@@ -10,7 +10,7 @@ router.post("/", async (req, res) => {
     if (!message) {
       return res.status(400).json({
         success: false,
-        reply: "Message is required.",
+        reply: "Hello from astra.",
       });
     }
 
