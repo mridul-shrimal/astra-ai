@@ -12,21 +12,53 @@ function Chat() {
     },
   ]);
 
-  const handleSendMessage = (text) => {
+  const handleSendMessage = async (text) => {
     if (!text.trim()) return;
 
-    const newMessage = {
+    // User message
+    const userMessage = {
       id: Date.now(),
       sender: "user",
       message: text,
     };
 
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: text,
+        }),
+      });
+
+      const data = await response.json();
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        sender: "ai",
+        message: data.reply,
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error(error);
+
+      const errorMessage = {
+        id: Date.now() + 1,
+        sender: "ai",
+        message: "❌ Unable to connect to the backend.",
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    }
   };
 
   return (
     <div className="flex h-[calc(100vh-140px)] flex-col gap-4">
-
       <div>
         <h1 className="text-4xl font-bold text-white">
           Astra Chat
@@ -38,13 +70,10 @@ function Chat() {
       </div>
 
       <div className="flex flex-1 flex-col gap-4">
-
         <ChatContainer messages={messages} />
 
         <ChatInput onSend={handleSendMessage} />
-
       </div>
-
     </div>
   );
 }
