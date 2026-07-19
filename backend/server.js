@@ -1,38 +1,38 @@
-require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config();
 
+// Initialize Database
+require("./database/database");
+
+// Routes
 const chatRoutes = require("./routes/chat");
+const memoryRoutes = require("./routes/memory");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+}));
+
 app.use(express.json());
 
 // Routes
 app.use("/api/chat", chatRoutes);
+app.use("/api/memory", memoryRoutes);
 
-// Home Route
+// Health Check
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "🚀 Astra AI Backend is running!",
-  });
-});
-
-// Health Check Route
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "OK",
-    server: "Astra AI Backend",
-    timestamp: new Date(),
+    message: "🚀 Astra Backend is Running",
   });
 });
 
 // Start Server
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Astra Backend running on http://localhost:${PORT}`);
 });
