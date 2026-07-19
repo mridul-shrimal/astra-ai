@@ -1,83 +1,79 @@
-import { Link } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Brain, Settings } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Brain,
+  Settings,
+} from "lucide-react";
+
+const menuItems = [
+  {
+    name: "Dashboard",
+    path: "/",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Chat",
+    path: "/chat",
+    icon: MessageSquare,
+  },
+  {
+    name: "Memory",
+    path: "/memory",
+    icon: Brain,
+  },
+  {
+    name: "Settings",
+    path: "/settings",
+    icon: Settings,
+  },
+];
 
 function Sidebar() {
   return (
-    <aside
-      style={{
-        width: "250px",
-        background: "#111827",
-        color: "#fff",
-        minHeight: "100vh",
-        padding: "20px",
-        boxSizing: "border-box",
-      }}
-    >
-      <h2 style={{ marginBottom: "30px" }}>🚀 Astra AI</h2>
+    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
+      {/* Logo */}
+      <div className="p-6 border-b border-slate-800">
+        <h1 className="text-2xl font-bold text-cyan-400">
+          🚀 Astra AI
+        </h1>
 
-      <nav
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "18px",
-        }}
-      >
-        <Link
-          to="/"
-          style={{
-            color: "white",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <LayoutDashboard size={20} />
-          Dashboard
-        </Link>
+        <p className="text-slate-400 text-sm mt-1">
+          Personal AI Assistant
+        </p>
+      </div>
 
-        <Link
-          to="/chat"
-          style={{
-            color: "white",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <MessageSquare size={20} />
-          Chat
-        </Link>
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
 
-        <Link
-          to="/memory"
-          style={{
-            color: "white",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <Brain size={20} />
-          Memory
-        </Link>
-
-        <Link
-          to="/settings"
-          style={{
-            color: "white",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <Settings size={20} />
-          Settings
-        </Link>
+          return (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              end={item.path === "/"}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
+                  isActive
+                    ? "bg-cyan-500 text-white shadow-lg"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-cyan-400"
+                }`
+              }
+            >
+              <Icon size={20} />
+              <span>{item.name}</span>
+            </NavLink>
+          );
+        })}
       </nav>
+
+      {/* Footer */}
+      <div className="border-t border-slate-800 p-4">
+        <p className="text-xs text-slate-500 text-center">
+          Astra AI v0.1
+        </p>
+      </div>
     </aside>
   );
 }

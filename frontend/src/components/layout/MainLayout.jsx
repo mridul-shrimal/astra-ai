@@ -3,31 +3,13 @@ import Header from "./Header";
 
 function MainLayout({ children }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-        background: "#0F172A",
-      }}
-    >
+    <div className="flex min-h-screen bg-slate-950 text-white">
       <Sidebar />
 
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className="flex flex-1 flex-col">
         <Header />
 
-        <main
-          style={{
-            flex: 1,
-            padding: "30px",
-            color: "white",
-          }}
-        >
+        <main className="flex-1 p-8 overflow-auto">
           {children}
         </main>
       </div>
