@@ -1,12 +1,32 @@
+import { useState } from "react";
+
 import ChatContainer from "../components/chat/ChatContainer";
 import ChatInput from "../components/chat/ChatInput";
-import TypingIndicator from "../components/chat/TypingIndicator";
 
 function Chat() {
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      sender: "ai",
+      message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
+    },
+  ]);
+
+  const handleSendMessage = (text) => {
+    if (!text.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      sender: "user",
+      message: text,
+    };
+
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  };
+
   return (
     <div className="flex h-[calc(100vh-140px)] flex-col gap-4">
 
-      {/* Page Title */}
       <div>
         <h1 className="text-4xl font-bold text-white">
           Astra Chat
@@ -17,15 +37,11 @@ function Chat() {
         </p>
       </div>
 
-      {/* Chat Area */}
       <div className="flex flex-1 flex-col gap-4">
 
-        <ChatContainer />
+        <ChatContainer messages={messages} />
 
-        {/* Temporary Typing Indicator */}
-        <TypingIndicator />
-
-        <ChatInput />
+        <ChatInput onSend={handleSendMessage} />
 
       </div>
 
