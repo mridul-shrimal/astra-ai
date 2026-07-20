@@ -10,7 +10,7 @@ function ChatContainer({
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
+      behavior: messages.length <= 2 ? "auto" : "smooth",
     });
   }, [messages, isTyping]);
 
