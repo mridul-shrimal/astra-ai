@@ -5,12 +5,11 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-async function generateResponse(prompt) {
+async function generateResponse(sessionId, prompt) {
   try {
-    // Get previous conversation memory
-    const memory = await getMemoryContext();
+    // Get memory only for this session
+    const memory = await getMemoryContext(sessionId);
 
-    // Build prompt
     const fullPrompt = `
 You are Astra, a modern AI assistant similar to ChatGPT.
 
@@ -49,13 +48,6 @@ Answer:
       model: "gemini-3.5-flash",
       contents: fullPrompt,
     });
-
-    console.log("\n================ RAW GEMINI RESPONSE ==================\n");
-    console.dir(response, { depth: null });
-    console.log("\n-------------------------------------------------------\n");
-    console.log("response.text:");
-    console.log(response.text);
-    console.log("\n=======================================================\n");
 
     return response.text;
   } catch (error) {

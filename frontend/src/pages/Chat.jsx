@@ -4,6 +4,18 @@ import ChatContainer from "../components/chat/ChatContainer";
 import ChatInput from "../components/chat/ChatInput";
 
 function Chat() {
+  // Create one session id per browser
+  const [sessionId] = useState(() => {
+    let id = localStorage.getItem("astra-session");
+
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem("astra-session", id);
+    }
+
+    return id;
+  });
+
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -12,10 +24,32 @@ function Chat() {
     },
   ]);
 
+  const [isTyping, setIsTyping] = useState(false);
+
+  const typeMessage = async (text, messageId) => {
+    let current = "";
+
+    for (let i = 0; i < text.length; i++) {
+      current += text[i];
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId
+            ? {
+                ...msg,
+                message: current,
+              }
+            : msg
+        )
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    }
+  };
+
   const handleSendMessage = async (text) => {
     if (!text.trim()) return;
 
-    // User message
     const userMessage = {
       id: Date.now(),
       sender: "user",
@@ -23,6 +57,8 @@ function Chat() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+
+    setIsTyping(true);
 
     try {
       const response = await fetch("http://localhost:5000/api/chat", {
@@ -32,20 +68,29 @@ function Chat() {
         },
         body: JSON.stringify({
           message: text,
+          sessionId: sessionId,
         }),
       });
 
       const data = await response.json();
 
-      const aiMessage = {
-        id: Date.now() + 1,
+      setIsTyping(false);
+
+      const aiId = Date.now() + 1;
+
+      const emptyAIMessage = {
+        id: aiId,
         sender: "ai",
-        message: data.reply,
+        message: "",
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, emptyAIMessage]);
+
+      await typeMessage(data.reply, aiId);
     } catch (error) {
       console.error(error);
+
+      setIsTyping(false);
 
       const errorMessage = {
         id: Date.now() + 1,
@@ -70,7 +115,10 @@ function Chat() {
       </div>
 
       <div className="flex flex-1 flex-col gap-4">
-        <ChatContainer messages={messages} />
+        <ChatContainer
+          messages={messages}
+          isTyping={isTyping}
+        />
 
         <ChatInput onSend={handleSendMessage} />
       </div>

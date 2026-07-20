@@ -15,6 +15,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     db.run(`
       CREATE TABLE IF NOT EXISTS memories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT NOT NULL,
         user_message TEXT NOT NULL,
         ai_response TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP

@@ -6,7 +6,7 @@ const { saveMemory } = require("../services/memoryService");
 
 router.post("/", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, sessionId } = req.body;
 
     if (!message) {
       return res.status(400).json({
@@ -15,11 +15,14 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Generate AI response
-    const aiReply = await generateResponse(message);
+    // Default session if none is provided
+    const currentSession = sessionId || "default";
 
-    // Save conversation to memory
-    await saveMemory(message, aiReply);
+    // Generate AI response
+    const aiReply = await generateResponse(currentSession, message);
+
+    // Save conversation
+    await saveMemory(currentSession, message, aiReply);
 
     res.json({
       success: true,
