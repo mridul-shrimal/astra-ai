@@ -17,16 +17,16 @@ function ChatContainer({
   return (
     <div className="flex-1 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6">
       {messages.map((message, index) => (
-        <ChatMessage
-          key={message.id}
-          sender={message.sender}
-          message={message.message}
-          isLastAI={
-            message.sender === "ai" &&
-            index === messages.length - 1
-          }
-          onRegenerate={onRegenerate}
-        />
+       <ChatMessage
+  key={message.id}
+  sender={message.sender}
+  message={message.message}
+  isLastAI={
+    message.sender === "ai" &&
+    index === messages.length - 1
+  }
+  onRegenerate={onRegenerate}
+/>
       ))}
 
       {isTyping && (

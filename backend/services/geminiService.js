@@ -9,7 +9,8 @@ async function generateResponse(sessionId, prompt) {
   try {
     // Get memory only for this session
     const memory = await getMemoryContext(sessionId);
-
+console.log("Memory for session:");
+console.log(memory);
     const fullPrompt = `
 You are Astra, a modern AI assistant similar to ChatGPT.
 
