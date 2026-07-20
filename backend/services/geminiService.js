@@ -44,9 +44,10 @@ Answer:
     console.log("\n================ PROMPT SENT TO GEMINI ================\n");
     console.log(fullPrompt);
     console.log("\n=======================================================\n");
-
+console.log("Using model:", "gemini-flash-latest");
+console.log("API Key:", process.env.GEMINI_API_KEY.substring(0, 10));
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-flash-latest",
       contents: fullPrompt,
     });
 

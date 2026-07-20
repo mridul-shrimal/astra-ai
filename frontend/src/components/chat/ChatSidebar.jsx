@@ -1,6 +1,8 @@
 function ChatSidebar({
   chats,
   currentChatId,
+  searchQuery,
+  onSearchChange,
   onNewChat,
   onSelectChat,
   onDeleteChat,
@@ -15,6 +17,16 @@ function ChatSidebar({
           className="w-full rounded-xl bg-cyan-500 py-3 font-semibold text-white hover:bg-cyan-600 transition"
         >
           + New Chat
+          {/* Search */}
+<div className="px-4 pb-4">
+  <input
+    type="text"
+    placeholder="🔍 Search chats..."
+    value={searchQuery}
+    onChange={(e) => onSearchChange(e.target.value)}
+    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-400 focus:border-cyan-500 focus:outline-none"
+  />
+</div>
         </button>
       </div>
 

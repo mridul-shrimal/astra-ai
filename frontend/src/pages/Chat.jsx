@@ -40,7 +40,8 @@ function Chat() {
       setCurrentChatId(chats[0].id);
     }
   }, [currentChatId, chats]);
-
+// 🔍 Search Query
+const [searchQuery, setSearchQuery] = useState("");
   // Save chats
   useEffect(() => {
     localStorage.setItem("astra-chats", JSON.stringify(chats));
@@ -316,13 +317,17 @@ const handleStopGenerating = () => {
   return (
     <div className="flex h-[calc(100vh-140px)]">
       <ChatSidebar
-        chats={chats}
-        currentChatId={currentChat.id}
-        onNewChat={handleNewChat}
-        onSelectChat={setCurrentChatId}
-        onRenameChat={handleRenameChat}
-        onDeleteChat={handleDeleteChat}
-      />
+        chats={chats.filter((chat) =>
+  chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+)}
+        currentChatId={currentChatId}
+  searchQuery={searchQuery}
+  onSearchChange={setSearchQuery}
+  onNewChat={handleNewChat}
+  onSelectChat={setCurrentChatId}
+  onDeleteChat={handleDeleteChat}
+  onRenameChat={handleRenameChat}
+/>
 
       <div className="flex flex-1 flex-col gap-4 p-6">
         <div>
