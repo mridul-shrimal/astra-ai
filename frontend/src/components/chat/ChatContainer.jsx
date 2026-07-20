@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import ChatMessage from "./ChatMessage";
 
-function ChatContainer({ messages, isTyping }) {
+function ChatContainer({
+  messages,
+  isTyping,
+  onRegenerate,
+}) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -12,11 +16,16 @@ function ChatContainer({ messages, isTyping }) {
 
   return (
     <div className="flex-1 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6">
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <ChatMessage
           key={message.id}
           sender={message.sender}
           message={message.message}
+          isLastAI={
+            message.sender === "ai" &&
+            index === messages.length - 1
+          }
+          onRegenerate={onRegenerate}
         />
       ))}
 
@@ -28,10 +37,12 @@ function ChatContainer({ messages, isTyping }) {
 
               <span className="flex gap-1">
                 <span className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce"></span>
+
                 <span
                   className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce"
                   style={{ animationDelay: "0.2s" }}
                 ></span>
+
                 <span
                   className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce"
                   style={{ animationDelay: "0.4s" }}

@@ -12,7 +12,12 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-function ChatMessage({ sender, message }) {
+function ChatMessage({
+  sender,
+  message,
+  isLastAI,
+  onRegenerate,
+}) {
   const isUser = sender === "user";
 
   const copyCode = (code) => {
@@ -136,7 +141,6 @@ function ChatMessage({ sender, message }) {
               {message}
             </ReactMarkdown>
 
-            {/* Message Actions */}
             <div className="mt-3 flex gap-2 opacity-0 transition group-hover:opacity-100">
               <button
                 onClick={copyMessage}
@@ -168,12 +172,15 @@ function ChatMessage({ sender, message }) {
                 <ThumbsDown size={18} />
               </button>
 
-              <button
-                className="rounded-lg p-2 hover:bg-slate-700"
-                title="Regenerate"
-              >
-                <RotateCcw size={18} />
-              </button>
+              {isLastAI && (
+                <button
+                  onClick={onRegenerate}
+                  className="rounded-lg p-2 hover:bg-slate-700"
+                  title="Regenerate"
+                >
+                  <RotateCcw size={18} />
+                </button>
+              )}
             </div>
           </>
         )}

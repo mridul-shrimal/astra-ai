@@ -188,7 +188,69 @@ function Chat() {
       ]);
     }
   };
+const handleRegenerate = async () => {
+  // Find the last user message
+  const lastUserMessage = [...currentChat.messages]
+    .reverse()
+    .find((msg) => msg.sender === "user");
 
+  if (!lastUserMessage) return;
+
+  // Remove the last AI message (if there is one)
+  let updatedMessages = [...currentChat.messages];
+
+  if (
+    updatedMessages.length &&
+    updatedMessages[updatedMessages.length - 1].sender === "ai"
+  ) {
+    updatedMessages.pop();
+  }
+
+  updateCurrentMessages(updatedMessages);
+
+  setIsTyping(true);
+
+  try {
+    const response = await fetch("http://localhost:5000/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: lastUserMessage.message,
+        sessionId: currentChat.sessionId,
+      }),
+    });
+
+    const data = await response.json();
+
+    setIsTyping(false);
+
+    const aiMessage = {
+      id: Date.now(),
+      sender: "ai",
+      message: data.reply,
+    };
+
+    updateCurrentMessages([
+      ...updatedMessages,
+      aiMessage,
+    ]);
+  } catch (error) {
+    console.error(error);
+
+    setIsTyping(false);
+
+    updateCurrentMessages([
+      ...updatedMessages,
+      {
+        id: Date.now(),
+        sender: "ai",
+        message: "❌ Failed to regenerate response.",
+      },
+    ]);
+  }
+};
   const handleNewChat = () => {
     const newChat = createNewChat();
 
@@ -223,6 +285,7 @@ function Chat() {
           <ChatContainer
             messages={currentChat.messages}
             isTyping={isTyping}
+            onRegenerate={handleRegenerate}
           />
 
           <ChatInput onSend={handleSendMessage} />
