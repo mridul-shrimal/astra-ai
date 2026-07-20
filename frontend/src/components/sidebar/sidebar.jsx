@@ -5,17 +5,17 @@ function ChatSidebar({
   onSelectChat,
 }) {
   return (
-    <aside className="w-72 border-r border-slate-800 bg-slate-950 flex flex-col">
-      <div className="p-4">
+    <aside className="w-72 bg-slate-950 border-r border-slate-800 flex flex-col">
+      <div className="p-4 border-b border-slate-800">
         <button
           onClick={onNewChat}
-          className="w-full rounded-xl bg-cyan-500 py-3 font-semibold text-white hover:bg-cyan-600"
+          className="w-full rounded-xl bg-cyan-500 py-3 font-semibold text-white hover:bg-cyan-600 transition"
         >
           + New Chat
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {chats.map((chat) => (
           <button
             key={chat.id}

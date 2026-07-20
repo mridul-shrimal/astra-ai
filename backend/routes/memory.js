@@ -6,15 +6,17 @@ const {
   clearMemories,
 } = require("../services/memoryService");
 
-// Get recent memories
-router.get("/", async (req, res) => {
+// Get memories of ONE chat
+router.get("/:sessionId", async (req, res) => {
   try {
-    const memories = await getRecentMemories(50);
+    const { sessionId } = req.params;
 
-    res.status(200).json({
-    success: true,
-    count: memories.length,
-    memories,
+    const memories = await getRecentMemories(sessionId, 50);
+
+    res.json({
+      success: true,
+      count: memories.length,
+      memories,
     });
   } catch (error) {
     console.error(error);
@@ -26,21 +28,23 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Delete all memories
-router.delete("/", async (req, res) => {
+// Delete ONE chat memory
+router.delete("/:sessionId", async (req, res) => {
   try {
-    await clearMemories();
+    const { sessionId } = req.params;
+
+    await clearMemories(sessionId);
 
     res.json({
       success: true,
-      message: "All memories cleared.",
+      message: "Chat memory cleared.",
     });
   } catch (error) {
     console.error(error);
 
     res.status(500).json({
       success: false,
-      message: "Failed to clear memories.",
+      message: "Failed to clear memory.",
     });
   }
 });

@@ -1,50 +1,74 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import ChatContainer from "../components/chat/ChatContainer";
 import ChatInput from "../components/chat/ChatInput";
+import ChatSidebar from "../components/chat/ChatSidebar";
 
 function Chat() {
-  // Create one session id per browser
-  const [sessionId] = useState(() => {
-    let id = localStorage.getItem("astra-session");
-
-    if (!id) {
-      id = crypto.randomUUID();
-      localStorage.setItem("astra-session", id);
-    }
-
-    return id;
+  const createNewChat = () => ({
+    id: crypto.randomUUID(),
+    sessionId: crypto.randomUUID(),
+    title: "New Chat",
+    messages: [
+      {
+        id: Date.now(),
+        sender: "ai",
+        message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
+      },
+    ],
   });
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: "ai",
-      message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
-    },
-  ]);
+  // Load chats from localStorage
+  const [chats, setChats] = useState(() => {
+    const saved = localStorage.getItem("astra-chats");
+
+    if (saved) {
+      return JSON.parse(saved);
+    }
+
+    return [createNewChat()];
+  });
+
+  // Current chat
+  const [currentChatId, setCurrentChatId] = useState(() => {
+    return localStorage.getItem("astra-current-chat") || null;
+  });
+
+  // Select first chat if none selected
+  useEffect(() => {
+    if (!currentChatId && chats.length) {
+      setCurrentChatId(chats[0].id);
+    }
+  }, [currentChatId, chats]);
+
+  // Save chats
+  useEffect(() => {
+    localStorage.setItem("astra-chats", JSON.stringify(chats));
+  }, [chats]);
+
+  // Save selected chat
+  useEffect(() => {
+    if (currentChatId) {
+      localStorage.setItem("astra-current-chat", currentChatId);
+    }
+  }, [currentChatId]);
+
+  const currentChat =
+    chats.find((chat) => chat.id === currentChatId) || chats[0];
 
   const [isTyping, setIsTyping] = useState(false);
 
-  const typeMessage = async (text, messageId) => {
-    let current = "";
-
-    for (let i = 0; i < text.length; i++) {
-      current += text[i];
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId
-            ? {
-                ...msg,
-                message: current,
-              }
-            : msg
-        )
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 15));
-    }
+  const updateCurrentMessages = (messages) => {
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === currentChat.id
+          ? {
+              ...chat,
+              messages,
+            }
+          : chat
+      )
+    );
   };
 
   const handleSendMessage = async (text) => {
@@ -56,7 +80,23 @@ function Chat() {
       message: text,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...currentChat.messages, userMessage];
+
+    updateCurrentMessages(updatedMessages);
+
+    // Rename first chat automatically
+    if (currentChat.title === "New Chat") {
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === currentChat.id
+            ? {
+                ...chat,
+                title: text.substring(0, 30),
+              }
+            : chat
+        )
+      );
+    }
 
     setIsTyping(true);
 
@@ -68,7 +108,7 @@ function Chat() {
         },
         body: JSON.stringify({
           message: text,
-          sessionId: sessionId,
+          sessionId: currentChat.sessionId,
         }),
       });
 
@@ -78,49 +118,65 @@ function Chat() {
 
       const aiId = Date.now() + 1;
 
-      const emptyAIMessage = {
+      const aiMessage = {
         id: aiId,
         sender: "ai",
-        message: "",
+        message: data.reply,
       };
 
-      setMessages((prev) => [...prev, emptyAIMessage]);
-
-      await typeMessage(data.reply, aiId);
+      updateCurrentMessages([...updatedMessages, aiMessage]);
     } catch (error) {
       console.error(error);
 
       setIsTyping(false);
 
-      const errorMessage = {
-        id: Date.now() + 1,
-        sender: "ai",
-        message: "❌ Unable to connect to the backend.",
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
+      updateCurrentMessages([
+        ...updatedMessages,
+        {
+          id: Date.now() + 1,
+          sender: "ai",
+          message: "❌ Unable to connect to the backend.",
+        },
+      ]);
     }
   };
 
+  const handleNewChat = () => {
+    const newChat = createNewChat();
+
+    setChats((prev) => [newChat, ...prev]);
+
+    setCurrentChatId(newChat.id);
+  };
+
   return (
-    <div className="flex h-[calc(100vh-140px)] flex-col gap-4">
-      <div>
-        <h1 className="text-4xl font-bold text-white">
-          Astra Chat
-        </h1>
+    <div className="flex h-[calc(100vh-140px)]">
+      <ChatSidebar
+  chats={chats}
+  currentChatId={currentChatId}
+  onNewChat={handleNewChat}
+  onSelectChat={setCurrentChatId}
+/>
 
-        <p className="mt-2 text-slate-400">
-          Talk with your AI assistant.
-        </p>
-      </div>
+      <div className="flex flex-1 flex-col gap-4 p-6">
+        <div>
+          <h1 className="text-4xl font-bold text-white">
+            Astra Chat
+          </h1>
 
-      <div className="flex flex-1 flex-col gap-4">
-        <ChatContainer
-          messages={messages}
-          isTyping={isTyping}
-        />
+          <p className="mt-2 text-slate-400">
+            Talk with your AI assistant.
+          </p>
+        </div>
 
-        <ChatInput onSend={handleSendMessage} />
+        <div className="flex flex-1 flex-col gap-4">
+          <ChatContainer
+            messages={currentChat.messages}
+            isTyping={isTyping}
+          />
+
+          <ChatInput onSend={handleSendMessage} />
+        </div>
       </div>
     </div>
   );
