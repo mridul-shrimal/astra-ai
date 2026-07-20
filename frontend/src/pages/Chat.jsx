@@ -73,44 +73,47 @@ function Chat() {
 
   // Rename Chat
   const handleRenameChat = (chatId) => {
-    const newTitle = prompt("Enter new chat title:");
+  const chat = chats.find((c) => c.id === chatId);
 
-    if (!newTitle?.trim()) return;
+  const newTitle = prompt(
+    "Rename chat",
+    chat?.title || ""
+  );
 
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
-          ? {
-              ...chat,
-              title: newTitle,
-            }
-          : chat
-      )
-    );
-  };
+  if (!newTitle || !newTitle.trim()) return;
 
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === chatId
+        ? {
+            ...chat,
+            title: newTitle.trim(),
+          }
+        : chat
+    )
+  );
+};
   // Delete Chat
   const handleDeleteChat = (chatId) => {
-    if (!window.confirm("Delete this chat?")) return;
+  if (chats.length === 1) {
+    alert("At least one chat must remain.");
+    return;
+  }
 
-    const updatedChats = chats.filter(
-      (chat) => chat.id !== chatId
-    );
+  if (!window.confirm("Are you sure you want to delete this chat?")) {
+    return;
+  }
 
-    if (updatedChats.length === 0) {
-      const fresh = createNewChat();
+  const updatedChats = chats.filter(
+    (chat) => chat.id !== chatId
+  );
 
-      setChats([fresh]);
-      setCurrentChatId(fresh.id);
-      return;
-    }
+  setChats(updatedChats);
 
-    setChats(updatedChats);
-
-    if (currentChatId === chatId) {
-      setCurrentChatId(updatedChats[0].id);
-    }
-  };
+  if (currentChatId === chatId) {
+    setCurrentChatId(updatedChats[0].id);
+  }
+};
 
   const handleSendMessage = async (text) => {
     if (!text.trim()) return;

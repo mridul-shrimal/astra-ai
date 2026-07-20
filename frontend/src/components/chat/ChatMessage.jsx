@@ -94,7 +94,59 @@ function ChatMessage({
                     {children}
                   </ol>
                 ),
+strong: ({ children }) => (
+  <strong className="font-bold text-white">
+    {children}
+  </strong>
+),
 
+table: ({ children }) => (
+  <div className="my-6 overflow-x-auto">
+    <table className="min-w-full border border-slate-700 border-collapse">
+      {children}
+    </table>
+  </div>
+),
+
+thead: ({ children }) => (
+  <thead className="bg-slate-800">
+    {children}
+  </thead>
+),
+
+tbody: ({ children }) => (
+  <tbody>
+    {children}
+  </tbody>
+),
+
+tr: ({ children }) => (
+  <tr className="border-b border-slate-700">
+    {children}
+  </tr>
+),
+
+th: ({ children }) => (
+  <th className="border border-slate-700 px-4 py-2 text-left font-semibold text-cyan-300">
+    {children}
+  </th>
+),
+
+td: ({ children }) => (
+  <td className="border border-slate-700 px-4 py-2 align-top">
+    {children}
+  </td>
+),
+
+blockquote: ({ children }) => (
+  <blockquote className="my-4 border-l-4 border-cyan-500 pl-4 italic text-slate-300">
+    {children}
+  </blockquote>
+),
+
+hr: () => (
+  <hr className="my-6 border-slate-700" />
+),
                 code({ inline, className, children }) {
                   const match = /language-(\w+)/.exec(className || "");
 
@@ -131,7 +183,7 @@ function ChatMessage({
                   }
 
                   return (
-                    <code className="rounded bg-slate-900 px-2 py-1 text-cyan-300">
+                    <code className="rounded bg-slate-800 px-2 py-1 font-mono text-cyan-300">
                       {children}
                     </code>
                   );
