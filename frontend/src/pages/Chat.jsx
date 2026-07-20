@@ -18,7 +18,7 @@ function Chat() {
     ],
   });
 
-  // Load chats from localStorage
+  // Load chats
   const [chats, setChats] = useState(() => {
     const saved = localStorage.getItem("astra-chats");
 
@@ -34,7 +34,7 @@ function Chat() {
     return localStorage.getItem("astra-current-chat") || null;
   });
 
-  // Select first chat if none selected
+  // Select first chat
   useEffect(() => {
     if (!currentChatId && chats.length) {
       setCurrentChatId(chats[0].id);
@@ -71,6 +71,47 @@ function Chat() {
     );
   };
 
+  // Rename Chat
+  const handleRenameChat = (chatId) => {
+    const newTitle = prompt("Enter new chat title:");
+
+    if (!newTitle?.trim()) return;
+
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              title: newTitle,
+            }
+          : chat
+      )
+    );
+  };
+
+  // Delete Chat
+  const handleDeleteChat = (chatId) => {
+    if (!window.confirm("Delete this chat?")) return;
+
+    const updatedChats = chats.filter(
+      (chat) => chat.id !== chatId
+    );
+
+    if (updatedChats.length === 0) {
+      const fresh = createNewChat();
+
+      setChats([fresh]);
+      setCurrentChatId(fresh.id);
+      return;
+    }
+
+    setChats(updatedChats);
+
+    if (currentChatId === chatId) {
+      setCurrentChatId(updatedChats[0].id);
+    }
+  };
+
   const handleSendMessage = async (text) => {
     if (!text.trim()) return;
 
@@ -80,11 +121,14 @@ function Chat() {
       message: text,
     };
 
-    const updatedMessages = [...currentChat.messages, userMessage];
+    const updatedMessages = [
+      ...currentChat.messages,
+      userMessage,
+    ];
 
     updateCurrentMessages(updatedMessages);
 
-    // Rename first chat automatically
+    // Rename first message automatically
     if (currentChat.title === "New Chat") {
       setChats((prev) =>
         prev.map((chat) =>
@@ -101,30 +145,34 @@ function Chat() {
     setIsTyping(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: text,
-          sessionId: currentChat.sessionId,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: text,
+            sessionId: currentChat.sessionId,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       setIsTyping(false);
 
-      const aiId = Date.now() + 1;
-
       const aiMessage = {
-        id: aiId,
+        id: Date.now() + 1,
         sender: "ai",
         message: data.reply,
       };
 
-      updateCurrentMessages([...updatedMessages, aiMessage]);
+      updateCurrentMessages([
+        ...updatedMessages,
+        aiMessage,
+      ]);
     } catch (error) {
       console.error(error);
 
@@ -152,11 +200,13 @@ function Chat() {
   return (
     <div className="flex h-[calc(100vh-140px)]">
       <ChatSidebar
-  chats={chats}
-  currentChatId={currentChatId}
-  onNewChat={handleNewChat}
-  onSelectChat={setCurrentChatId}
-/>
+        chats={chats}
+        currentChatId={currentChat.id}
+        onNewChat={handleNewChat}
+        onSelectChat={setCurrentChatId}
+        onRenameChat={handleRenameChat}
+        onDeleteChat={handleDeleteChat}
+      />
 
       <div className="flex flex-1 flex-col gap-4 p-6">
         <div>
