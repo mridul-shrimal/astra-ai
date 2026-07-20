@@ -114,7 +114,32 @@ function Chat() {
     setCurrentChatId(updatedChats[0].id);
   }
 };
+const streamMessage = async (
+  text,
+  messageId,
+  existingMessages
+) => {
+  let current = "";
 
+  for (let i = 0; i < text.length; i += 3) {
+    current += text.slice(i, i + 3);
+
+    updateCurrentMessages(
+      existingMessages.map((msg) =>
+        msg.id === messageId
+          ? {
+              ...msg,
+              message: current,
+            }
+          : msg
+      )
+    );
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, 8)
+    );
+  }
+};
   const handleSendMessage = async (text) => {
     if (!text.trim()) return;
 
@@ -166,16 +191,26 @@ function Chat() {
 
       setIsTyping(false);
 
-      const aiMessage = {
-        id: Date.now() + 1,
-        sender: "ai",
-        message: data.reply,
-      };
+      const aiId = Date.now() + 1;
 
-      updateCurrentMessages([
-        ...updatedMessages,
-        aiMessage,
-      ]);
+const aiMessage = {
+  id: aiId,
+  sender: "ai",
+  message: "",
+};
+
+const newMessages = [
+  ...updatedMessages,
+  aiMessage,
+];
+
+updateCurrentMessages(newMessages);
+
+await streamMessage(
+  data.reply,
+  aiId,
+  newMessages
+);
     } catch (error) {
       console.error(error);
 
