@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ChatContainer from "../components/chat/ChatContainer";
 import ChatInput from "../components/chat/ChatInput";
@@ -57,7 +57,8 @@ function Chat() {
     chats.find((chat) => chat.id === currentChatId) || chats[0];
 
   const [isTyping, setIsTyping] = useState(false);
-
+const [isGenerating, setIsGenerating] = useState(false);
+const stopGenerationRef = useRef(false);
   const updateCurrentMessages = (messages) => {
     setChats((prev) =>
       prev.map((chat) =>
@@ -115,6 +116,7 @@ function Chat() {
   }
 };
 const streamMessage = async (
+
   text,
   messageId,
   existingMessages
@@ -122,6 +124,11 @@ const streamMessage = async (
   let current = "";
 
   for (let i = 0; i < text.length; i += 3) {
+      if (stopGenerationRef.current) {
+      setIsTyping(false);
+      setIsGenerating(false);
+      return;
+    }
     current += text.slice(i, i + 3);
 
     updateCurrentMessages(
@@ -169,9 +176,10 @@ const streamMessage = async (
         )
       );
     }
-
+    
+stopGenerationRef.current = false;
     setIsTyping(true);
-
+setIsGenerating(true);
     try {
       const response = await fetch(
         "http://localhost:5000/api/chat",
@@ -189,8 +197,7 @@ const streamMessage = async (
 
       const data = await response.json();
 
-      setIsTyping(false);
-
+    
       const aiId = Date.now() + 1;
 
 const aiMessage = {
@@ -211,11 +218,14 @@ await streamMessage(
   aiId,
   newMessages
 );
+  setIsTyping(false);
+setIsGenerating(false);
+
     } catch (error) {
       console.error(error);
 
       setIsTyping(false);
-
+setIsGenerating(false);
       updateCurrentMessages([
         ...updatedMessages,
         {
@@ -227,6 +237,7 @@ await streamMessage(
     }
   };
 const handleRegenerate = async () => {
+   stopGenerationRef.current = false;
   // Find the last user message
   const lastUserMessage = [...currentChat.messages]
     .reverse()
@@ -289,6 +300,11 @@ const handleRegenerate = async () => {
     ]);
   }
 };
+const handleStopGenerating = () => {
+  stopGenerationRef.current = true;
+  setIsGenerating(false);
+  setIsTyping(false);
+};
   const handleNewChat = () => {
     const newChat = createNewChat();
 
@@ -320,11 +336,13 @@ const handleRegenerate = async () => {
         </div>
 
         <div className="flex flex-1 flex-col gap-4">
-          <ChatContainer
-            messages={currentChat.messages}
-            isTyping={isTyping}
-            onRegenerate={handleRegenerate}
-          />
+ <ChatContainer
+  messages={currentChat.messages}
+  isTyping={isTyping}
+  isGenerating={isGenerating}
+  onStopGenerating={handleStopGenerating}
+  onRegenerate={handleRegenerate}
+/>
 
           <ChatInput onSend={handleSendMessage} />
         </div>

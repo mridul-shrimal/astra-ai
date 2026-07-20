@@ -4,6 +4,8 @@ import ChatMessage from "./ChatMessage";
 function ChatContainer({
   messages,
   isTyping,
+  isGenerating,
+  onStopGenerating,
   onRegenerate,
 }) {
   const bottomRef = useRef(null);
@@ -52,7 +54,16 @@ function ChatContainer({
           </div>
         </div>
       )}
-
+{isGenerating && (
+  <div className="flex justify-center my-4">
+    <button
+      onClick={onStopGenerating}
+      className="rounded-full border border-red-500 px-5 py-2 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200"
+    >
+      ⏹ Stop Generating
+    </button>
+  </div>
+)}
       <div ref={bottomRef}></div>
     </div>
   );
