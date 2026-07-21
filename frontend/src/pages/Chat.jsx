@@ -359,15 +359,22 @@ const streamMessage = async (
     );
   }
 };
-  const handleSendMessage = async (text) => {
+  const handleSendMessage = async (text,file) => {
       speechSynthesis.cancel(); 
     if (!text.trim()) return;
 
-    const userMessage = {
-      id: Date.now(),
-      sender: "user",
-      message: text,
-    };
+   const userMessage = {
+  id: Date.now(),
+  sender: "user",
+  message: text,
+  file: file
+    ? {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      }
+    : null,
+};
 
     const updatedMessages = [
       ...currentChat.messages,
