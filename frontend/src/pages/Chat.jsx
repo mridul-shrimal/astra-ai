@@ -95,6 +95,36 @@ const stopGenerationRef = useRef(false);
     )
   );
 };
+
+  // Export Chat
+  const handleExportChat = () => {
+    if (!currentChat) return;
+
+    const content = currentChat.messages
+    .map((msg) => {
+      const sender = msg.sender === "user" ? "You" : "Astra";
+      return `${sender}:\n${msg.message}\n`;
+    })
+    .join("\n------------------------------\n\n");
+
+  const blob = new Blob([content], {
+    type: "text/plain;charset=utf-8",
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+
+  link.download = `${currentChat.title || "chat"}.txt`;
+
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+};
   // Delete Chat
   const handleDeleteChat = (chatId) => {
   if (chats.length === 1) {
@@ -347,6 +377,7 @@ const handleStopGenerating = () => {
   isGenerating={isGenerating}
   onStopGenerating={handleStopGenerating}
   onRegenerate={handleRegenerate}
+  onExport={handleExportChat}
 />
 
           <ChatInput onSend={handleSendMessage} />
