@@ -7,37 +7,10 @@ function ChatInput({ onSend }) {
 
   const fileInputRef = useRef(null);
 
-const handleSend = async () => {
+const handleSend = () => {
   if (!input.trim() && !selectedFile) return;
 
-  let uploadedFile = null;
-
-  if (selectedFile) {
-    const formData = new FormData();
-
-    formData.append("file", selectedFile);
-
-    try {
-      const response = await fetch(
-        "http://localhost:5000/api/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      console.log("Uploaded:", data);
-
-      uploadedFile = data.file;
-    } catch (error) {
-      console.error("Upload failed:", error);
-      return;
-    }
-  }
-
-  onSend(input, uploadedFile);
+  onSend(input, selectedFile);
 
   setInput("");
   setSelectedFile(null);

@@ -401,19 +401,22 @@ stopGenerationRef.current = false;
     setIsTyping(true);
 setIsGenerating(true);
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: text,
-            sessionId: currentChat.sessionId,
-          }),
-        }
-      );
+      const formData = new FormData();
+
+formData.append("message", text);
+formData.append("sessionId", currentChat.sessionId);
+
+if (file) {
+  formData.append("file", file);
+}
+
+const response = await fetch(
+  "http://localhost:5000/api/chat",
+  {
+    method: "POST",
+    body: formData,
+  }
+);
 
       const data = await response.json();
 
