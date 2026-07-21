@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-
+import { Menu } from "lucide-react";
 import ChatContainer from "../components/chat/ChatContainer";
 import ChatInput from "../components/chat/ChatInput";
 import ChatSidebar from "../components/chat/ChatSidebar";
@@ -42,6 +42,7 @@ function Chat() {
   }, [currentChatId, chats]);
 // 🔍 Search Query
 const [searchQuery, setSearchQuery] = useState("");
+const [sidebarOpen, setSidebarOpen] = useState(true);
   // Save chats
   useEffect(() => {
     localStorage.setItem("astra-chats", JSON.stringify(chats));
@@ -344,47 +345,68 @@ const handleStopGenerating = () => {
     setCurrentChatId(newChat.id);
   };
 
-  return (
-    <div className="flex h-[calc(100vh-140px)]">
+return (
+  <div className="flex h-[calc(100vh-140px)] overflow-hidden">
+
+    {sidebarOpen && (
       <ChatSidebar
         chats={chats.filter((chat) =>
-  chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-)}
+          chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+        )}
         currentChatId={currentChatId}
-  searchQuery={searchQuery}
-  onSearchChange={setSearchQuery}
-  onNewChat={handleNewChat}
-  onSelectChat={setCurrentChatId}
-  onDeleteChat={handleDeleteChat}
-  onRenameChat={handleRenameChat}
-/>
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onNewChat={handleNewChat}
+        onSelectChat={setCurrentChatId}
+        onDeleteChat={handleDeleteChat}
+        onRenameChat={handleRenameChat}
+      />
+    )}
 
-      <div className="flex flex-1 flex-col gap-4 p-6">
+    <div className="flex min-h-0 flex-1 flex-col">
+
+      {/* Header */}
+      <div className="flex items-center gap-4 border-b border-slate-800 bg-slate-950 px-6 py-4">
+
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="rounded-lg p-2 transition hover:bg-slate-800"
+        >
+          <Menu size={24} className="text-white" />
+        </button>
+
         <div>
-          <h1 className="text-4xl font-bold text-white">
-            Astra Chat
+          <h1 className="text-3xl font-bold text-white">
+            Astra AI
           </h1>
 
-          <p className="mt-2 text-slate-400">
-            Talk with your AI assistant.
+          <p className="text-slate-400">
+            Your intelligent AI assistant
           </p>
         </div>
 
-        <div className="flex flex-1 flex-col gap-4">
- <ChatContainer
-  messages={currentChat.messages}
-  isTyping={isTyping}
-  isGenerating={isGenerating}
-  onStopGenerating={handleStopGenerating}
-  onRegenerate={handleRegenerate}
-  onExport={handleExportChat}
-/>
-
-          <ChatInput onSend={handleSendMessage} />
-        </div>
       </div>
+
+      {/* Chat */}
+<div className="flex min-h-0 flex-1 flex-col gap-4 p-6">
+
+        <ChatContainer
+          messages={currentChat.messages}
+          isTyping={isTyping}
+          isGenerating={isGenerating}
+          onStopGenerating={handleStopGenerating}
+          onRegenerate={handleRegenerate}
+          onExport={handleExportChat}
+        />
+
+        <ChatInput onSend={handleSendMessage} />
+
+      </div>
+
     </div>
-  );
+
+  </div>
+);
 }
 
 export default Chat;

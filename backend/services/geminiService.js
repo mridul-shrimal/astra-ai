@@ -1,16 +1,14 @@
-const { GoogleGenAI } = require("@google/genai");
+const axios = require("axios");
 const { getMemoryContext } = require("./memoryService");
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
 
 async function generateResponse(sessionId, prompt) {
   try {
     // Get memory only for this session
     const memory = await getMemoryContext(sessionId);
-console.log("Memory for session:");
-console.log(memory);
+
+    console.log("Memory for session:");
+    console.log(memory);
+
     const fullPrompt = `
 You are Astra, a modern AI assistant similar to ChatGPT.
 
@@ -41,19 +39,35 @@ ${prompt}
 Answer:
 `;
 
-    console.log("\n================ PROMPT SENT TO GEMINI ================\n");
+    console.log("\n================ PROMPT SENT TO OPENROUTER ================\n");
     console.log(fullPrompt);
-    console.log("\n=======================================================\n");
-console.log("Using model:", "gemini-flash-latest");
-console.log("API Key:", process.env.GEMINI_API_KEY.substring(0, 10));
-    const response = await ai.models.generateContent({
-      model: "gemini-flash-latest",
-      contents: fullPrompt,
-    });
+    console.log("\n===========================================================\n");
 
-    return response.text;
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: process.env.OPENROUTER_MODEL || "openai/gpt-oss-20b:free",
+        messages: [
+          {
+            role: "user",
+            content: fullPrompt,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data.choices[0].message.content;
   } catch (error) {
-    console.error("Gemini Error:", error);
+    console.error(
+      "OpenRouter Error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }

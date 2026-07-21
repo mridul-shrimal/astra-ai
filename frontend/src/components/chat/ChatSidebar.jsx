@@ -1,3 +1,5 @@
+import { Search, MessageSquare, MessageSquarePlus } from "lucide-react";
+
 function ChatSidebar({
   chats,
   currentChatId,
@@ -9,25 +11,42 @@ function ChatSidebar({
   onRenameChat,
 }) {
   return (
-    <aside className="w-72 border-r border-slate-800 bg-slate-950 flex flex-col">
+    <aside className="flex w-72 flex-col border-r border-slate-800 bg-slate-950">
+
       {/* New Chat */}
-      <div className="p-4">
+      <div className="sticky top-0 z-10 border-b border-slate-800 bg-slate-950 p-4">
         <button
           onClick={onNewChat}
-          className="w-full rounded-xl bg-cyan-500 py-3 font-semibold text-white hover:bg-cyan-600 transition"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-600"
         >
-          + New Chat
-          {/* Search */}
-<div className="px-4 pb-4">
-  <input
-    type="text"
-    placeholder="🔍 Search chats..."
-    value={searchQuery}
-    onChange={(e) => onSearchChange(e.target.value)}
-    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-400 focus:border-cyan-500 focus:outline-none"
-  />
-</div>
+          <MessageSquarePlus size={20} />
+          New Chat
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="border-b border-slate-800 px-4 py-4">
+        <div className="relative">
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search chats..."
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-4 text-white placeholder:text-slate-400 outline-none transition focus:border-cyan-500"
+          />
+        </div>
+      </div>
+
+      {/* Chats Heading */}
+      <div className="px-5 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          Chats
+        </p>
       </div>
 
       {/* Chat List */}
@@ -35,25 +54,30 @@ function ChatSidebar({
         {chats.map((chat) => (
           <div
             key={chat.id}
-            className={`group flex items-center justify-between rounded-lg p-3 transition ${
+            className={`group flex items-center justify-between rounded-xl p-3 transition-all duration-200 ${
               currentChatId === chat.id
-                ? "bg-slate-800"
-                : "bg-slate-900 hover:bg-slate-800"
+                ? "bg-slate-800 shadow-md"
+                : "bg-slate-900 hover:bg-slate-800 hover:scale-[1.02]"
             }`}
           >
             {/* Chat Title */}
             <button
               onClick={() => onSelectChat(chat.id)}
-              className="flex-1 text-left text-slate-200 truncate"
+              className="flex flex-1 items-center gap-2 overflow-hidden text-left text-slate-200"
             >
-              💬 {chat.title}
+              <MessageSquare
+                size={18}
+                 className="shrink-0 text-cyan-400"
+              />
+
+              <span className="truncate">{chat.title}</span>
             </button>
 
             {/* Actions */}
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+            <div className="ml-2 flex gap-2 opacity-0 transition group-hover:opacity-100">
               <button
                 onClick={() => onRenameChat(chat.id)}
-                className="text-yellow-400 hover:text-yellow-300"
+                className="rounded-md p-1 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300"
                 title="Rename"
               >
                 ✏️
@@ -61,10 +85,10 @@ function ChatSidebar({
 
               <button
                 onClick={() => onDeleteChat(chat.id)}
-                className="text-red-400 hover:text-red-300"
+                className="rounded-md p-1 text-red-400 hover:bg-slate-700 hover:text-red-300"
                 title="Delete"
               >
-                🗑
+                🗑️
               </button>
             </div>
           </div>

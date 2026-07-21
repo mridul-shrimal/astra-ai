@@ -12,16 +12,18 @@ function ChatContainer({
   onExport,
 }) {
   const bottomRef = useRef(null);
+const containerRef = useRef(null);
+ useEffect(() => {
+  if (!containerRef.current) return;
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: messages.length <= 2 ? "auto" : "smooth",
-    });
-  }, [messages, isTyping]);
+  containerRef.current.scrollTop =
+    containerRef.current.scrollHeight;
+}, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6">
-
+    <div 
+    ref={containerRef}
+    className="flex-1 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6">
       {/* Export Button */}
       <div className="mb-4 flex justify-end">
         <button
