@@ -21,9 +21,10 @@ const containerRef = useRef(null);
 }, [messages]);
 
   return (
-    <div 
-    ref={containerRef}
-    className="flex-1 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <div
+  id="chat-export"
+  className="flex-1 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6"
+>
       {/* Export Button */}
       <div className="mb-4 flex justify-end">
         <button
@@ -83,7 +84,7 @@ const containerRef = useRef(null);
         </div>
       )}
 
-      <div ref={bottomRef}></div>
+       <div ref={bottomRef}></div>
     </div>
   );
 }
