@@ -14,16 +14,36 @@ import {
   ThumbsUp,
   ThumbsDown,
   RotateCcw,
+  ExternalLink,
+  Download,
+  FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 
 function ChatMessage({
   sender,
   message,
+  file,
   isLastAI,
   onRegenerate,
 }) {
   const isUser = sender === "user";
+  console.log("FILE DATA:", file);
+const getFileIcon = () => {
+  if (!file) return <FileText size={22} />;
 
+  if (file.type?.includes("image")) {
+    return <ImageIcon size={22} />;
+  }
+
+  return <FileText size={22} />;
+};
+
+const fileUrl = file?.filename
+  ? `http://localhost:5000/uploads/${file.filename}`
+  : null;
+  console.log("FILE OBJECT:", file);
+console.log("FILE URL:", fileUrl);
   const [copiedCode, setCopiedCode] = useState("");
   const [copiedMessage, setCopiedMessage] = useState(false);
 
@@ -108,11 +128,65 @@ function ChatMessage({
               : "max-w-[85%] border border-slate-700 bg-slate-800 text-gray-100"
           }`}
         >
-          {isUser ? (
-            <p className="whitespace-pre-wrap leading-7">
-              {message}
-            </p>
-          ) : (
+         {isUser ? (
+  <>
+    {file && (
+  <div className="mb-3 rounded-2xl border border-cyan-300/20 bg-cyan-600/10 p-4">
+
+    <div className="flex items-center gap-3">
+
+      <div className="rounded-xl bg-cyan-500/20 p-3">
+        {getFileIcon()}
+      </div>
+
+      <div className="flex-1">
+
+        <p className="font-semibold">
+          {file.name}
+        </p>
+
+        <p className="text-xs opacity-70">
+          {file.type}
+        </p>
+
+        <p className="text-xs opacity-70">
+          {(file.size / 1024).toFixed(1)} KB
+        </p>
+
+      </div>
+
+      {fileUrl && (
+        <div className="flex gap-2">
+
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg bg-cyan-500 p-2 hover:bg-cyan-600"
+          >
+            <ExternalLink size={16} />
+          </a>
+
+          <a
+            href={fileUrl}
+            download
+            className="rounded-lg bg-slate-700 p-2 hover:bg-slate-600"
+          >
+            <Download size={16} />
+          </a>
+
+        </div>
+      )}
+
+    </div>
+
+  </div>
+)}
+    <p className="whitespace-pre-wrap leading-7">
+      {message}
+    </p>
+  </>
+) : (
             <>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -256,11 +330,11 @@ function ChatMessage({
 
               {/* Message Actions */}
 
-              <div className="mt-4 flex items-center gap-2 border-t border-slate-700 pt-3">
+             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-700 pt-3">
 
                 <button
                   onClick={copyMessage}
-                  className="rounded-lg p-2 transition hover:bg-slate-700"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
                   title="Copy"
                 >
                   {copiedMessage ? (
@@ -274,21 +348,21 @@ function ChatMessage({
 
                 <button
                   onClick={speakMessage}
-                  className="rounded-lg p-2 transition hover:bg-slate-700"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
                   title="Read Aloud"
                 >
                   <Volume2 size={18} />
                 </button>
 
                 <button
-                  className="rounded-lg p-2 transition hover:bg-slate-700"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
                   title="Like"
                 >
                   <ThumbsUp size={18} />
                 </button>
 
                 <button
-                  className="rounded-lg p-2 transition hover:bg-slate-700"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
                   title="Dislike"
                 >
                   <ThumbsDown size={18} />
@@ -297,7 +371,7 @@ function ChatMessage({
                 {isLastAI && (
                   <button
                     onClick={onRegenerate}
-                    className="rounded-lg p-2 transition hover:bg-slate-700"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
                     title="Regenerate"
                   >
                     <RotateCcw size={18} />

@@ -361,19 +361,20 @@ const streamMessage = async (
 };
   const handleSendMessage = async (text,file) => {
       speechSynthesis.cancel(); 
-    if (!text.trim()) return;
+    if (!text.trim() && !file) return;
 
    const userMessage = {
   id: Date.now(),
   sender: "user",
-  message: text,
+  message: text || "Uploaded a document",
   file: file
-    ? {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      }
-    : null,
+  ? {
+      name: file.originalname || file.name,
+      type: file.mimetype || file.type,
+      size: file.size,
+      filename: file.filename,
+    }
+  : null,
 };
 
     const updatedMessages = [
@@ -419,7 +420,19 @@ const response = await fetch(
 );
 
       const data = await response.json();
+if (data.file) {
+  userMessage.file = {
+    name: data.file.originalname,
+    type: data.file.mimetype,
+    size: data.file.size,
+    filename: data.file.filename,
+  };
 
+  updateCurrentMessages([
+    ...currentChat.messages,
+    userMessage,
+  ]);
+}
     
       const aiId = Date.now() + 1;
 

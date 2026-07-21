@@ -1,10 +1,16 @@
 const axios = require("axios");
 const { getMemoryContext } = require("./memoryService");
 
-async function generateResponse(sessionId, prompt) {
+async function generateResponse(
+  sessionId,
+  prompt,
+  useMemory = true
+) {
   try {
     // Get memory only for this session
-    const memory = await getMemoryContext(sessionId);
+    const memory = useMemory
+  ? await getMemoryContext(sessionId)
+  : "";
 
     console.log("Memory for session:");
     console.log(memory);
