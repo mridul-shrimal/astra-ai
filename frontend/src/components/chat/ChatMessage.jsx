@@ -17,32 +17,23 @@ import {
   ExternalLink,
   Download,
   FileText,
-  Image as ImageIcon,
 } from "lucide-react";
 
 function ChatMessage({
   sender,
   message,
-  file,
+    files = [],
   isLastAI,
   onRegenerate,
 }) {
   const isUser = sender === "user";
-  console.log("FILE DATA:", file);
-const getFileIcon = () => {
-  if (!file) return <FileText size={22} />;
+  console.log("FILE DATA:", files);
 
-  if (file.type?.includes("image")) {
-    return <ImageIcon size={22} />;
-  }
 
-  return <FileText size={22} />;
-};
-
-const fileUrl = file?.filename
-  ? `http://localhost:5000/uploads/${file.filename}`
+const fileUrl = files?.filename
+  ? `http://localhost:5000/uploads/${files.filename}`
   : null;
-  console.log("FILE OBJECT:", file);
+  console.log("FILE OBJECT:", files);
 console.log("FILE URL:", fileUrl);
   const [copiedCode, setCopiedCode] = useState("");
   const [copiedMessage, setCopiedMessage] = useState(false);
@@ -130,56 +121,59 @@ console.log("FILE URL:", fileUrl);
         >
          {isUser ? (
   <>
-    {file && (
-  <div className="mb-3 rounded-2xl border border-cyan-300/20 bg-cyan-600/10 p-4">
+{files && files.length > 0 && (
+  <div className="mb-3 space-y-3">
+    {files.map((file, index) => {
+      const fileUrl = file.filename
+        ? `http://localhost:5000/uploads/${file.filename}`
+        : null;
 
-    <div className="flex items-center gap-3">
+      return (
+        <div
+          key={index}
+          className="rounded-2xl border border-cyan-300/20 bg-cyan-600/10 p-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-cyan-500/20 p-3">
+              <FileText size={22} />
+            </div>
 
-      <div className="rounded-xl bg-cyan-500/20 p-3">
-        {getFileIcon()}
-      </div>
+            <div className="flex-1">
+              <p className="font-semibold">{file.name}</p>
 
-      <div className="flex-1">
+              <p className="text-xs opacity-70">
+                {file.type}
+              </p>
 
-        <p className="font-semibold">
-          {file.name}
-        </p>
+              <p className="text-xs opacity-70">
+                {(file.size / 1024).toFixed(1)} KB
+              </p>
+            </div>
 
-        <p className="text-xs opacity-70">
-          {file.type}
-        </p>
+            {fileUrl && (
+              <div className="flex gap-2">
+                <a
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-lg bg-cyan-500 p-2 hover:bg-cyan-600"
+                >
+                  <ExternalLink size={16} />
+                </a>
 
-        <p className="text-xs opacity-70">
-          {(file.size / 1024).toFixed(1)} KB
-        </p>
-
-      </div>
-
-      {fileUrl && (
-        <div className="flex gap-2">
-
-          <a
-            href={fileUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-lg bg-cyan-500 p-2 hover:bg-cyan-600"
-          >
-            <ExternalLink size={16} />
-          </a>
-
-          <a
-            href={fileUrl}
-            download
-            className="rounded-lg bg-slate-700 p-2 hover:bg-slate-600"
-          >
-            <Download size={16} />
-          </a>
-
+                <a
+                  href={fileUrl}
+                  download
+                  className="rounded-lg bg-slate-700 p-2 hover:bg-slate-600"
+                >
+                  <Download size={16} />
+                </a>
+              </div>
+            )}
+          </div>
         </div>
-      )}
-
-    </div>
-
+      );
+    })}
   </div>
 )}
     <p className="whitespace-pre-wrap leading-7">

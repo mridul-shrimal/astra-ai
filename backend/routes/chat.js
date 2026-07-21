@@ -5,35 +5,55 @@ const extractText = require("../utils/extractText");
 const { generateResponse } = require("../services/geminiService");
 const { saveMemory } = require("../services/memoryService");
 
-  router.post("/", upload.single("file"), async (req, res) => {
+  router.post("/", upload.array("files", 10), async (req, res) => {
   try {
     const { message, sessionId } = req.body;
 let finalPrompt = message || "Summarize this document.";
 
-if (req.file) {
-  const extractedText = await extractText(req.file);
-console.log("========== EXTRACTED TEXT ==========");
-console.log(extractedText);
-console.log("====================================");
+let documentText = "";
+
+if (req.files && req.files.length > 0) {
+
+  for (const file of req.files) {
+
+    const extractedText = await extractText(file);
+
+    documentText += `
+
+==============================
+Document: ${file.originalname}
+==============================
+
+${extractedText}
+
+`;
+  }
+
+  console.log(documentText);
+
   finalPrompt = `
 You are Astra AI.
 
-Use ONLY the uploaded document as your source.
+Use ONLY the uploaded documents as your source.
 
-Answer in detail using headings and bullet points.
+If there are multiple documents,
+compare them when necessary.
 
-================ DOCUMENT ================
+Answer in detail using headings,
+bullet points and tables whenever useful.
 
-${extractedText}
+================ DOCUMENTS ================
+
+${documentText}
 
 ==========================================
 
 User Question:
 
-${message || "Summarize this document."}
+${message || "Summarize all uploaded documents."}
 `;
 }
-    if (!message && !req.file) {
+    if (!message && (!req.files || req.files.length === 0)) {
   return res.status(400).json({
     success: false,
     reply: "Message or file is required.",
@@ -47,24 +67,24 @@ console.log("Incoming Session:", currentSession);
   const aiReply = await generateResponse(
   currentSession,
   finalPrompt,
-  !req.file
+  !(req.files && req.files.length)
 );
 
     // Save only normal conversations
-if (!req.file) {
+if (!req.files || req.files.length === 0) {
   await saveMemory(currentSession, message, aiReply);
 }
 res.json({
   success: true,
   reply: aiReply,
-  file: req.file
-    ? {
-        filename: req.file.filename,
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size,
-      }
-    : null,
+  files: req.files
+  ? req.files.map((file) => ({
+      filename: file.filename,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    }))
+  : [],
 });
 
   } catch (error) {

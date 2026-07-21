@@ -41,7 +41,7 @@ const containerRef = useRef(null);
   key={message.id}
   sender={message.sender}
   message={message.message}
-  file={message.file}
+  files={message.files}
   isLastAI={
     message.sender === "ai" &&
     index === messages.length - 1

@@ -359,30 +359,20 @@ const streamMessage = async (
     );
   }
 };
-  const handleSendMessage = async (text,file) => {
+  const handleSendMessage = async (text,files) => {
       speechSynthesis.cancel(); 
-    if (!text.trim() && !file) return;
+    if (!text.trim() && files.length === 0) return;
 
-   const userMessage = {
+const userMessage = {
   id: Date.now(),
   sender: "user",
-  message: text || "Uploaded a document",
-  file: file
-  ? {
-      name: file.originalname || file.name,
-      type: file.mimetype || file.type,
-      size: file.size,
-      filename: file.filename,
-    }
-  : null,
+  message: text || "Uploaded document(s)",
+  files: files.map((file) => ({
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  })),
 };
-
-    const updatedMessages = [
-      ...currentChat.messages,
-      userMessage,
-    ];
-
-    updateCurrentMessages(updatedMessages);
 
     // Rename first message automatically
     if (currentChat.title === "New Chat") {
@@ -407,9 +397,9 @@ setIsGenerating(true);
 formData.append("message", text);
 formData.append("sessionId", currentChat.sessionId);
 
-if (file) {
-  formData.append("file", file);
-}
+files.forEach((file) => {
+  formData.append("files", file);
+});
 
 const response = await fetch(
   "http://localhost:5000/api/chat",
@@ -420,19 +410,27 @@ const response = await fetch(
 );
 
       const data = await response.json();
-if (data.file) {
-  userMessage.file = {
-    name: data.file.originalname,
-    type: data.file.mimetype,
-    size: data.file.size,
-    filename: data.file.filename,
-  };
 
-  updateCurrentMessages([
-    ...currentChat.messages,
-    userMessage,
-  ]);
-}
+// Final user message with uploaded file info
+const finalUserMessage = {
+  ...userMessage,
+  files: data.files
+    ? data.files.map((file) => ({
+        name: file.originalname,
+        type: file.mimetype,
+        size: file.size,
+        filename: file.filename,
+      }))
+    : userMessage.files,
+};
+
+// Add the user message once
+const updatedMessages = [
+  ...currentChat.messages,
+  finalUserMessage,
+];
+
+updateCurrentMessages(updatedMessages);
     
       const aiId = Date.now() + 1;
 
@@ -462,14 +460,15 @@ setIsGenerating(false);
 
       setIsTyping(false);
 setIsGenerating(false);
-      updateCurrentMessages([
-        ...updatedMessages,
-        {
-          id: Date.now() + 1,
-          sender: "ai",
-          message: "❌ Unable to connect to the backend.",
-        },
-      ]);
+     updateCurrentMessages([
+  ...currentChat.messages,
+  userMessage,
+  {
+    id: Date.now() + 1,
+    sender: "ai",
+    message: "❌ Unable to connect to the backend.",
+  },
+]);
     }
   };
 const handleRegenerate = async () => {
