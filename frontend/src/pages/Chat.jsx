@@ -367,11 +367,12 @@ const userMessage = {
   id: Date.now(),
   sender: "user",
   message: text || "Uploaded document(s)",
-  files: files.map((file) => ({
-    name: file.name,
-    type: file.type,
-    size: file.size,
-  })),
+ files: files.map((file) => ({
+  name: file.name,
+  type: file.type,
+  size: file.size,
+  preview: URL.createObjectURL(file),
+})),
 };
 
     // Rename first message automatically
@@ -400,7 +401,11 @@ formData.append("sessionId", currentChat.sessionId);
 files.forEach((file) => {
   formData.append("files", file);
 });
-
+// Show user message immediately
+updateCurrentMessages([
+  ...currentChat.messages,
+  userMessage,
+]);
 const response = await fetch(
   "http://localhost:5000/api/chat",
   {
@@ -424,11 +429,13 @@ const finalUserMessage = {
     : userMessage.files,
 };
 
-// Add the user message once
+// Update the already displayed message with backend file info
 const updatedMessages = [
   ...currentChat.messages,
   finalUserMessage,
 ];
+
+updateCurrentMessages(updatedMessages);
 
 updateCurrentMessages(updatedMessages);
     

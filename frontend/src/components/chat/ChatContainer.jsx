@@ -12,24 +12,63 @@ function ChatContainer({
   onExport,
 }) {
   const bottomRef = useRef(null);
-const containerRef = useRef(null);
- useEffect(() => {
-  if (!containerRef.current) return;
+  const containerRef = useRef(null);
+  const shouldAutoScroll = useRef(true);
 
-  containerRef.current.scrollTop =
-    containerRef.current.scrollHeight;
+  // Detect whether user is near the bottom
+  useEffect(() => {
+    const container = containerRef.current;
+
+    if (!container) return;
+
+    const handleScroll = () => {
+      const distanceFromBottom =
+        container.scrollHeight -
+        container.scrollTop -
+        container.clientHeight;
+
+      shouldAutoScroll.current = distanceFromBottom < 120;
+    };
+
+    container.addEventListener("scroll", handleScroll);
+
+    handleScroll();
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // Auto-scroll only when user is already at bottom
+  useEffect(() => {
+  requestAnimationFrame(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "auto",
+      block: "end",
+    });
+  });
+}, []);
+
+useEffect(() => {
+  if (shouldAutoScroll.current) {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }
 }, [messages]);
 
   return (
     <div
-  id="chat-export"
-  className="flex-1 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6"
->
+      ref={containerRef}
+      id="chat-export"
+      className="flex-1 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6"
+    >
       {/* Export Button */}
       <div className="mb-4 flex justify-end">
         <button
           onClick={onExport}
-          className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-white hover:bg-cyan-600 transition"
+          className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-white transition hover:bg-cyan-600"
         >
           <Download size={18} />
           Export Chat
@@ -37,22 +76,22 @@ const containerRef = useRef(null);
       </div>
 
       {messages.map((message, index) => (
-  <ChatMessage
-  key={message.id}
-  sender={message.sender}
-  message={message.message}
-  files={message.files}
-  isLastAI={
-    message.sender === "ai" &&
-    index === messages.length - 1
-  }
-  onRegenerate={onRegenerate}
-/>
+        <ChatMessage
+          key={message.id}
+          sender={message.sender}
+          message={message.message}
+          files={message.files}
+          isLastAI={
+            message.sender === "ai" &&
+            index === messages.length - 1
+          }
+          onRegenerate={onRegenerate}
+        />
       ))}
 
       {isTyping && (
         <div className="mb-4 flex justify-start">
-          <div className="rounded-2xl bg-slate-800 px-4 py-3 shadow-md text-gray-300">
+          <div className="rounded-2xl bg-slate-800 px-4 py-3 text-gray-300 shadow-md">
             <div className="flex items-center gap-2">
               <span>Astra is typing</span>
 
@@ -85,7 +124,7 @@ const containerRef = useRef(null);
         </div>
       )}
 
-       <div ref={bottomRef}></div>
+      <div ref={bottomRef}></div>
     </div>
   );
 }

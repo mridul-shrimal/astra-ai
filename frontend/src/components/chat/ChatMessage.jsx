@@ -124,9 +124,11 @@ console.log("FILE URL:", fileUrl);
 {files && files.length > 0 && (
   <div className="mb-3 space-y-3">
     {files.map((file, index) => {
-      const fileUrl = file.filename
-        ? `http://localhost:5000/uploads/${file.filename}`
-        : null;
+      const fileUrl =
+  file.preview ||
+  (file.filename
+    ? `http://localhost:5000/uploads/${file.filename}`
+    : null);
 
       return (
         <div
