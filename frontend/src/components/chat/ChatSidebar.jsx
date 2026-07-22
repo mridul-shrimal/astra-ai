@@ -1,4 +1,9 @@
-import { Search, MessageSquare, MessageSquarePlus, Settings} from "lucide-react";
+import {
+  Search,
+  MessageSquare,
+  MessageSquarePlus,
+  Settings,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function ChatSidebar({
@@ -11,10 +16,10 @@ function ChatSidebar({
   onDeleteChat,
   onRenameChat,
 }) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
   return (
     <aside className="flex w-72 flex-col border-r border-slate-800 bg-slate-950">
-
       {/* New Chat */}
       <div className="sticky top-0 z-10 border-b border-slate-800 bg-slate-950 p-4">
         <button
@@ -53,57 +58,65 @@ function ChatSidebar({
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
-        {chats.map((chat) => (
-          <div
-            key={chat.id}
-            className={`group flex items-center justify-between rounded-xl p-3 transition-all duration-200 ${
-              currentChatId === chat.id
-                ? "bg-slate-800 shadow-md"
-                : "bg-slate-900 hover:bg-slate-800 hover:scale-[1.02]"
-            }`}
-          >
-            {/* Chat Title */}
-            <button
-              onClick={() => onSelectChat(chat.id)}
-              className="flex flex-1 items-center gap-2 overflow-hidden text-left text-slate-200"
-            >
-              <MessageSquare
-                size={18}
-                 className="shrink-0 text-cyan-400"
-              />
-
-              <span className="truncate">{chat.title}</span>
-            </button>
-
-            {/* Actions */}
-            <div className="ml-2 flex gap-2 opacity-0 transition group-hover:opacity-100">
-              <button
-                onClick={() => onRenameChat(chat.id)}
-                className="rounded-md p-1 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300"
-                title="Rename"
-              >
-                ✏️
-              </button>
-
-              <button
-                onClick={() => onDeleteChat(chat.id)}
-                className="rounded-md p-1 text-red-400 hover:bg-slate-700 hover:text-red-300"
-                title="Delete"
-              >
-                🗑️
-              </button>
-              <div className="mt-auto border-t border-slate-800 pt-4">
-  <button
-    onClick={() => navigate("/settings")}
-    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-  >
-    <Settings size={20} />
-    <span>Settings</span>
-  </button>
-</div>
-            </div>
+        {chats.length === 0 ? (
+          <div className="flex h-32 items-center justify-center rounded-xl bg-slate-900 text-slate-400">
+            No chats found
           </div>
-        ))}
+        ) : (
+          chats.map((chat) => (
+            <div
+              key={chat.id}
+              className={`group flex items-center justify-between rounded-xl p-3 transition-all duration-200 ${
+                currentChatId === chat.id
+                  ? "bg-slate-800 shadow-md"
+                  : "bg-slate-900 hover:bg-slate-800 hover:scale-[1.02]"
+              }`}
+            >
+              {/* Chat Title */}
+              <button
+                onClick={() => onSelectChat(chat.id)}
+                className="flex flex-1 items-center gap-2 overflow-hidden text-left text-slate-200"
+              >
+                <MessageSquare
+                  size={18}
+                  className="shrink-0 text-cyan-400"
+                />
+
+                <span className="truncate">{chat.title}</span>
+              </button>
+
+              {/* Actions */}
+              <div className="ml-2 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                <button
+                  onClick={() => onRenameChat(chat.id)}
+                  className="rounded-md p-1 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300"
+                  title="Rename"
+                >
+                  ✏️
+                </button>
+
+                <button
+                  onClick={() => onDeleteChat(chat.id)}
+                  className="rounded-md p-1 text-red-400 hover:bg-slate-700 hover:text-red-300"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Bottom Settings */}
+      <div className="border-t border-slate-800 p-3">
+        <button
+          onClick={() => navigate("/settings")}
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+        >
+          <Settings size={20} />
+          <span>Settings</span>
+        </button>
       </div>
     </aside>
   );

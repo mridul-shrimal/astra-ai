@@ -616,6 +616,8 @@ const handleStopGenerating = () => {
   const filteredChats = chats.filter((chat) => {
   const query = searchQuery.toLowerCase();
 
+  if (!query) return true;
+
   const titleMatch = chat.title
     .toLowerCase()
     .includes(query);
@@ -627,7 +629,20 @@ const handleStopGenerating = () => {
   );
 
   return titleMatch || messageMatch;
-});return (
+});
+
+useEffect(() => {
+  if (!searchQuery.trim()) return;
+
+  if (
+    filteredChats.length > 0 &&
+    filteredChats[0].id !== currentChatId
+  ) {
+    setCurrentChatId(filteredChats[0].id);
+  }
+}, [searchQuery, filteredChats, currentChatId]);
+return (
+  
   <ChatDesktop
     chats={filteredChats}
     currentChat={currentChat}

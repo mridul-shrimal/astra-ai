@@ -5,6 +5,7 @@ import ChatMessage from "./ChatMessage";
 
 function ChatContainer({
   messages,
+  searchQuery,
   isTyping,
   isGenerating,
   onStopGenerating,
@@ -58,7 +59,30 @@ useEffect(() => {
     });
   }
 }, [messages]);
+useEffect(() => {
+  if (!searchQuery?.trim()) return;
 
+  const timer = setTimeout(() => {
+    const query = searchQuery.toLowerCase();
+
+    const matchedMessage = messages.find((message) =>
+      (message.message || "")
+        .toLowerCase()
+        .includes(query)
+    );
+
+    if (!matchedMessage) return;
+
+    document
+      .getElementById(`message-${matchedMessage.id}`)
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+  }, 100);
+
+  return () => clearTimeout(timer);
+}, [searchQuery, messages]);
   return (
     <div
       ref={containerRef}
@@ -84,23 +108,27 @@ useEffect(() => {
         </button>
       </div>
 
-      {messages.map((message, index) => (
-<ChatMessage
-  key={message.id}
-  id={message.id}
-  sender={message.sender}
-  message={message.message}
-  files={message.files}
-  liked={message.liked}
-  disliked={message.disliked}
-  isLastAI={
-    message.sender === "ai" &&
-    index === messages.length - 1
-  }
-  onRegenerate={onRegenerate}
-  onFeedback={onFeedback}
-/>
-      ))}
+ {messages.map((message, index) => (
+  <div
+    key={message.id}
+    id={`message-${message.id}`}
+  >
+    <ChatMessage
+      id={message.id}
+      sender={message.sender}
+      message={message.message}
+      files={message.files}
+      liked={message.liked}
+      disliked={message.disliked}
+      isLastAI={
+        message.sender === "ai" &&
+        index === messages.length - 1
+      }
+      onRegenerate={onRegenerate}
+      onFeedback={onFeedback}
+    />
+  </div>
+))}
 
       {isTyping && (
         <div className="mb-4 flex justify-start">
