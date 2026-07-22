@@ -68,8 +68,8 @@ const [isSpeaking, setIsSpeaking] = useState(false);
       console.error("Copy failed:", err);
     }
   };
-
   const speakMessage = () => {
+    
   // Stop if this message is already speaking
   if (isSpeaking) {
     speechSynthesis.cancel();
@@ -99,8 +99,25 @@ const [isSpeaking, setIsSpeaking] = useState(false);
 
   speechSynthesis.speak(utterance);
 };
+const downloadResponse = () => {
+  const blob = new Blob([message], {
+    type: "text/plain;charset=utf-8",
+  });
 
-  return (
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `Astra_Response_${Date.now()}.txt`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+};
+
+return (
     <div
       className={`group mb-8 flex items-start gap-4 ${
         isUser ? "flex-row-reverse" : ""
@@ -410,6 +427,15 @@ const [isSpeaking, setIsSpeaking] = useState(false);
                     <RotateCcw size={18} />
                   </button>
                 )}
+                {sender === "ai" && (
+  <button
+    onClick={downloadResponse}
+    className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
+    title="Download Response"
+  >
+    <Download size={18} />
+  </button>
+)}
               </div>
             </>
           )}

@@ -33,6 +33,7 @@ function Chat() {
   // Export Modal State
 const [exportOpen, setExportOpen] = useState(false);
 const [selectedFormat, setSelectedFormat] = useState("pdf");
+
   // Current chat
   const [currentChatId, setCurrentChatId] = useState(() => {
     return localStorage.getItem("astra-current-chat") || null;
@@ -635,7 +636,7 @@ return (
       {/* Chat */}
 <div className="flex min-h-0 flex-1 flex-col gap-4 p-6">
 
-        <ChatContainer
+ <ChatContainer
   messages={currentChat.messages}
   isTyping={isTyping}
   isGenerating={isGenerating}
