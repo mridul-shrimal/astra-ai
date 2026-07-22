@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
-import ExportModal from "../components/chat/ExportModal";
-import { Menu } from "lucide-react";
-import ChatContainer from "../components/chat/ChatContainer";
-import ChatInput from "../components/chat/ChatInput";
-import ChatSidebar from "../components/chat/ChatSidebar";
 import toast from "react-hot-toast";
-
+import ChatDesktop from "../components/chat/ChatDesktop";
 function Chat() {
   const createNewChat = () => ({
     id: crypto.randomUUID(),
@@ -48,7 +43,26 @@ const [selectedFormat, setSelectedFormat] = useState("pdf");
   }, [currentChatId, chats]);
 // 🔍 Search Query
 const [searchQuery, setSearchQuery] = useState("");
-const [sidebarOpen, setSidebarOpen] = useState(true);
+const [sidebarOpen, setSidebarOpen] = useState(
+  window.innerWidth >= 768
+);
+useEffect(() => {
+  const handleResize = () => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    } else {
+      setSidebarOpen(true);
+    }
+  };
+
+  handleResize();
+
+  window.addEventListener("resize", handleResize);
+
+  return () => {
+    window.removeEventListener("resize", handleResize);
+  };
+}, []);
   // Save chats
   useEffect(() => {
     localStorage.setItem("astra-chats", JSON.stringify(chats));
@@ -63,7 +77,6 @@ const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const currentChat =
     chats.find((chat) => chat.id === currentChatId) || chats[0];
-
   const [isTyping, setIsTyping] = useState(false);
 const [isGenerating, setIsGenerating] = useState(false);
 const stopGenerationRef = useRef(false);
@@ -468,8 +481,6 @@ const updatedMessages = [
 ];
 
 updateCurrentMessages(updatedMessages);
-
-updateCurrentMessages(updatedMessages);
     
       const aiId = Date.now() + 1;
 
@@ -602,74 +613,53 @@ const handleStopGenerating = () => {
     setCurrentChatId(newChat.id);
      toast.success("New chat created!");
   };
+  const filteredChats = chats.filter((chat) => {
+  const query = searchQuery.toLowerCase();
 
-return (
-  <div className="flex h-[calc(100vh-140px)] overflow-hidden">
+  const titleMatch = chat.title
+    .toLowerCase()
+    .includes(query);
 
-    {sidebarOpen && (
-      <ChatSidebar
-        chats={chats.filter((chat) =>
-          chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-        )}
-        currentChatId={currentChatId}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onNewChat={handleNewChat}
-        onSelectChat={setCurrentChatId}
-        onDeleteChat={handleDeleteChat}
-        onRenameChat={handleRenameChat}
-      />
-    )}
+  const messageMatch = chat.messages.some((msg) =>
+    (msg.message || "")
+      .toLowerCase()
+      .includes(query)
+  );
 
-    <div className="flex min-h-0 flex-1 flex-col">
+  return titleMatch || messageMatch;
+});return (
+  <ChatDesktop
+    chats={filteredChats}
+    currentChat={currentChat}
+    currentChatId={currentChatId}
 
-      {/* Header */}
-      <div className="flex items-center gap-4 border-b border-slate-800 bg-slate-950 px-6 py-4">
+    sidebarOpen={sidebarOpen}
+    setSidebarOpen={setSidebarOpen}
 
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="rounded-lg p-2 transition hover:bg-slate-800"
-        >
-          <Menu size={24} className="text-white" />
-        </button>
+    searchQuery={searchQuery}
+    setSearchQuery={setSearchQuery}
 
-        <div>
-          <h1 className="text-3xl font-bold text-white">
-            Astra AI
-          </h1>
+    exportOpen={exportOpen}
+    selectedFormat={selectedFormat}
+    setSelectedFormat={setSelectedFormat}
 
-          <p className="text-slate-400">
-            Your intelligent AI assistant
-          </p>
-        </div>
+    isTyping={isTyping}
+    isGenerating={isGenerating}
 
-      </div>
+    handleNewChat={handleNewChat}
+    handleDeleteChat={handleDeleteChat}
+    handleRenameChat={handleRenameChat}
 
-      {/* Chat */}
-<div className="flex min-h-0 flex-1 flex-col gap-4 p-6">
+    handleSendMessage={handleSendMessage}
+    handleStopGenerating={handleStopGenerating}
+    handleRegenerate={handleRegenerate}
+    handleFeedback={handleFeedback}
 
-<ChatContainer
-  messages={currentChat.messages}
-  isTyping={isTyping}
-  isGenerating={isGenerating}
-  onStopGenerating={handleStopGenerating}
-  onRegenerate={handleRegenerate}
-  onFeedback={handleFeedback}
-  onExport={() => setExportOpen(true)}
-/>
-        <ChatInput onSend={handleSendMessage} />
+    handleExportChat={handleExportChat}
 
-      </div>
-
-    </div>
-<ExportModal
-  open={exportOpen}
-  selectedFormat={selectedFormat}
-  setSelectedFormat={setSelectedFormat}
-  onClose={() => setExportOpen(false)}
-  onExport={handleExportChat}
-/>
-  </div>
+    setCurrentChatId={setCurrentChatId}
+    setExportOpen={setExportOpen}
+  />
 );
 }
 

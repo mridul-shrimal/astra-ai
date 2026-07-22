@@ -1,8 +1,7 @@
 import { useState } from "react";
-
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+import toast from "react-hot-toast";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
@@ -28,7 +27,6 @@ function ChatMessage({
   disliked,
   onRegenerate,
   onFeedback,
-  toast,
 }) {
   const isUser = sender === "user";
   console.log("FILE DATA:", files);
@@ -42,33 +40,37 @@ console.log("FILE URL:", fileUrl);
   const [copiedCode, setCopiedCode] = useState("");
   const [copiedMessage, setCopiedMessage] = useState(false);
 const [isSpeaking, setIsSpeaking] = useState(false);
-  const copyCode = async (code) => {
-    try {
-      await navigator.clipboard.writeText(code);
-toast.success("Code copied!");
-      setCopiedCode(code);
+const copyCode = async (code) => {
+  try {
+    await navigator.clipboard.writeText(code);
 
-      setTimeout(() => {
-        setCopiedCode("");
-      }, 2000);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    toast.success("Code copied!");
 
-  const copyMessage = async () => {
-    try {
-      await navigator.clipboard.writeText(message);
-toast.success("Copied to clipboard!");
-      setCopiedMessage(true);
+    setCopiedCode(code);
 
-      setTimeout(() => {
-        setCopiedMessage(false);
-      }, 2000);
-    } catch (err) {
-      console.error("Copy failed:", err);
-    }
-  };
+    setTimeout(() => {
+      setCopiedCode("");
+    }, 2000);
+  } catch (err) {
+    console.error("Copy failed:", err);
+  }
+};
+
+const copyMessage = async () => {
+  try {
+    await navigator.clipboard.writeText(message);
+
+    toast.success("Copied to clipboard!");
+
+    setCopiedMessage(true);
+
+    setTimeout(() => {
+      setCopiedMessage(false);
+    }, 2000);
+  } catch (err) {
+    console.error("Copy failed:", err);
+  }
+};
   const speakMessage = () => {
     
   // Stop if this message is already speaking
