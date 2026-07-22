@@ -5,6 +5,7 @@ import {
   Brain,
   Settings,
 } from "lucide-react";
+import { useTheme } from "../../context/ThemeContext";
 
 const menuItems = [
   {
@@ -30,15 +31,35 @@ const menuItems = [
 ];
 
 function Sidebar() {
+  const { theme } = useTheme();
+
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
+    <aside
+      className={`w-64 flex flex-col border-r transition-colors duration-300 ${
+        theme === "light"
+          ? "bg-white border-slate-200"
+          : "bg-slate-900 border-slate-800"
+      }`}
+    >
       {/* Logo */}
-      <div className="p-6 border-b border-slate-800">
+      <div
+        className={`p-6 border-b ${
+          theme === "light"
+            ? "border-slate-200"
+            : "border-slate-800"
+        }`}
+      >
         <h1 className="text-2xl font-bold text-cyan-400">
           🚀 Astra AI
         </h1>
 
-        <p className="text-slate-400 text-sm mt-1">
+        <p
+          className={`mt-1 text-sm ${
+            theme === "light"
+              ? "text-slate-600"
+              : "text-slate-400"
+          }`}
+        >
           Personal AI Assistant
         </p>
       </div>
@@ -54,9 +75,11 @@ function Sidebar() {
               to={item.path}
               end={item.path === "/"}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
+                `flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${
                   isActive
                     ? "bg-cyan-500 text-white shadow-lg"
+                    : theme === "light"
+                    ? "text-slate-700 hover:bg-slate-100 hover:text-cyan-600"
                     : "text-slate-300 hover:bg-slate-800 hover:text-cyan-400"
                 }`
               }
@@ -69,8 +92,14 @@ function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-slate-800 p-4">
-        <p className="text-xs text-slate-500 text-center">
+      <div
+        className={`border-t p-4 ${
+          theme === "light"
+            ? "border-slate-200"
+            : "border-slate-800"
+        }`}
+      >
+        <p className="text-center text-xs text-slate-500">
           Astra AI v0.1
         </p>
       </div>
