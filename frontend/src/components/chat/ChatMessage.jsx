@@ -20,11 +20,15 @@ import {
 } from "lucide-react";
 
 function ChatMessage({
+  id,
   sender,
   message,
-    files = [],
+  files,
+  liked,
+  disliked,
   isLastAI,
   onRegenerate,
+  onFeedback,
 }) {
   const isUser = sender === "user";
   console.log("FILE DATA:", files);
@@ -351,18 +355,28 @@ console.log("FILE URL:", fileUrl);
                 </button>
 
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
-                  title="Like"
-                >
-                  <ThumbsUp size={18} />
-                </button>
+  onClick={() => onFeedback(id, "like")}
+  className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+    liked
+      ? "bg-cyan-600 text-white"
+      : "bg-slate-900 text-slate-300 hover:bg-cyan-600 hover:text-white"
+  }`}
+  title="Like"
+>
+  <ThumbsUp size={18} />
+</button>
 
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
-                  title="Dislike"
-                >
-                  <ThumbsDown size={18} />
-                </button>
+  onClick={() => onFeedback(id, "dislike")}
+  className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+    disliked
+      ? "bg-red-600 text-white"
+      : "bg-slate-900 text-slate-300 hover:bg-red-600 hover:text-white"
+  }`}
+  title="Dislike"
+>
+  <ThumbsDown size={18} />
+</button>
 
                 {isLastAI && (
                   <button

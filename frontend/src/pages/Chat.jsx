@@ -77,7 +77,27 @@ const stopGenerationRef = useRef(false);
       )
     );
   };
+const handleFeedback = (messageId, type) => {
+  const updatedMessages = currentChat.messages.map((msg) => {
+    if (msg.id !== messageId) return msg;
 
+    if (type === "like") {
+      return {
+        ...msg,
+        liked: !msg.liked,
+        disliked: false,
+      };
+    }
+
+    return {
+      ...msg,
+      disliked: !msg.disliked,
+      liked: false,
+    };
+  });
+
+  updateCurrentMessages(updatedMessages);
+};
   // Rename Chat
   const handleRenameChat = (chatId) => {
   const chat = chats.find((c) => c.id === chatId);
@@ -445,6 +465,8 @@ const aiMessage = {
   id: aiId,
   sender: "ai",
   message: "",
+  liked: false,
+  disliked: false,
 };
 
 const newMessages = [
@@ -471,10 +493,12 @@ setIsGenerating(false);
   ...currentChat.messages,
   userMessage,
   {
-    id: Date.now() + 1,
-    sender: "ai",
-    message: "❌ Unable to connect to the backend.",
-  },
+  id: Date.now() + 1,
+  sender: "ai",
+  message: "❌ Unable to connect to the backend.",
+  liked: false,
+  disliked: false,
+}
 ]);
     }
   };
@@ -518,11 +542,13 @@ const handleRegenerate = async () => {
 
     setIsTyping(false);
 
-    const aiMessage = {
-      id: Date.now(),
-      sender: "ai",
-      message: data.reply,
-    };
+   const aiMessage = {
+  id: Date.now(),
+  sender: "ai",
+  message: data.reply,
+  liked: false,
+  disliked: false,
+};
 
     updateCurrentMessages([
       ...updatedMessages,
@@ -602,14 +628,14 @@ return (
 <div className="flex min-h-0 flex-1 flex-col gap-4 p-6">
 
         <ChatContainer
-          messages={currentChat.messages}
-          isTyping={isTyping}
-          isGenerating={isGenerating}
-          onStopGenerating={handleStopGenerating}
-          onRegenerate={handleRegenerate}
-          onExport={() => setExportOpen(true)}
-        />
-
+  messages={currentChat.messages}
+  isTyping={isTyping}
+  isGenerating={isGenerating}
+  onStopGenerating={handleStopGenerating}
+  onRegenerate={handleRegenerate}
+  onFeedback={handleFeedback}
+  onExport={() => setExportOpen(true)}
+/>
         <ChatInput onSend={handleSendMessage} />
 
       </div>

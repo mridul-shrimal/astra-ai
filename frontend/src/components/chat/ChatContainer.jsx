@@ -9,6 +9,7 @@ function ChatContainer({
   isGenerating,
   onStopGenerating,
   onRegenerate,
+  onFeedback,
   onExport,
 }) {
   const bottomRef = useRef(null);
@@ -76,17 +77,21 @@ useEffect(() => {
       </div>
 
       {messages.map((message, index) => (
-        <ChatMessage
-          key={message.id}
-          sender={message.sender}
-          message={message.message}
-          files={message.files}
-          isLastAI={
-            message.sender === "ai" &&
-            index === messages.length - 1
-          }
-          onRegenerate={onRegenerate}
-        />
+     <ChatMessage
+  key={message.id}
+  id={message.id}
+  sender={message.sender}
+  message={message.message}
+  files={message.files}
+  liked={message.liked}
+  disliked={message.disliked}
+  isLastAI={
+    message.sender === "ai" &&
+    index === messages.length - 1
+  }
+  onRegenerate={onRegenerate}
+  onFeedback={onFeedback}
+/>
       ))}
 
       {isTyping && (
