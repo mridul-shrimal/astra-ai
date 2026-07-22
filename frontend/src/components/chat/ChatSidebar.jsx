@@ -1,4 +1,5 @@
-import { Search, MessageSquare, MessageSquarePlus } from "lucide-react";
+import { Search, MessageSquare, MessageSquarePlus, Settings} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function ChatSidebar({
   chats,
@@ -10,6 +11,7 @@ function ChatSidebar({
   onDeleteChat,
   onRenameChat,
 }) {
+  const navigate = useNavigate()
   return (
     <aside className="flex w-72 flex-col border-r border-slate-800 bg-slate-950">
 
@@ -90,6 +92,15 @@ function ChatSidebar({
               >
                 🗑️
               </button>
+              <div className="mt-auto border-t border-slate-800 pt-4">
+  <button
+    onClick={() => navigate("/settings")}
+    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+  >
+    <Settings size={20} />
+    <span>Settings</span>
+  </button>
+</div>
             </div>
           </div>
         ))}

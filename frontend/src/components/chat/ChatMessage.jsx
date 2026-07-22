@@ -28,6 +28,7 @@ function ChatMessage({
   disliked,
   onRegenerate,
   onFeedback,
+  toast,
 }) {
   const isUser = sender === "user";
   console.log("FILE DATA:", files);
@@ -44,7 +45,7 @@ const [isSpeaking, setIsSpeaking] = useState(false);
   const copyCode = async (code) => {
     try {
       await navigator.clipboard.writeText(code);
-
+toast.success("Code copied!");
       setCopiedCode(code);
 
       setTimeout(() => {
@@ -58,7 +59,7 @@ const [isSpeaking, setIsSpeaking] = useState(false);
   const copyMessage = async () => {
     try {
       await navigator.clipboard.writeText(message);
-
+toast.success("Copied to clipboard!");
       setCopiedMessage(true);
 
       setTimeout(() => {
