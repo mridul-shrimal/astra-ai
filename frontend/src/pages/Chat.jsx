@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import ChatContainer from "../components/chat/ChatContainer";
 import ChatInput from "../components/chat/ChatInput";
 import ChatSidebar from "../components/chat/ChatSidebar";
+import toast from "react-hot-toast";
 
 function Chat() {
   const createNewChat = () => ({
@@ -33,7 +34,6 @@ function Chat() {
   // Export Modal State
 const [exportOpen, setExportOpen] = useState(false);
 const [selectedFormat, setSelectedFormat] = useState("pdf");
-
   // Current chat
   const [currentChatId, setCurrentChatId] = useState(() => {
     return localStorage.getItem("astra-current-chat") || null;
@@ -111,6 +111,7 @@ const handleFeedback = (messageId, type) => {
   if (!newTitle || !newTitle.trim()) return;
 
   setChats((prev) =>
+    
     prev.map((chat) =>
       chat.id === chatId
         ? {
@@ -120,6 +121,7 @@ const handleFeedback = (messageId, type) => {
         : chat
     )
   );
+  toast.success("Chat renamed!");
 };
 
   // Export Chat
@@ -285,7 +287,9 @@ if (selectedFormat === "pdf") {
 
   pdf.save(`${currentChat.title || "chat"} - Astra AI.pdf`);
 
-  return;
+toast.success("Chat exported as PDF!");
+
+return;
 }
 
   // TXT (existing)
@@ -295,6 +299,7 @@ if (selectedFormat === "pdf") {
     `${currentChat.title || "chat"}.txt`,
     "text/plain;charset=utf-8"
   );
+  toast.success("Chat exported as TXT!");
   return;
 }
 
@@ -304,6 +309,7 @@ if (selectedFormat === "md") {
     `${currentChat.title || "chat"}.md`,
     "text/markdown;charset=utf-8"
   );
+  toast.success("Chat exported as Markdown!");
   return;
 }
 
@@ -313,6 +319,7 @@ if (selectedFormat === "html") {
     `${currentChat.title || "chat"}.html`,
     "text/html;charset=utf-8"
   );
+  toast.success("Chat exported as HTML!");
   return;
 }
 
@@ -322,17 +329,18 @@ if (selectedFormat === "json") {
     `${currentChat.title || "chat"}.json`,
     "application/json"
   );
+  toast.success("Chat exported as JSON!");
   return;
 }
 
-  alert(`${selectedFormat.toUpperCase()} export coming next.`);
+  toast(`${selectedFormat.toUpperCase()} export coming next.`);
 };
   // Delete Chat
   const handleDeleteChat = (chatId) => {
   if (chats.length === 1) {
-    alert("At least one chat must remain.");
-    return;
-  }
+  toast.error("At least one chat must remain.");
+  return;
+}
 
   if (!window.confirm("Are you sure you want to delete this chat?")) {
     return;
@@ -347,6 +355,7 @@ if (selectedFormat === "json") {
   if (currentChatId === chatId) {
     setCurrentChatId(updatedChats[0].id);
   }
+  toast.success("Chat deleted!");
 };
 const streamMessage = async (
 
@@ -487,7 +496,7 @@ setIsGenerating(false);
 
     } catch (error) {
       console.error(error);
-
+toast.error("Unable to connect to backend.");
       setIsTyping(false);
 setIsGenerating(false);
      updateCurrentMessages([
@@ -589,6 +598,7 @@ const handleStopGenerating = () => {
     setChats((prev) => [newChat, ...prev]);
 
     setCurrentChatId(newChat.id);
+     toast.success("New chat created!");
   };
 
 return (
@@ -636,7 +646,7 @@ return (
       {/* Chat */}
 <div className="flex min-h-0 flex-1 flex-col gap-4 p-6">
 
- <ChatContainer
+<ChatContainer
   messages={currentChat.messages}
   isTyping={isTyping}
   isGenerating={isGenerating}
