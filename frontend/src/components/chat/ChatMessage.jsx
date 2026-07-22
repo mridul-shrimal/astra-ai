@@ -26,7 +26,6 @@ function ChatMessage({
   files,
   liked,
   disliked,
-  isLastAI,
   onRegenerate,
   onFeedback,
 }) {
@@ -41,7 +40,7 @@ const fileUrl = files?.filename
 console.log("FILE URL:", fileUrl);
   const [copiedCode, setCopiedCode] = useState("");
   const [copiedMessage, setCopiedMessage] = useState(false);
-
+const [isSpeaking, setIsSpeaking] = useState(false);
   const copyCode = async (code) => {
     try {
       await navigator.clipboard.writeText(code);
@@ -71,15 +70,35 @@ console.log("FILE URL:", fileUrl);
   };
 
   const speakMessage = () => {
+  // Stop if this message is already speaking
+  if (isSpeaking) {
     speechSynthesis.cancel();
+    setIsSpeaking(false);
+    return;
+  }
 
-    const utterance = new SpeechSynthesisUtterance(message);
+  // Stop any previous speech
+  speechSynthesis.cancel();
 
-    utterance.rate = 1;
-    utterance.pitch = 1;
+  const utterance = new SpeechSynthesisUtterance(message);
 
-    speechSynthesis.speak(utterance);
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  utterance.onstart = () => {
+    setIsSpeaking(true);
   };
+
+  utterance.onend = () => {
+    setIsSpeaking(false);
+  };
+
+  utterance.onerror = () => {
+    setIsSpeaking(false);
+  };
+
+  speechSynthesis.speak(utterance);
+};
 
   return (
     <div
@@ -347,12 +366,16 @@ console.log("FILE URL:", fileUrl);
                 </button>
 
                 <button
-                  onClick={speakMessage}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
-                  title="Read Aloud"
-                >
-                  <Volume2 size={18} />
-                </button>
+  onClick={speakMessage}
+  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
+  title={isSpeaking ? "Stop Reading" : "Read Aloud"}
+>
+  {isSpeaking ? (
+    <span className="text-sm">⏹</span>
+  ) : (
+    <Volume2 size={18} />
+  )}
+</button>
 
                 <button
   onClick={() => onFeedback(id, "like")}
@@ -378,9 +401,9 @@ console.log("FILE URL:", fileUrl);
   <ThumbsDown size={18} />
 </button>
 
-                {isLastAI && (
+                {sender === "ai" && (
                   <button
-                    onClick={onRegenerate}
+                    onClick={() => onRegenerate(id)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
                     title="Regenerate"
                   >

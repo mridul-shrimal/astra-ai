@@ -76,7 +76,7 @@ useEffect(() => {
         </button>
       </div>
 
-      {messages.map((message, index) => (
+      {messages.map((message) => (
      <ChatMessage
   key={message.id}
   id={message.id}
@@ -85,10 +85,7 @@ useEffect(() => {
   files={message.files}
   liked={message.liked}
   disliked={message.disliked}
-  isLastAI={
-    message.sender === "ai" &&
-    index === messages.length - 1
-  }
+  
   onRegenerate={onRegenerate}
   onFeedback={onFeedback}
 />

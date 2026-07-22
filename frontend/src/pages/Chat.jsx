@@ -502,25 +502,30 @@ setIsGenerating(false);
 ]);
     }
   };
-const handleRegenerate = async () => {
+const handleRegenerate = async (aiMessageId) => {
     speechSynthesis.cancel();
    stopGenerationRef.current = false;
-  // Find the last user message
-  const lastUserMessage = [...currentChat.messages]
-    .reverse()
-    .find((msg) => msg.sender === "user");
+  // Find the AI message index
+const aiIndex = currentChat.messages.findIndex(
+  (msg) => msg.id === aiMessageId
+);
 
-  if (!lastUserMessage) return;
+if (aiIndex === -1) return;
 
-  // Remove the last AI message (if there is one)
-  let updatedMessages = [...currentChat.messages];
+// Find the user message just before this AI response
+let userMessage = null;
 
-  if (
-    updatedMessages.length &&
-    updatedMessages[updatedMessages.length - 1].sender === "ai"
-  ) {
-    updatedMessages.pop();
+for (let i = aiIndex - 1; i >= 0; i--) {
+  if (currentChat.messages[i].sender === "user") {
+    userMessage = currentChat.messages[i];
+    break;
   }
+}
+
+if (!userMessage) return;
+
+  // Keep all messages
+let updatedMessages = [...currentChat.messages];
 
   updateCurrentMessages(updatedMessages);
 
@@ -533,7 +538,7 @@ const handleRegenerate = async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: lastUserMessage.message,
+        message: userMessage.message,
         sessionId: currentChat.sessionId,
       }),
     });
@@ -550,23 +555,26 @@ const handleRegenerate = async () => {
   disliked: false,
 };
 
-    updateCurrentMessages([
-      ...updatedMessages,
-      aiMessage,
-    ]);
+    updateCurrentMessages(
+  updatedMessages.map((msg) =>
+    msg.id === aiMessageId ? aiMessage : msg
+  )
+);
   } catch (error) {
     console.error(error);
 
     setIsTyping(false);
 
-    updateCurrentMessages([
-      ...updatedMessages,
-      {
-        id: Date.now(),
-        sender: "ai",
-        message: "❌ Failed to regenerate response.",
-      },
-    ]);
+   updateCurrentMessages(
+  updatedMessages.map((msg) =>
+    msg.id === aiMessageId
+      ? {
+          ...msg,
+          message: "❌ Failed to regenerate response.",
+        }
+      : msg
+  )
+);
   }
 };
 const handleStopGenerating = () => {
