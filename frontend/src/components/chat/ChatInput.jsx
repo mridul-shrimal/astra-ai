@@ -95,7 +95,7 @@ const getFileIcon = (file) => {
   </div>
 )}
 
-      <div className="flex items-end gap-2 sm:gap-3">
+      <div className="flex items-center gap-3">
         <input
           ref={fileInputRef}
           type="file"
@@ -104,26 +104,29 @@ multiple
           onChange={handleFileChange}
         />
 
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="min-w-0 flex-1 rounded-xl bg-slate-800 px-3 py-3 text-sm text-white outline-none placeholder:text-slate-400 sm:px-4 sm:text-base"
-          title="Attach File"
-        >
-          <Paperclip size={20} className="text-cyan-400" />
-        </button>
+        <div className="flex flex-1 items-center rounded-2xl border border-slate-700 bg-slate-800 px-3 transition-all duration-200 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-500/30">
+  <button
+    type="button"
+    onClick={() => fileInputRef.current?.click()}
+    className="mr-2 rounded-lg p-2 text-cyan-400 transition hover:bg-slate-700"
+    title="Attach File"
+  >
+    <Paperclip size={18} />
+  </button>
 
-        <input
-          type="text"
-          placeholder="Ask Astra anything..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1 rounded-xl bg-slate-800 px-4 py-3 text-white outline-none placeholder:text-slate-400"
-        />
+  <input
+    type="text"
+    placeholder="Message Astra..."
+    value={input}
+    onChange={(e) => setInput(e.target.value)}
+    onKeyDown={handleKeyDown}
+    className="min-w-0 flex-1 bg-transparent py-4 text-sm text-white outline-none placeholder:text-slate-400 sm:text-base"
+  />
+</div>
 
         <button
           onClick={handleSend}
-          className="shrink-0 rounded-xl bg-cyan-500 p-3 transition hover:bg-cyan-600"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cyan-500 transition-all duration-200 hover:scale-105 hover:bg-cyan-600 active:scale-95"
         >
           <Send size={20} className="text-white" />
         </button>

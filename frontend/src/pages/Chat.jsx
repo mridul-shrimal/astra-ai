@@ -427,7 +427,11 @@ const userMessage = {
           chat.id === currentChat.id
             ? {
                 ...chat,
-                title: text.substring(0, 30),
+                title: text.trim()
+  ? text.substring(0, 30)
+  : files.length
+    ? files[0].name
+    : "New Chat",
               }
             : chat
         )
@@ -440,7 +444,15 @@ setIsGenerating(true);
     try {
       const formData = new FormData();
 
-formData.append("message", text);
+const prompt =
+  text.trim() ||
+  `Analyze the uploaded document(s) and provide:
+- A concise summary
+- Key points
+- Important information
+- Any actionable insights`;
+
+formData.append("message", prompt);
 formData.append("sessionId", currentChat.sessionId);
 
 files.forEach((file) => {

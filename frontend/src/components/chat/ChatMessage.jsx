@@ -29,14 +29,7 @@ function ChatMessage({
   onFeedback,
 }) {
   const isUser = sender === "user";
-  console.log("FILE DATA:", files);
 
-
-const fileUrl = files?.filename
-  ? `http://localhost:5000/uploads/${files.filename}`
-  : null;
-  console.log("FILE OBJECT:", files);
-console.log("FILE URL:", fileUrl);
   const [copiedCode, setCopiedCode] = useState("");
   const [copiedMessage, setCopiedMessage] = useState(false);
 const [isSpeaking, setIsSpeaking] = useState(false);
