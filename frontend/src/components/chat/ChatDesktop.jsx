@@ -1,5 +1,5 @@
 import { Menu } from "lucide-react";
-
+import { useTheme } from "../../context/ThemeContext";
 import ChatSidebar from "./ChatSidebar";
 import ChatContainer from "./ChatContainer";
 import ChatInput from "./ChatInput";
@@ -37,8 +37,16 @@ function ChatDesktop({
   setCurrentChatId,
   setExportOpen,
 }) {
+  const { theme } = useTheme();
+  console.log("ChatDesktop Theme:", theme);
 return (
-  <div className="relative flex h-[calc(100vh-80px)] overflow-hidden">
+  <div
+  className={`relative flex h-[calc(100vh-80px)] overflow-hidden transition-colors duration-300 ${
+    theme === "light"
+      ? "bg-slate-100"
+      : "bg-slate-950"
+  }`}
+>
 {/* Mobile Overlay */}
 <div
   className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 md:static md:translate-x-0 ${
@@ -76,21 +84,45 @@ return (
     <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
 
       {/* Header */}
-      <div 
-      className="flex shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-950 px-4 py-3 md:gap-4 md:px-6 md:py-4">
+      <div
+  className={`flex shrink-0 items-center gap-3 border-b px-4 py-3 md:gap-4 md:px-6 md:py-4 ${
+    theme === "light"
+      ? "bg-white border-slate-200"
+      : "bg-slate-950 border-slate-800"
+  }`}
+>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="rounded-lg p-2 transition hover:bg-slate-800"
+          className={`rounded-lg p-2 transition ${
+  theme === "light"
+    ? "hover:bg-slate-100"
+    : "hover:bg-slate-800"
+}`}
         >
-          <Menu size={24} className="text-white" />
+          <Menu
+  size={24}
+  className={theme === "light" ? "text-slate-900" : "text-white"}
+/>
         </button>
 
         <div>
-          <h1 className="text-xl font-bold text-white md:text-3xl">
+          <h1
+  className={`text-xl font-bold md:text-3xl ${
+    theme === "light"
+      ? "text-slate-900"
+      : "text-white"
+  }`}
+>
             Astra AI
           </h1>
 
-          <p className="hidden text-slate-400 md:block">
+          <p
+  className={`hidden md:block ${
+    theme === "light"
+      ? "text-slate-600"
+      : "text-slate-400"
+  }`}
+>
             Your intelligent AI assistant
           </p>
         </div>

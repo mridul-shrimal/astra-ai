@@ -50,7 +50,13 @@ useEffect(() => {
   exportFormat,
 ]);
   return (
-    <div className="min-h-screen bg-slate-950 p-8 text-white">
+    <div
+  className={`p-8 transition-colors duration-300 ${
+    theme === "light"
+      ? "text-slate-900"
+      : "text-white"
+  }`}
+>
       <div className="mx-auto max-w-4xl">
 
    {/* Header */}
@@ -82,7 +88,11 @@ useEffect(() => {
 </div>
 
         {/* Appearance */}
-        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className={`mb-8 rounded-2xl border p-6 transition-colors duration-300 ${
+  theme === "light"
+    ? "border-slate-200 bg-white shadow-sm"
+    : "border-slate-800 bg-slate-900"
+}`}>
           <div className="mb-6 flex items-center gap-3">
             <Palette className="text-cyan-400" />
             <h2 className="text-2xl font-semibold">
@@ -132,7 +142,11 @@ useEffect(() => {
         </div>
 
         {/* AI */}
-        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className={`mb-8 rounded-2xl border p-6 transition-colors duration-300 ${
+  theme === "light"
+    ? "border-slate-200 bg-white shadow-sm"
+    : "border-slate-800 bg-slate-900"
+}`}>
 
           <h2 className="mb-6 text-2xl font-semibold">
             AI
@@ -171,7 +185,11 @@ useEffect(() => {
         </div>
 
         {/* Chat */}
-        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className={`mb-8 rounded-2xl border p-6 transition-colors duration-300 ${
+  theme === "light"
+    ? "border-slate-200 bg-white shadow-sm"
+    : "border-slate-800 bg-slate-900"
+}`}>
 
           <h2 className="mb-6 text-2xl font-semibold">
             Chat
@@ -214,7 +232,11 @@ useEffect(() => {
         </div>
 
         {/* Data */}
-        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className={`mb-8 rounded-2xl border p-6 transition-colors duration-300 ${
+  theme === "light"
+    ? "border-slate-200 bg-white shadow-sm"
+    : "border-slate-800 bg-slate-900"
+}`}>
 
           <h2 className="mb-6 flex items-center gap-3 text-2xl font-semibold">
             <Trash2 />
@@ -228,7 +250,11 @@ useEffect(() => {
         </div>
 
         {/* About */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className={`rounded-2xl border p-6 transition-colors duration-300 ${
+  theme === "light"
+    ? "border-slate-200 bg-white shadow-sm"
+    : "border-slate-800 bg-slate-900"
+}`}>
 
           <h2 className="mb-5 flex items-center gap-3 text-2xl font-semibold">
             <Info />

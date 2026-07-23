@@ -1,3 +1,4 @@
+import { useTheme } from "../../context/ThemeContext";
 import {
   Search,
   MessageSquare,
@@ -17,11 +18,25 @@ function ChatSidebar({
   onRenameChat,
 }) {
   const navigate = useNavigate();
+const { theme } = useTheme();
 
+console.log("ChatSidebar Theme:", theme);
   return (
-    <aside className="flex h-full w-72 max-w-[85vw] flex-col border-r border-slate-800 bg-slate-950 shadow-xl md:shadow-none">
+    <aside
+  className={`flex h-full w-72 max-w-[85vw] flex-col border-r shadow-xl md:shadow-none ${
+    theme === "light"
+      ? "bg-white border-slate-200"
+      : "bg-slate-950 border-slate-800"
+  }`}
+>
       {/* New Chat */}
-      <div className="sticky top-0 z-10 border-b border-slate-800 bg-slate-950 p-4">
+      <div
+  className={`sticky top-0 z-10 border-b p-4 ${
+    theme === "light"
+      ? "bg-white border-slate-200"
+      : "bg-slate-950 border-slate-800"
+  }`}
+>
         <button
           onClick={onNewChat}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-600"
@@ -32,7 +47,13 @@ function ChatSidebar({
       </div>
 
       {/* Search */}
-      <div className="border-b border-slate-800 px-4 py-4">
+      <div
+  className={`border-b px-4 py-4 ${
+    theme === "light"
+      ? "border-slate-200"
+      : "border-slate-800"
+  }`}
+>
         <div className="relative">
           <Search
             size={18}
@@ -44,7 +65,11 @@ function ChatSidebar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search chats..."
-            className="w-full rounded-xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-4 text-white placeholder:text-slate-400 outline-none transition focus:border-cyan-500"
+            className={`w-full rounded-xl border py-3 pl-10 pr-4 outline-none transition focus:border-cyan-500 ${
+  theme === "light"
+    ? "border-slate-300 bg-white text-slate-900 placeholder:text-slate-500"
+    : "border-slate-700 bg-slate-900 text-white placeholder:text-slate-400"
+}`}
           />
         </div>
       </div>
@@ -59,18 +84,28 @@ function ChatSidebar({
       {/* Chat List */}
       <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
         {chats.length === 0 ? (
-          <div className="flex h-32 items-center justify-center rounded-xl bg-slate-900 text-slate-400">
-            No chats found
-          </div>
+          <div
+  className={`flex h-32 items-center justify-center rounded-xl ${
+    theme === "light"
+      ? "bg-slate-100 text-slate-500"
+      : "bg-slate-900 text-slate-400"
+  }`}
+>
+  No chats found
+</div>
         ) : (
           chats.map((chat) => (
             <div
               key={chat.id}
               className={`group flex items-center justify-between rounded-xl p-3 transition-all duration-200 ${
-                currentChatId === chat.id
-                  ? "bg-slate-800 shadow-md"
-                  : "bg-slate-900 hover:bg-slate-800 hover:scale-[1.02]"
-              }`}
+  currentChatId === chat.id
+    ? theme === "light"
+      ? "bg-cyan-100 shadow-md"
+      : "bg-slate-800 shadow-md"
+    : theme === "light"
+      ? "bg-white hover:bg-slate-100 hover:scale-[1.02]"
+      : "bg-slate-900 hover:bg-slate-800 hover:scale-[1.02]"
+}`}
             >
               {/* Chat Title */}
               <button
@@ -82,7 +117,13 @@ function ChatSidebar({
                   className="shrink-0 text-cyan-400"
                 />
 
-                <span className="truncate text-sm md:text-base">
+                <span
+  className={`truncate text-sm md:text-base ${
+    theme === "light"
+      ? "text-slate-900"
+      : "text-slate-200"
+  }`}
+>
   {chat.title}
 </span>
               </button>
