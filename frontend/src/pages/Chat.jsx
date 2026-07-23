@@ -613,60 +613,10 @@ const handleStopGenerating = () => {
     setCurrentChatId(newChat.id);
      toast.success("New chat created!");
   };
-const searchResults = chats
-  .map((chat) => {
-    const query = searchQuery.trim().toLowerCase();
-
-    if (!query) {
-      return {
-        chat,
-        matchedMessages: [],
-        matchCount: 0,
-      };
-    }
-
-    const matchedMessages = chat.messages.filter((msg) =>
-      (msg.message || "")
-        .toLowerCase()
-        .includes(query)
-    );
-
-    const titleMatched = chat.title
-      .toLowerCase()
-      .includes(query);
-
-    if (!titleMatched && matchedMessages.length === 0) {
-      return null;
-    }
-
-    return {
-      chat,
-      matchedMessages,
-      matchCount:
-        matchedMessages.length +
-        (titleMatched ? 1 : 0),
-    };
-  })
-  .filter(Boolean);
-
-const filteredChats = searchResults.map(
-  (result) => result.chat
-);
-useEffect(() => {
-  if (!searchQuery.trim()) return;
-
-  if (
-    filteredChats.length > 0 &&
-    filteredChats[0].id !== currentChatId
-  ) {
-    setCurrentChatId(filteredChats[0].id);
-  }
-}, [searchQuery, filteredChats, currentChatId]);
 return (
   
   <ChatDesktop
-    chats={filteredChats}
-    searchResults={searchResults} 
+    chats={chats}
     currentChat={currentChat}
     currentChatId={currentChatId}
 
