@@ -38,49 +38,46 @@ function ChatDesktop({
   setExportOpen,
 }) {
 return (
-  <div className="flex h-[calc(100vh-140px)] overflow-hidden">
+  <div className="relative flex h-[calc(100vh-80px)] overflow-hidden">
+{/* Mobile Overlay */}
+<div
+  className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 md:static md:translate-x-0 ${
+    sidebarOpen ? "translate-x-0" : "-translate-x-full"
+  }`}
+>
+  <ChatSidebar
+    chats={chats.filter((chat) => {
+      const query = searchQuery.toLowerCase();
 
-    {sidebarOpen && (
-      <ChatSidebar
-        chats={chats.filter((chat) => {
-  console.log("Checking Chat:", chat.title);
+      const titleMatch = chat.title.toLowerCase().includes(query);
 
-  const query = searchQuery.toLowerCase();
+      const messageMatch = chat.messages.some((msg) =>
+        (msg.message || "").toLowerCase().includes(query)
+      );
 
-  const titleMatch = chat.title
-    .toLowerCase()
-    .includes(query);
+      return titleMatch || messageMatch;
+    })}
+    currentChatId={currentChatId}
+    searchQuery={searchQuery}
+    onSearchChange={setSearchQuery}
+    onNewChat={handleNewChat}
+    onSelectChat={(id) => {
+      setCurrentChatId(id);
 
-  const messageMatch = chat.messages.some((msg) => {
-    console.log("Message:", msg.message);
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
+    }}
+    onDeleteChat={handleDeleteChat}
+    onRenameChat={handleRenameChat}
+  />
+</div>
 
-    return (msg.message || "")
-      .toLowerCase()
-      .includes(query);
-  });
-
-  console.log({
-    titleMatch,
-    messageMatch,
-  });
-
-  return titleMatch || messageMatch;
-})}
-        currentChatId={currentChatId}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onNewChat={handleNewChat}
-        onSelectChat={setCurrentChatId}
-        onDeleteChat={handleDeleteChat}
-        onRenameChat={handleRenameChat}
-      />
-    )}
-
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-center gap-4 border-b border-slate-800 bg-slate-950 px-6 py-4">
-
+      <div 
+      className="flex shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-950 px-4 py-3 md:gap-4 md:px-6 md:py-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="rounded-lg p-2 transition hover:bg-slate-800"
@@ -89,11 +86,11 @@ return (
         </button>
 
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-xl font-bold text-white md:text-3xl">
             Astra AI
           </h1>
 
-          <p className="text-slate-400">
+          <p className="hidden text-slate-400 md:block">
             Your intelligent AI assistant
           </p>
         </div>
@@ -101,7 +98,7 @@ return (
       </div>
 
       {/* Chat */}
-<div className="flex min-h-0 flex-1 flex-col gap-4 p-6">
+<div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3 md:gap-4 md:p-6">
 
 <ChatContainer
   messages={currentChat.messages}

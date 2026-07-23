@@ -15,7 +15,7 @@ function ChatInput({ onSend }) {
   const fileInputRef = useRef(null);
 
 const handleSend = () => {
-  if (!input.trim() && !selectedFiles) return;
+  if (!input.trim() && selectedFiles.length === 0) return;
 
   onSend(input, selectedFiles);
 
@@ -61,19 +61,21 @@ const getFileIcon = (file) => {
   return <FileText size={22} className="text-red-400" />;
 };
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+    <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 sm:rounded-2xl sm:p-4">
       {selectedFiles.length > 0 && (
   <div className="mb-3 space-y-2">
     {selectedFiles.map((file, index) => (
       <div
         key={index}
-        className="flex items-center justify-between rounded-xl bg-slate-800 px-4 py-3"
+        className="flex items-start justify-between gap-3 rounded-xl bg-slate-800 px-3 py-3 sm:items-center sm:px-4"
       >
         <div>
           <div className="font-medium text-white">
             <div className="flex items-center gap-2">
   {getFileIcon(file)}
-  <span>{file.name}</span>
+  <span className="truncate break-all">
+  {file.name}
+</span>
 </div>
           </div>
 
@@ -93,7 +95,7 @@ const getFileIcon = (file) => {
   </div>
 )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-end gap-2 sm:gap-3">
         <input
           ref={fileInputRef}
           type="file"
@@ -104,7 +106,7 @@ multiple
 
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="rounded-xl bg-slate-800 p-3 transition hover:bg-slate-700"
+          className="min-w-0 flex-1 rounded-xl bg-slate-800 px-3 py-3 text-sm text-white outline-none placeholder:text-slate-400 sm:px-4 sm:text-base"
           title="Attach File"
         >
           <Paperclip size={20} className="text-cyan-400" />
@@ -121,7 +123,7 @@ multiple
 
         <button
           onClick={handleSend}
-          className="rounded-xl bg-cyan-500 p-3 transition hover:bg-cyan-600"
+          className="shrink-0 rounded-xl bg-cyan-500 p-3 transition hover:bg-cyan-600"
         >
           <Send size={20} className="text-white" />
         </button>

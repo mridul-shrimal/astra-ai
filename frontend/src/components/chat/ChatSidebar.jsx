@@ -19,7 +19,7 @@ function ChatSidebar({
   const navigate = useNavigate();
 
   return (
-    <aside className="flex w-72 flex-col border-r border-slate-800 bg-slate-950">
+    <aside className="flex h-full w-72 max-w-[85vw] flex-col border-r border-slate-800 bg-slate-950 shadow-xl md:shadow-none">
       {/* New Chat */}
       <div className="sticky top-0 z-10 border-b border-slate-800 bg-slate-950 p-4">
         <button
@@ -57,7 +57,7 @@ function ChatSidebar({
       </div>
 
       {/* Chat List */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
+      <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
         {chats.length === 0 ? (
           <div className="flex h-32 items-center justify-center rounded-xl bg-slate-900 text-slate-400">
             No chats found
@@ -82,7 +82,9 @@ function ChatSidebar({
                   className="shrink-0 text-cyan-400"
                 />
 
-                <span className="truncate">{chat.title}</span>
+                <span className="truncate text-sm md:text-base">
+  {chat.title}
+</span>
               </button>
 
               {/* Actions */}
@@ -112,7 +114,7 @@ function ChatSidebar({
       <div className="border-t border-slate-800 p-3">
         <button
           onClick={() => navigate("/settings")}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white md:text-base"
         >
           <Settings size={20} />
           <span>Settings</span>

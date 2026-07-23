@@ -66,7 +66,7 @@ function ChatContainer({
     <div
       ref={containerRef}
       id="chat-export"
-      className={`flex-1 overflow-y-auto rounded-2xl border p-6 transition-colors duration-300 ${
+      className={`flex-1 overflow-y-auto rounded-xl border p-3 transition-colors duration-300 sm:rounded-2xl sm:p-4 md:p-6 ${
         theme === "light"
           ? "border-slate-200 bg-white"
           : "border-slate-800 bg-slate-900"
@@ -76,7 +76,7 @@ function ChatContainer({
       <div className="mb-4 flex justify-end">
         <button
           onClick={onExport}
-          className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-white transition hover:bg-cyan-600"
+          className="flex items-center gap-2 rounded-lg bg-cyan-500 px-3 py-2 text-sm text-white transition hover:bg-cyan-600 sm:px-4 sm:text-base"
         >
           <Download size={18} />
           Export Chat
@@ -105,7 +105,7 @@ function ChatContainer({
       {isTyping && (
         <div className="mb-4 flex justify-start">
           <div
-            className={`rounded-2xl px-4 py-3 shadow-md transition-colors duration-300 ${
+            className={`max-w-full rounded-2xl px-3 py-3 shadow-md transition-colors duration-300 sm:px-4 ${
               theme === "light"
                 ? "bg-slate-100 text-slate-700"
                 : "bg-slate-800 text-gray-300"
@@ -134,7 +134,7 @@ function ChatContainer({
         <div className="my-4 flex justify-center">
           <button
             onClick={onStopGenerating}
-            className={`rounded-full border px-5 py-2 transition-all duration-200 ${
+            className={`rounded-full border px-4 py-2 text-sm transition-all duration-200 sm:px-5 sm:text-base ${
               theme === "light"
                 ? "border-red-500 text-red-600 hover:bg-red-500 hover:text-white"
                 : "border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
@@ -145,7 +145,7 @@ function ChatContainer({
         </div>
       )}
 
-      <div ref={bottomRef}></div>
+      <div ref={bottomRef} />
     </div>
   );
 }
