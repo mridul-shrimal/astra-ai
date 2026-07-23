@@ -3,6 +3,7 @@ import DateTimeWidget from "../components/dashboard/DateTimeWidget";
 
 import Card from "../components/ui/Card";
 import StatsCard from "../components/ui/StatsCard";
+import { useTheme } from "../context/ThemeContext";
 
 import {
   Brain,
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 
 function Dashboard() {
+  const { theme } = useTheme();
+const isLight = theme === "light";
   return (
     <div className="space-y-8">
 
@@ -32,7 +35,7 @@ function Dashboard() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
 
         <StatsCard
           title="AI Status"
@@ -94,7 +97,11 @@ function Dashboard() {
 
         <Card title="💬 Recent Activity">
 
-          <div className="space-y-3 text-slate-300">
+          <div
+  className={`space-y-3 ${
+    isLight ? "text-slate-700" : "text-slate-300"
+  }`}
+>
 
             <div className="flex items-center gap-2">
               <Activity size={18} className="text-cyan-400" />
@@ -126,18 +133,36 @@ function Dashboard() {
             New Chat
           </button>
 
-          <button className="rounded-xl bg-slate-800 py-3 transition hover:bg-slate-700">
-            Memory
-          </button>
+          <button
+  className={`rounded-xl py-3 transition ${
+    isLight
+      ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+      : "bg-slate-800 hover:bg-slate-700"
+  }`}
+>
+  Memory
+</button>
 
-          <button className="rounded-xl bg-slate-800 py-3 transition hover:bg-slate-700">
-            Voice
-          </button>
+         <button
+  className={`rounded-xl py-3 transition ${
+    isLight
+      ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+      : "bg-slate-800 hover:bg-slate-700"
+  }`}
+>
+  Voice
+</button>
 
-          <button className="flex items-center justify-center gap-2 rounded-xl bg-slate-800 py-3 transition hover:bg-slate-700">
-            <Zap size={18} />
-            Actions
-          </button>
+  <button
+  className={`flex items-center justify-center gap-2 rounded-xl py-3 transition ${
+    isLight
+      ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+      : "bg-slate-800 hover:bg-slate-700"
+  }`}
+>
+  <Zap size={18} />
+  Actions
+</button>
 
         </div>
 
