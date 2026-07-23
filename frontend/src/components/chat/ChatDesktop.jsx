@@ -7,7 +7,6 @@ import ExportModal from "./ExportModal";
 
 function ChatDesktop({
   chats,
-   searchResults,
   currentChat,
   currentChatId,
 
@@ -106,12 +105,6 @@ return (
 
 <ChatContainer
   messages={currentChat.messages}
-  searchQuery={searchQuery}
-  matchedMessages={
-    searchResults.find(
-      (result) => result.chat.id === currentChat.id
-    )?.matchedMessages || []
-  }
   isTyping={isTyping}
   isGenerating={isGenerating}
   onStopGenerating={handleStopGenerating}
