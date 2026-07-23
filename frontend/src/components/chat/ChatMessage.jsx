@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useTheme } from "../../context/ThemeContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import toast from "react-hot-toast";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import {
   Bot,
@@ -29,6 +31,8 @@ function ChatMessage({
   onFeedback,
 }) {
   const isUser = sender === "user";
+const { theme } = useTheme();
+const isLight = theme === "light";
 
   const [copiedCode, setCopiedCode] = useState("");
   const [copiedMessage, setCopiedMessage] = useState(false);
@@ -122,7 +126,15 @@ return (
       {/* Avatar */}
 
       <div
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full shadow-lg ${
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full shadow-lg ring-2 transition-all duration-200 ${
+  isUser
+    ? isLight
+      ? "ring-cyan-200"
+      : "ring-cyan-700/40"
+    : isLight
+      ? "ring-slate-200"
+      : "ring-slate-700"
+} ${
           isUser
             ? "bg-linear-to-br from-violet-500 to-fuchsia-600"
             : "bg-linear-to-br from-cyan-500 to-blue-600"
@@ -137,23 +149,31 @@ return (
 
       {/* Message */}
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <div
-          className={`mb-2 text-sm font-semibold ${
-            isUser
-              ? "text-right text-cyan-300"
-              : "text-slate-400"
-          }`}
+         className={`mb-2 text-sm font-semibold ${
+  isUser
+    ? isLight
+      ? "text-right text-cyan-700"
+      : "text-right text-cyan-300"
+    : isLight
+      ? "text-slate-600"
+      : "text-slate-400"
+}`}
         >
           {isUser ? "You" : "Astra"}
         </div>
 
         <div
           className={`rounded-2xl px-6 py-5 shadow-lg transition-all duration-200 ${
-            isUser
-              ? "ml-auto max-w-[85%] bg-cyan-500 text-white"
-              : "max-w-[85%] border border-slate-700 bg-slate-800 text-gray-100"
-          }`}
+  isUser
+    ? isLight
+      ? "ml-auto max-w-[85%] border border-cyan-200 bg-cyan-50 text-slate-900"
+      : "ml-auto max-w-[85%] bg-cyan-500 text-white"
+    : isLight
+      ? "max-w-[85%] border border-slate-200 bg-white text-slate-900"
+      : "max-w-[85%] border border-slate-700 bg-slate-800 text-gray-100"
+}`}
         >
          {isUser ? (
   <>
@@ -169,7 +189,11 @@ return (
       return (
         <div
           key={index}
-          className="rounded-2xl border border-cyan-300/20 bg-cyan-600/10 p-4"
+          className={`rounded-2xl border p-4 ${
+  isLight
+    ? "border-cyan-200 bg-cyan-50"
+    : "border-cyan-300/20 bg-cyan-600/10"
+}`}
         >
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-cyan-500/20 p-3">
@@ -260,13 +284,23 @@ return (
                   ),
 
                   strong: ({ children }) => (
-                    <strong className="font-bold text-white">
+                    <strong
+  className={`font-bold ${
+    isLight ? "text-slate-900" : "text-white"
+  }`}
+>
                       {children}
                     </strong>
                   ),
 
                   table: ({ children }) => (
-                    <div className="my-6 overflow-x-auto rounded-lg border border-slate-700">
+                    <div
+  className={`my-6 overflow-x-auto rounded-lg border ${
+    isLight
+      ? "border-slate-200"
+      : "border-slate-700"
+  }`}
+>
                       <table className="min-w-full border-collapse">
                         {children}
                       </table>
@@ -274,7 +308,13 @@ return (
                   ),
 
                   thead: ({ children }) => (
-                    <thead className="bg-slate-900">
+                   <thead
+  className={
+    isLight
+      ? "bg-slate-100"
+      : "bg-slate-900"
+  }
+> 
                       {children}
                     </thead>
                   ),
@@ -284,31 +324,61 @@ return (
                   ),
 
                   tr: ({ children }) => (
-                    <tr className="border-b border-slate-700">
+                    <tr
+  className={
+    isLight
+      ? "border-b border-slate-200"
+      : "border-b border-slate-700"
+  }
+>
                       {children}
                     </tr>
                   ),
 
                   th: ({ children }) => (
-                    <th className="border border-slate-700 px-4 py-3 text-left font-semibold text-cyan-300">
+                    <th
+  className={`border px-4 py-3 text-left font-semibold ${
+    isLight
+      ? "border-slate-200 text-cyan-700"
+      : "border-slate-700 text-cyan-300"
+  }`}
+>
                       {children}
                     </th>
                   ),
 
                   td: ({ children }) => (
-                    <td className="border border-slate-700 px-4 py-3 align-top">
+                    <td
+  className={`border px-4 py-3 align-top ${
+    isLight
+      ? "border-slate-200"
+      : "border-slate-700"
+  }`}
+>
                       {children}
                     </td>
                   ),
 
                   blockquote: ({ children }) => (
-                    <blockquote className="my-5 border-l-4 border-cyan-500 pl-4 italic text-slate-300">
+                    <blockquote
+  className={`my-5 border-l-4 pl-4 italic ${
+    isLight
+      ? "border-cyan-500 text-slate-700"
+      : "border-cyan-500 text-slate-300"
+  }`}
+>
                       {children}
                     </blockquote>
                   ),
 
                   hr: () => (
-                    <hr className="my-6 border-slate-700" />
+                    <hr
+  className={`my-6 ${
+    isLight
+      ? "border-slate-200"
+      : "border-slate-700"
+  }`}
+/>
                   ),
                                     code({ inline, className, children }) {
                     const match = /language-(\w+)/.exec(className || "");
@@ -317,15 +387,35 @@ return (
                       const code = String(children).replace(/\n$/, "");
 
                       return (
-                        <div className="mb-6 overflow-hidden rounded-xl border border-slate-700 shadow-lg">
-                          <div className="flex items-center justify-between border-b border-slate-700 bg-slate-900 px-4 py-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                              {match[1]}
-                            </span>
+                        <div
+  className={`mb-6 overflow-hidden rounded-xl border shadow-lg ${
+    isLight
+      ? "border-slate-200"
+      : "border-slate-700"
+  }`}
+>
+                          <div
+  className={`flex items-center justify-between border-b px-4 py-2 ${
+    isLight
+      ? "border-slate-200 bg-slate-100"
+      : "border-slate-700 bg-slate-900"
+  }`}
+>
+                            <span
+  className={`text-xs font-semibold uppercase tracking-wider ${
+    isLight ? "text-slate-600" : "text-slate-400"
+  }`}
+>
+  {match[1]}
+</span>
 
                             <button
                               onClick={() => copyCode(code)}
-                              className="rounded-md px-3 py-1 text-sm font-medium text-slate-300 transition hover:bg-slate-700 hover:text-white"
+                              className={`rounded-md px-3 py-1 text-sm font-medium transition ${
+  isLight
+    ? "text-slate-700 hover:bg-slate-200"
+    : "text-slate-300 hover:bg-slate-700 hover:text-white"
+}`}
                             >
                               {copiedCode === code
                                 ? "✅ Copied!"
@@ -335,13 +425,14 @@ return (
 
                           <SyntaxHighlighter
                             language={match[1]}
-                            style={oneDark}
+                            style={isLight ? oneLight : oneDark}
                             customStyle={{
-                              margin: 0,
-                              borderRadius: 0,
-                              padding: "20px",
-                              fontSize: "14px",
-                            }}
+  margin: 0,
+  borderRadius: 0,
+  padding: "20px",
+  fontSize: "14px",
+  background: "transparent",
+}}
                           >
                             {code}
                           </SyntaxHighlighter>
@@ -350,7 +441,11 @@ return (
                     }
 
                     return (
-                      <code className="rounded bg-slate-900 px-2 py-1 font-mono text-cyan-300">
+                      <code className={`rounded px-2 py-1 font-mono text-sm ${
+  isLight
+    ? "bg-slate-100 text-cyan-700"
+    : "bg-slate-900 text-cyan-300"
+}`}>
                         {children}
                       </code>
                     );
@@ -362,11 +457,19 @@ return (
 
               {/* Message Actions */}
 
-             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-700 pt-3">
+             <div className={`mt-5 flex flex-wrap items-center gap-2 border-t pt-4 ${
+  isLight
+    ? "border-slate-200"
+    : "border-slate-700"
+}`}>
 
                 <button
                   onClick={copyMessage}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+  isLight
+    ? "bg-slate-100 text-slate-700 hover:bg-cyan-500 hover:text-white"
+    : "bg-slate-900 text-slate-300 hover:bg-cyan-600 hover:text-white"
+}`}
                   title="Copy"
                 >
                   {copiedMessage ? (
@@ -380,8 +483,11 @@ return (
 
                 <button
   onClick={speakMessage}
-  className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
-  title={isSpeaking ? "Stop Reading" : "Read Aloud"}
+  className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+  isLight
+    ? "bg-slate-100 text-slate-700 hover:bg-cyan-500 hover:text-white"
+    : "bg-slate-900 text-slate-300 hover:bg-cyan-600 hover:text-white"
+}`}
 >
   {isSpeaking ? (
     <span className="text-sm">⏹</span>
@@ -392,11 +498,13 @@ return (
 
                 <button
   onClick={() => onFeedback(id, "like")}
-  className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
-    liked
-      ? "bg-cyan-600 text-white"
+ className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+  liked
+    ? "bg-cyan-600 text-white"
+    : isLight
+      ? "bg-slate-100 text-slate-700 hover:bg-cyan-500 hover:text-white"
       : "bg-slate-900 text-slate-300 hover:bg-cyan-600 hover:text-white"
-  }`}
+}`}
   title="Like"
 >
   <ThumbsUp size={18} />
@@ -404,11 +512,13 @@ return (
 
                 <button
   onClick={() => onFeedback(id, "dislike")}
-  className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
-    disliked
-      ? "bg-red-600 text-white"
+ className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+  disliked
+    ? "bg-red-600 text-white"
+    : isLight
+      ? "bg-slate-100 text-slate-700 hover:bg-red-500 hover:text-white"
       : "bg-slate-900 text-slate-300 hover:bg-red-600 hover:text-white"
-  }`}
+}`}
   title="Dislike"
 >
   <ThumbsDown size={18} />
@@ -417,7 +527,11 @@ return (
                 {sender === "ai" && (
                   <button
                     onClick={() => onRegenerate(id)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+  isLight
+    ? "bg-slate-100 text-slate-700 hover:bg-cyan-500 hover:text-white"
+    : "bg-slate-900 text-slate-300 hover:bg-cyan-600 hover:text-white"
+}`}
                     title="Regenerate"
                   >
                     <RotateCcw size={18} />
@@ -426,7 +540,11 @@ return (
                 {sender === "ai" && (
   <button
     onClick={downloadResponse}
-    className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-300 transition hover:bg-cyan-600 hover:text-white"
+    className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+  isLight
+    ? "bg-slate-100 text-slate-700 hover:bg-cyan-500 hover:text-white"
+    : "bg-slate-900 text-slate-300 hover:bg-cyan-600 hover:text-white"
+}`}
     title="Download Response"
   >
     <Download size={18} />
