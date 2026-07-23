@@ -6,6 +6,7 @@ import ChatMessage from "./ChatMessage";
 function ChatContainer({
   messages,
   searchQuery,
+   matchedMessages,
   isTyping,
   isGenerating,
   onStopGenerating,
@@ -60,21 +61,12 @@ useEffect(() => {
   }
 }, [messages]);
 useEffect(() => {
-  if (!searchQuery?.trim()) return;
+  if (!searchQuery.trim()) return;
+  if (!matchedMessages.length) return;
 
   const timer = setTimeout(() => {
-    const query = searchQuery.toLowerCase();
-
-    const matchedMessage = messages.find((message) =>
-      (message.message || "")
-        .toLowerCase()
-        .includes(query)
-    );
-
-    if (!matchedMessage) return;
-
     document
-      .getElementById(`message-${matchedMessage.id}`)
+      .getElementById(`message-${matchedMessages[0].id}`)
       ?.scrollIntoView({
         behavior: "smooth",
         block: "center",
@@ -82,7 +74,7 @@ useEffect(() => {
   }, 100);
 
   return () => clearTimeout(timer);
-}, [searchQuery, messages]);
+}, [searchQuery, matchedMessages]);
   return (
     <div
       ref={containerRef}

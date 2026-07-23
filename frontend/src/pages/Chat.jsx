@@ -613,24 +613,45 @@ const handleStopGenerating = () => {
     setCurrentChatId(newChat.id);
      toast.success("New chat created!");
   };
-  const filteredChats = chats.filter((chat) => {
-  const query = searchQuery.toLowerCase();
+const searchResults = chats
+  .map((chat) => {
+    const query = searchQuery.trim().toLowerCase();
 
-  if (!query) return true;
+    if (!query) {
+      return {
+        chat,
+        matchedMessages: [],
+        matchCount: 0,
+      };
+    }
 
-  const titleMatch = chat.title
-    .toLowerCase()
-    .includes(query);
+    const matchedMessages = chat.messages.filter((msg) =>
+      (msg.message || "")
+        .toLowerCase()
+        .includes(query)
+    );
 
-  const messageMatch = chat.messages.some((msg) =>
-    (msg.message || "")
+    const titleMatched = chat.title
       .toLowerCase()
-      .includes(query)
-  );
+      .includes(query);
 
-  return titleMatch || messageMatch;
-});
+    if (!titleMatched && matchedMessages.length === 0) {
+      return null;
+    }
 
+    return {
+      chat,
+      matchedMessages,
+      matchCount:
+        matchedMessages.length +
+        (titleMatched ? 1 : 0),
+    };
+  })
+  .filter(Boolean);
+
+const filteredChats = searchResults.map(
+  (result) => result.chat
+);
 useEffect(() => {
   if (!searchQuery.trim()) return;
 
@@ -645,6 +666,7 @@ return (
   
   <ChatDesktop
     chats={filteredChats}
+    searchResults={searchResults} 
     currentChat={currentChat}
     currentChatId={currentChatId}
 
