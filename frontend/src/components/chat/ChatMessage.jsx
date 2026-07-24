@@ -31,6 +31,7 @@ function ChatMessage({
   onRegenerate,
   onFeedback,
 }) {
+    console.log("ChatMessage Render");
   const isUser = sender === "user";
 const { theme } = useTheme();
 const isLight = theme === "light";

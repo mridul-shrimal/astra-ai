@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+
 function ExportModal({
   open,
   selectedFormat,
@@ -6,21 +7,23 @@ function ExportModal({
   onClose,
   onExport,
 }) {
+  // Close modal with Escape key
   useEffect(() => {
-  if (!open) return;
+    if (!open) return;
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Escape") {
-      onClose();
-    }
-  };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
 
-  window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
-  return () => {
-    window.removeEventListener("keydown", handleKeyDown);
-  };
-}, [open, onClose]);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const formats = [
@@ -32,15 +35,19 @@ function ExportModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-
-      <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-2xl sm:p-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-2xl sm:p-6"
+      >
         <h2 className="mb-5 text-xl font-bold text-white sm:mb-6 sm:text-2xl">
           Export Chat
         </h2>
 
         <div className="space-y-3">
-
           {formats.map((format) => (
             <label
               key={format.id}
@@ -63,11 +70,9 @@ function ExportModal({
               </span>
             </label>
           ))}
-
         </div>
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:mt-8 sm:flex-row sm:justify-end">
-
           <button
             onClick={onClose}
             className="w-full rounded-lg border border-slate-700 px-5 py-2 text-slate-300 transition hover:bg-slate-800 sm:w-auto"
@@ -81,11 +86,8 @@ function ExportModal({
           >
             Export
           </button>
-
         </div>
-
       </div>
-
     </div>
   );
 }

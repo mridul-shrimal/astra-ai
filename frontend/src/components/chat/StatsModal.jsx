@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -13,13 +14,55 @@ function StatsModal({
 }) {
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const modalRef = useRef(null);
 
-  if (!open) return null;
+  // Close modal with Escape key
+  useEffect(() => {
+    if (!open) return;
+const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onClose]);
+
+// Close modal when clicking outside
+useEffect(() => {
+  if (!open) return;
+  const handleClickOutside = (e) => {
+    if (
+      modalRef.current &&
+      !modalRef.current.contains(e.target)
+    ) {
+      onClose();
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+  };
+}, [open, onClose]);
+    if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div
+  className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+  onClick={onClose}
+>
       <div
-        className={`w-[90%] max-w-md rounded-2xl shadow-2xl ${
+  ref={modalRef}
+  className={`w-[90%] max-w-md rounded-2xl shadow-2xl ${
           isLight ? "bg-white" : "bg-slate-900"
         }`}
       >
@@ -51,14 +94,12 @@ function StatsModal({
 
         {/* Body */}
         <div className="space-y-4 p-6">
-
           <StatRow label="💬 Total Messages" value={totalMessages} />
           <StatRow label="👤 User Messages" value={userMessages} />
           <StatRow label="🤖 AI Responses" value={aiMessages} />
           <StatRow label="📝 Total Words" value={totalWords} />
           <StatRow label="🔤 Characters" value={totalCharacters} />
           <StatRow label="📎 Files Uploaded" value={totalFiles} />
-
         </div>
 
         {/* Footer */}
