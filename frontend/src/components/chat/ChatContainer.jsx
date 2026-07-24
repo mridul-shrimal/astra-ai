@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import ChatMessage from "./ChatMessage";
-
+import StatsModal from "./StatsModal";
 function ChatContainer({
   messages,
   isTyping,
@@ -11,11 +11,15 @@ function ChatContainer({
   onRegenerate,
   onFeedback,
   onExport,
+
+  onOpenStats,
+  statsOpen,
+  onCloseStats,
 }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
   const shouldAutoScroll = useRef(true);
-
+const [showScrollButton, setShowScrollButton] = useState(false);
   const { theme } = useTheme();
 
   // Detect whether user is near the bottom
@@ -31,6 +35,7 @@ function ChatContainer({
         container.clientHeight;
 
       shouldAutoScroll.current = distanceFromBottom < 120;
+      setShowScrollButton(distanceFromBottom > 250);
     };
 
     container.addEventListener("scroll", handleScroll);
@@ -61,8 +66,34 @@ function ChatContainer({
       });
     }
   }, [messages]);
+const totalMessages = messages.length;
 
+const userMessages = messages.filter(
+  (msg) => msg.sender === "user"
+).length;
+
+const aiMessages = messages.filter(
+  (msg) => msg.sender === "ai"
+).length;
+
+const totalWords = messages.reduce(
+  (count, msg) =>
+    count +
+    msg.message.trim().split(/\s+/).filter(Boolean).length,
+  0
+);
+
+const totalCharacters = messages.reduce(
+  (count, msg) => count + msg.message.length,
+  0
+);
+
+const totalFiles = messages.reduce(
+  (count, msg) => count + (msg.files?.length || 0),
+  0
+);
   return (
+    <>
     <div
       ref={containerRef}
       id="chat-export"
@@ -72,8 +103,14 @@ function ChatContainer({
           : "border-slate-800 bg-slate-900"
       }`}
     >
-      {/* Export Button */}
-      <div className="mb-4 flex justify-end">
+      {/* Top Actions */}
+<div className="mb-4 flex justify-end gap-3">
+  <button
+  onClick={onOpenStats}
+  className="flex items-center gap-2 rounded-lg bg-violet-500 px-3 py-2 text-sm text-white transition hover:bg-violet-600 sm:px-4 sm:text-base"
+>
+  📊 Stats
+</button>
         <button
           onClick={onExport}
           className="flex items-center gap-2 rounded-lg bg-cyan-500 px-3 py-2 text-sm text-white transition hover:bg-cyan-600 sm:px-4 sm:text-base"
@@ -145,9 +182,36 @@ function ChatContainer({
         </div>
       )}
 
-      <div ref={bottomRef} />
+          {showScrollButton && (
+  <button
+    onClick={() =>
+      bottomRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      })
+    }
+    className="fixed bottom-24 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-xl text-white shadow-lg transition hover:scale-110 hover:bg-cyan-600"
+    title="Scroll to Bottom"
+  >
+    ↓
+  </button>
+)}
+
+<div ref={bottomRef} />
     </div>
-  );
+
+    <StatsModal
+  open={statsOpen}
+  onClose={onCloseStats}
+  totalMessages={totalMessages}
+  userMessages={userMessages}
+  aiMessages={aiMessages}
+  totalWords={totalWords}
+  totalCharacters={totalCharacters}
+  totalFiles={totalFiles}
+/>
+  </>
+);
 }
 
 export default ChatContainer;

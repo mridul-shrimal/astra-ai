@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -767,4 +767,4 @@ return (
   );
 }
 
-export default ChatMessage;
+export default memo(ChatMessage);

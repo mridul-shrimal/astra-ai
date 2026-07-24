@@ -11,6 +11,9 @@ function ChatDesktop({
   chats,
   currentChat,
   currentChatId,
+statsOpen,
+  onOpenStats,
+  onCloseStats,
 
   sidebarOpen,
   setSidebarOpen,
@@ -147,6 +150,10 @@ return (
   onRegenerate={handleRegenerate}
   onFeedback={handleFeedback}
   onExport={() => setExportOpen(true)}
+
+  statsOpen={statsOpen}
+  onOpenStats={onOpenStats}
+  onCloseStats={onCloseStats}
 />
         <ChatInput
   onSend={handleSendMessage}

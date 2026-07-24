@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 function ExportModal({
   open,
   selectedFormat,
@@ -5,6 +6,21 @@ function ExportModal({
   onClose,
   onExport,
 }) {
+  useEffect(() => {
+  if (!open) return;
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") {
+      onClose();
+    }
+  };
+
+  window.addEventListener("keydown", handleKeyDown);
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
+  };
+}, [open, onClose]);
   if (!open) return null;
 
   const formats = [

@@ -16,7 +16,7 @@ function Chat() {
       },
     ],
   });
-
+const [statsOpen, setStatsOpen] = useState(false);
   // Load chats
   const [chats, setChats] = useState(() => {
     const saved = localStorage.getItem("astra-chats");
@@ -628,38 +628,42 @@ const handleStopGenerating = () => {
   };
 return (
   
-  <ChatDesktop
-    chats={chats}
-    currentChat={currentChat}
-    currentChatId={currentChatId}
+<ChatDesktop
+  chats={chats}
+  currentChat={currentChat}
+  currentChatId={currentChatId}
 
-    sidebarOpen={sidebarOpen}
-    setSidebarOpen={setSidebarOpen}
+  sidebarOpen={sidebarOpen}
+  setSidebarOpen={setSidebarOpen}
 
-    searchQuery={searchQuery}
-    setSearchQuery={setSearchQuery}
+  searchQuery={searchQuery}
+  setSearchQuery={setSearchQuery}
 
-    exportOpen={exportOpen}
-    selectedFormat={selectedFormat}
-    setSelectedFormat={setSelectedFormat}
+  exportOpen={exportOpen}
+  selectedFormat={selectedFormat}
+  setSelectedFormat={setSelectedFormat}
 
-    isTyping={isTyping}
-    isGenerating={isGenerating}
+  statsOpen={statsOpen}
+  onOpenStats={() => setStatsOpen(true)}
+  onCloseStats={() => setStatsOpen(false)}
 
-    handleNewChat={handleNewChat}
-    handleDeleteChat={handleDeleteChat}
-    handleRenameChat={handleRenameChat}
+  isTyping={isTyping}
+  isGenerating={isGenerating}
 
-    handleSendMessage={handleSendMessage}
-    handleStopGenerating={handleStopGenerating}
-    handleRegenerate={handleRegenerate}
-    handleFeedback={handleFeedback}
+  handleNewChat={handleNewChat}
+  handleDeleteChat={handleDeleteChat}
+  handleRenameChat={handleRenameChat}
 
-    handleExportChat={handleExportChat}
+  handleSendMessage={handleSendMessage}
+  handleStopGenerating={handleStopGenerating}
+  handleRegenerate={handleRegenerate}
+  handleFeedback={handleFeedback}
 
-    setCurrentChatId={setCurrentChatId}
-    setExportOpen={setExportOpen}
-  />
+  handleExportChat={handleExportChat}
+
+  setCurrentChatId={setCurrentChatId}
+  setExportOpen={setExportOpen}
+/>
 );
 }
 
