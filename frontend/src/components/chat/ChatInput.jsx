@@ -9,7 +9,7 @@ import {
   FileImage,
 } from "lucide-react";
 
-function ChatInput({ onSend }) {
+function ChatInput({ onSend, inputRef }) {
   const { theme } = useTheme();
 const isLight = theme === "light";
   const [input, setInput] = useState("");
@@ -140,17 +140,18 @@ multiple
   </button>
 
   <input
+    ref={inputRef}
     type="text"
     placeholder="Message Astra..."
     value={input}
     onChange={(e) => setInput(e.target.value)}
     onKeyDown={handleKeyDown}
     className={`min-w-0 flex-1 bg-transparent py-4 text-sm outline-none sm:text-base ${
-  isLight
-    ? "text-slate-900 placeholder:text-slate-500"
-    : "text-white placeholder:text-slate-400"
-}`}
-  />
+      isLight
+        ? "text-slate-900 placeholder:text-slate-500"
+        : "text-white placeholder:text-slate-400"
+    }`}
+/>
 </div>
 
         <button

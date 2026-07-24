@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
+
 function Chat() {
   const createNewChat = () => ({
     id: crypto.randomUUID(),

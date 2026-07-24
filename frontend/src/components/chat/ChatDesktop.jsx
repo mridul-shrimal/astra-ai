@@ -4,6 +4,8 @@ import ChatSidebar from "./ChatSidebar";
 import ChatContainer from "./ChatContainer";
 import ChatInput from "./ChatInput";
 import ExportModal from "./ExportModal";
+import { useRef } from "react";
+import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 
 function ChatDesktop({
   chats,
@@ -37,6 +39,11 @@ function ChatDesktop({
   setCurrentChatId,
   setExportOpen,
 }) {
+  const inputRef = useRef(null);
+  useKeyboardShortcuts({
+  onNewChat: handleNewChat,
+  inputRef,
+});
   const { theme } = useTheme();
   console.log("ChatDesktop Theme:", theme);
 return (
@@ -141,7 +148,10 @@ return (
   onFeedback={handleFeedback}
   onExport={() => setExportOpen(true)}
 />
-        <ChatInput onSend={handleSendMessage} />
+        <ChatInput
+  onSend={handleSendMessage}
+  inputRef={inputRef}
+/>
 
       </div>
 

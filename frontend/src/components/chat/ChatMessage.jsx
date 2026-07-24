@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -33,7 +34,7 @@ function ChatMessage({
   const isUser = sender === "user";
 const { theme } = useTheme();
 const isLight = theme === "light";
-
+const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
   const [copiedMessage, setCopiedMessage] = useState(false);
 const [isSpeaking, setIsSpeaking] = useState(false);
@@ -99,22 +100,143 @@ const copyMessage = async () => {
 
   speechSynthesis.speak(utterance);
 };
-const downloadResponse = () => {
-  const blob = new Blob([message], {
-    type: "text/plain;charset=utf-8",
-  });
+const downloadResponse = (format = "txt") => {
 
-  const url = URL.createObjectURL(blob);
+  // TXT
+  if (format === "txt") {
+    const blob = new Blob([message], {
+      type: "text/plain;charset=utf-8",
+    });
 
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `Astra_Response_${Date.now()}.txt`;
+    const url = URL.createObjectURL(blob);
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Astra_Response_${Date.now()}.txt`;
 
-  URL.revokeObjectURL(url);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    return;
+  }
+
+  // PDF
+  if (format === "pdf") {
+
+    const pdf = new jsPDF();
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(12);
+
+    const lines = pdf.splitTextToSize(message, 180);
+
+    pdf.text(lines, 15, 20);
+
+    pdf.save(`Astra_Response_${Date.now()}.pdf`);
+
+    return;
+  }
+
+  // HTML
+  if (format === "html") {
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Astra AI Response</title>
+<style>
+body{
+  font-family: Arial, sans-serif;
+  padding: 30px;
+  line-height: 1.6;
+}
+pre{
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+</style>
+</head>
+<body>
+<pre>${message}</pre>
+</body>
+</html>`;
+
+    const blob = new Blob([html], {
+      type: "text/html",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Astra_Response_${Date.now()}.html`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    return;
+  }
+
+  // Markdown
+  if (format === "md") {
+
+    const blob = new Blob([message], {
+      type: "text/markdown;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Astra_Response_${Date.now()}.md`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    return;
+  }
+
+  // JSON
+  if (format === "json") {
+
+    const data = {
+      sender: "Astra AI",
+      message,
+      exportedAt: new Date().toISOString(),
+    };
+
+    const blob = new Blob(
+      [JSON.stringify(data, null, 2)],
+      {
+        type: "application/json",
+      }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Astra_Response_${Date.now()}.json`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    return;
+  }
+
 };
 
 return (
@@ -457,12 +579,13 @@ return (
 
               {/* Message Actions */}
 
-             <div className={`mt-5 flex flex-wrap items-center gap-2 border-t pt-4 ${
-  isLight
-    ? "border-slate-200"
-    : "border-slate-700"
-}`}>
-
+ <div
+  className={`relative mt-5 flex flex-wrap items-center gap-2 border-t pt-4 ${
+    isLight
+      ? "border-slate-200"
+      : "border-slate-700"
+  }`}
+>
                 <button
                   onClick={copyMessage}
                   className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
@@ -537,18 +660,103 @@ return (
                     <RotateCcw size={18} />
                   </button>
                 )}
-                {sender === "ai" && (
-  <button
-    onClick={downloadResponse}
-    className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
-  isLight
-    ? "bg-slate-100 text-slate-700 hover:bg-cyan-500 hover:text-white"
-    : "bg-slate-900 text-slate-300 hover:bg-cyan-600 hover:text-white"
-}`}
-    title="Download Response"
-  >
-    <Download size={18} />
-  </button>
+   {sender === "ai" && (
+  <div className="relative">
+
+    <button
+      onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+      className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+        isLight
+          ? "bg-slate-100 text-slate-700 hover:bg-cyan-500 hover:text-white"
+          : "bg-slate-900 text-slate-300 hover:bg-cyan-600 hover:text-white"
+      }`}
+      title="Download Response"
+    >
+      <Download size={18} />
+    </button>
+
+    {showDownloadMenu && (
+      <div
+        className={`absolute bottom-12 right-0 z-50 w-44 rounded-xl border shadow-xl ${
+          isLight
+            ? "border-slate-200 bg-white"
+            : "border-slate-700 bg-slate-900"
+        }`}
+      >
+        <button
+          onClick={() => {
+            downloadResponse("pdf");
+            setShowDownloadMenu(false);
+          }}
+          className={`block w-full px-4 py-3 text-left ${
+            isLight
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          📄 PDF
+        </button>
+
+          <button
+          onClick={() => {
+            downloadResponse("txt");
+            setShowDownloadMenu(false);
+          }}
+          className={`block w-full px-4 py-3 text-left ${
+            isLight
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          📃 TXT
+        </button>
+
+        <button
+          onClick={() => {
+            downloadResponse("html");
+            setShowDownloadMenu(false);
+          }}
+          className={`block w-full px-4 py-3 text-left ${
+            isLight
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          🌐 HTML
+        </button>
+
+        <button
+          onClick={() => {
+            downloadResponse("md");
+            setShowDownloadMenu(false);
+          }}
+          className={`block w-full px-4 py-3 text-left ${
+            isLight
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          📝 Markdown
+        </button>
+
+        <button
+          onClick={() => {
+            downloadResponse("json");
+            setShowDownloadMenu(false);
+          }}
+          className={`block w-full rounded-b-xl px-4 py-3 text-left ${
+            isLight
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          📦 JSON
+        </button>
+
+      </div>
+    )}
+
+  </div>
 )}
               </div>
             </>
