@@ -10,10 +10,11 @@ function Chat() {
     title: "New Chat",
     messages: [
       {
-        id: Date.now(),
-        sender: "ai",
-        message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
-      },
+  id: Date.now(),
+  sender: "ai",
+  message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
+  timestamp: Date.now(),
+},
     ],
   });
 const [statsOpen, setStatsOpen] = useState(false);
@@ -413,12 +414,14 @@ const userMessage = {
   id: Date.now(),
   sender: "user",
   message: text || "Uploaded document(s)",
- files: files.map((file) => ({
-  name: file.name,
-  type: file.type,
-  size: file.size,
-  preview: URL.createObjectURL(file),
-})),
+  timestamp: Date.now(),
+
+  files: files.map((file) => ({
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    preview: URL.createObjectURL(file),
+  })),
 };
 
     // Rename first message automatically
@@ -501,6 +504,7 @@ const aiMessage = {
   id: aiId,
   sender: "ai",
   message: "",
+  timestamp: Date.now(),
   liked: false,
   disliked: false,
 };
@@ -532,6 +536,7 @@ setIsGenerating(false);
   id: Date.now() + 1,
   sender: "ai",
   message: "❌ Unable to connect to the backend.",
+  timestamp: Date.now(),
   liked: false,
   disliked: false,
 }
@@ -587,6 +592,7 @@ let updatedMessages = [...currentChat.messages];
   id: Date.now(),
   sender: "ai",
   message: data.reply,
+  timestamp: Date.now(),
   liked: false,
   disliked: false,
 };

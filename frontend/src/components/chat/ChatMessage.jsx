@@ -25,13 +25,13 @@ function ChatMessage({
   id,
   sender,
   message,
+  timestamp,
   files,
   liked,
   disliked,
   onRegenerate,
   onFeedback,
 }) {
-    console.log("ChatMessage Render");
   const isUser = sender === "user";
 const { theme } = useTheme();
 const isLight = theme === "light";
@@ -578,7 +578,21 @@ return (
                 {message}
               </ReactMarkdown>
 
-              {/* Message Actions */}
+{/* Timestamp */}
+{timestamp && (
+  <div
+    className={`mt-3 text-xs ${
+      isLight ? "text-slate-500" : "text-slate-400"
+    }`}
+  >
+    {new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}
+  </div>
+)}
+
+{/* Message Actions */}
 
  <div
   className={`relative mt-5 flex flex-wrap items-center gap-2 border-t pt-4 ${
