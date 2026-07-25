@@ -10,6 +10,7 @@ import FavoritesModal from "./FavoritesModal";
 
 function ChatDesktop({
   chats,
+  folders,
   currentChat,
   currentChatId,
   statsOpen,
@@ -34,9 +35,11 @@ onCloseFavorites,
   isGenerating,
 
   handleNewChat,
+  handleCreateFolder,
   handleDeleteChat,
   handleRenameChat,
   handlePinChat,
+  handleDeleteFolder,
   handleDuplicateChat,
   handleArchiveChat,
   handleSendMessage,
@@ -72,10 +75,13 @@ return (
     >
       <ChatSidebar
   chats={chats}
+  folders={folders}
   currentChatId={currentChatId}
   searchQuery={searchQuery}
   onSearchChange={setSearchQuery}
   onNewChat={handleNewChat}
+  onCreateFolder={handleCreateFolder}
+  onDeleteFolder={handleDeleteFolder}
   onSelectChat={(id) => {
     setCurrentChatId(id);
 

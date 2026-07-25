@@ -10,6 +10,7 @@ function Chat() {
   title: "New Chat",
   pinned: false,
     archived: false,
+    folder: "Uncategorized",
   messages: [
   {
     id: Date.now(),
@@ -22,6 +23,13 @@ function Chat() {
   });
 const [statsOpen, setStatsOpen] = useState(false);
 const [favoritesOpen, setFavoritesOpen] = useState(false);
+const [folders, setFolders] = useState(() => {
+  const saved = localStorage.getItem("astra-folders");
+
+  return saved
+    ? JSON.parse(saved)
+    : ["Uncategorized"];
+});
   // Load chats
   const [chats, setChats] = useState(() => {
   const saved = localStorage.getItem("astra-chats");
@@ -30,6 +38,7 @@ const [favoritesOpen, setFavoritesOpen] = useState(false);
     return JSON.parse(saved).map((chat) => ({
   pinned: false,
   archived: false,
+    folder: "Uncategorized",
   ...chat,
 }));
   }
@@ -85,6 +94,14 @@ useEffect(() => {
       localStorage.setItem("astra-current-chat", currentChatId);
     }
   }, [currentChatId]);
+
+  // Save folders
+useEffect(() => {
+  localStorage.setItem(
+    "astra-folders",
+    JSON.stringify(folders)
+  );
+}, [folders]);
 
   const currentChat =
     chats.find((chat) => chat.id === currentChatId) || chats[0];
@@ -759,10 +776,49 @@ const handleStopGenerating = () => {
     setCurrentChatId(newChat.id);
      toast.success("New chat created!");
   };
+  const handleCreateFolder = () => {
+  const name = prompt("Enter folder name:");
+
+  if (!name?.trim()) return;
+
+  if (folders.includes(name.trim())) {
+    toast.error("Folder already exists!");
+    return;
+  }
+
+  setFolders((prev) => [...prev, name.trim()]);
+  toast.success("📂 Folder created!");
+};
+const handleDeleteFolder = (folderName) => {
+  if (
+    !window.confirm(
+      `Delete "${folderName}" folder?`
+    )
+  )
+    return;
+
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.folder === folderName
+        ? {
+            ...chat,
+            folder: "Uncategorized",
+          }
+        : chat
+    )
+  );
+
+  setFolders((prev) =>
+    prev.filter((f) => f !== folderName)
+  );
+
+  toast.success("Folder deleted.");
+};
 return (
   
 <ChatDesktop
   chats={chats}
+    folders={folders}
   currentChat={currentChat}
   currentChatId={currentChatId}
 
@@ -788,8 +844,10 @@ onCloseFavorites={() => setFavoritesOpen(false)}
   isGenerating={isGenerating}
 
   handleNewChat={handleNewChat}
+  handleCreateFolder={handleCreateFolder}
   handleDeleteChat={handleDeleteChat}
   handleRenameChat={handleRenameChat}
+  handleDeleteFolder={handleDeleteFolder}
   handlePinChat={handlePinChat}
   handleDuplicateChat={handleDuplicateChat}
   handleArchiveChat={handleArchiveChat}

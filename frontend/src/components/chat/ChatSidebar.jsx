@@ -1,6 +1,5 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
-import { useState, useRef, useEffect } from "react";
-import { RotateCcw } from "lucide-react";
 import {
   Search,
   MessageSquare,
@@ -12,15 +11,22 @@ import {
   Archive,
   Pencil,
   Trash2,
+  FolderPlus,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function ChatSidebar({
   chats,
+  folders,
   currentChatId,
   searchQuery,
   onSearchChange,
+
   onNewChat,
+  onCreateFolder,
+  onDeleteFolder,
   onSelectChat,
   onDeleteChat,
   onRenameChat,
@@ -28,346 +34,441 @@ function ChatSidebar({
   onDuplicateChat,
   onArchiveChat,
 }) {
-  const [showArchived, setShowArchived] = useState(true);
+  const { theme } = useTheme();
   const navigate = useNavigate();
-const { theme } = useTheme();
-const [openMenu, setOpenMenu] = useState(null);
-const menuRef = useRef(null);
-useEffect(() => {
-  function handleClickOutside(event) {
-    if (
-      menuRef.current &&
-      !menuRef.current.contains(event.target)
-    ) {
-      setOpenMenu(null);
-    }
-  }
 
-  document.addEventListener("mousedown", handleClickOutside);
+  const menuRef = useRef(null);
 
-  return () =>
-    document.removeEventListener(
-      "mousedown",
-      handleClickOutside
-    );
-}, []);
+  const [openMenu, setOpenMenu] = useState(null);
+  const [showArchived, setShowArchived] = useState(true);
 
-  return (
-    <aside
-  className={`flex h-full w-72 max-w-[85vw] flex-col border-r shadow-xl md:shadow-none ${
-    theme === "light"
-      ? "bg-white border-slate-200"
-      : "bg-slate-950 border-slate-800"
-  }`}
->
-      {/* New Chat */}
-      <div
-  className={`sticky top-0 z-10 border-b p-4 ${
-    theme === "light"
-      ? "bg-white border-slate-200"
-      : "bg-slate-950 border-slate-800"
-  }`}
->
-        <button
-          onClick={onNewChat}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-600"
-        >
-          <MessageSquarePlus size={20} />
-          New Chat
-        </button>
-      </div>
+  // collapsed folders
+  const [collapsedFolders, setCollapsedFolders] = useState({});
 
-      {/* Search */}
-      <div
-  className={`border-b px-4 py-4 ${
-    theme === "light"
-      ? "border-slate-200"
-      : "border-slate-800"
-  }`}
->
-        <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search chats..."
-            className={`w-full rounded-xl border py-3 pl-10 pr-4 outline-none transition focus:border-cyan-500 ${
-  theme === "light"
-    ? "border-slate-300 bg-white text-slate-900 placeholder:text-slate-500"
-    : "border-slate-700 bg-slate-900 text-white placeholder:text-slate-400"
-}`}
-          />
-        </div>
-      </div>
-
-      {/* Chats Heading */}
-      <div className="px-5 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Chats
-        </p>
-      </div>
-
-      {/* Chat List */}
-      <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
-        {chats.length === 0 ? (
-          <div
-  className={`flex h-32 items-center justify-center rounded-xl ${
-    theme === "light"
-      ? "bg-slate-100 text-slate-500"
-      : "bg-slate-900 text-slate-400"
-  }`}
->
-  No chats found
-</div>
-        ) : (
-  [...chats]
-  .filter((chat) => !chat.archived)
-  .filter((chat) =>
-    chat.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  )
-  .sort((a, b) => Number(b.pinned) - Number(a.pinned))
-  .map((chat) => (
-            <div
-              key={chat.id}
-              className={`group flex items-center justify-between rounded-xl p-3 transition-all duration-200 ease-out ${
-  currentChatId === chat.id
-    ? theme === "light"
-      ? "bg-cyan-100 shadow-md"
-      : "bg-slate-800 shadow-md"
-    : theme === "light"
-      ? "bg-white hover:bg-slate-100 hover:scale-[1.02]"
-      : "bg-slate-900 hover:bg-slate-800 hover:scale-[1.02]"
-}`}
-            >
-              {/* Chat Title */}
-              <button
-                onClick={() => onSelectChat(chat.id)}
-                className="flex flex-1 items-center gap-2 overflow-hidden text-left text-slate-200"
-              >
-                <div className="flex items-center gap-2">
-  <MessageSquare
-    size={18}
-    className="shrink-0 text-cyan-400"
-  />
-
-  {chat.pinned && (
-    <span title="Pinned">📌</span>
-  )}
-</div>
-                <span
-  className={`truncate text-sm md:text-base ${
-    theme === "light"
-      ? "text-slate-900"
-      : "text-slate-200"
-  }`}
->
-  {chat.title}
-</span>
-              </button>
-
-              {/* Actions */}
-<div className="relative ml-2">
-  <button
-    onClick={(e) => {
-  e.stopPropagation();
-  setOpenMenu((prev) =>
-    prev === chat.id ? null : chat.id
-  );
-}}
-    className={`rounded-md p-1 transition ${
-      theme === "light"
-        ? "hover:bg-slate-200"
-        : "hover:bg-slate-700"
-    }`}
-  >
-    <MoreVertical
-      size={18}
-      className={
-        theme === "light"
-          ? "text-slate-700"
-          : "text-slate-300"
+  useEffect(() => {
+    const closeMenu = (e) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target)
+      ) {
+        setOpenMenu(null);
       }
-    />
-  </button>
+    };
 
-  {openMenu === chat.id && (
-  <div
-    ref={menuRef}
-    className={`absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border shadow-2xl transition-all duration-200 ease-out ${
+    document.addEventListener("mousedown", closeMenu);
+
+    return () =>
+      document.removeEventListener(
+        "mousedown",
+        closeMenu
+      );
+  }, []);
+
+  const visibleChats = useMemo(() => {
+    return chats
+      .filter((chat) => !chat.archived)
+      .filter((chat) =>
+        chat.title
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      )
+      .sort(
+        (a, b) => Number(b.pinned) - Number(a.pinned)
+      );
+  }, [chats, searchQuery]);
+
+  const groupedChats = useMemo(() => {
+    const groups = {};
+
+    folders.forEach((folder) => {
+      groups[folder] = [];
+    });
+
+    if (!groups["Uncategorized"]) {
+      groups["Uncategorized"] = [];
+    }
+
+    visibleChats.forEach((chat) => {
+      const folder =
+        chat.folder || "Uncategorized";
+
+      if (!groups[folder]) {
+        groups[folder] = [];
+      }
+
+      groups[folder].push(chat);
+    });
+
+    return groups;
+  }, [folders, visibleChats]);
+
+  const toggleFolder = (folder) => {
+    setCollapsedFolders((prev) => ({
+      ...prev,
+      [folder]: !prev[folder],
+    }));
+  };
+  return (
+  <aside
+    className={`flex h-full w-72 max-w-[85vw] flex-col border-r shadow-xl md:shadow-none ${
       theme === "light"
         ? "border-slate-200 bg-white"
-        : "border-slate-700 bg-slate-900"
+        : "border-slate-800 bg-slate-950"
     }`}
   >
+    {/* New Chat */}
+    <div
+      className={`border-b p-4 ${
+        theme === "light"
+          ? "border-slate-200"
+          : "border-slate-800"
+      }`}
+    >
       <button
-  onClick={() => {
-    onPinChat(chat.id);
-    setOpenMenu(null);
-  }}
-  className={`flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-sm transition ${
-    theme === "light"
-      ? "text-slate-900 hover:bg-slate-100"
-      : "text-slate-200 hover:bg-slate-800"
-  }`}
->
-  <Pin size={16} />
-  <span>{chat.pinned ? "Unpin" : "Pin"}</span>
-</button>
+        onClick={onNewChat}
+        className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-600"
+      >
+        <MessageSquarePlus size={20} />
+        New Chat
+      </button>
 
       <button
-  onClick={() => {
-    onDuplicateChat(chat.id);
-    setOpenMenu(null);
-  }}
-  className={`flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-sm transition ${
-    theme === "light"
-      ? "text-slate-900 hover:bg-slate-100"
-      : "text-slate-200 hover:bg-slate-800"
-  }`}
->
-  <Copy size={16} />
-  <span>Duplicate</span>
-</button>
-
-      <button
-  onClick={() => {
-    onArchiveChat(chat.id);
-    setOpenMenu(null);
-  }}
-  className={`flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-sm transition ${
-    theme === "light"
-      ? "text-slate-900 hover:bg-slate-100"
-      : "text-slate-200 hover:bg-slate-800"
-  }`}
->
-  <Archive size={16} />
-  <span>{chat.archived ? "Restore" : "Archive"}</span>
-</button>
-
-      <button
-  onClick={() => {
-    onRenameChat(chat.id);
-    setOpenMenu(null);
-  }}
-  className={`flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-sm transition ${
-    theme === "light"
-      ? "text-slate-900 hover:bg-slate-100"
-      : "text-slate-200 hover:bg-slate-800"
-  }`}
->
-  <Pencil size={16} />
-  <span>Rename</span>
-</button>
-
-<hr
-  className={`my-1 ${
-    theme === "light"
-      ? "border-slate-200"
-      : "border-slate-700"
-  }`}
-/>
-      <button
-  onClick={() => {
-    onDeleteChat(chat.id);
-    setOpenMenu(null);
-  }}
-  className={`flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-sm transition ${
-    theme === "light"
-      ? "text-red-600 hover:bg-red-50"
-      : "text-red-400 hover:bg-red-900/20"
-  }`}
->
-  <Trash2 size={16} />
-  <span>Delete</span>
-</button>
+        onClick={onCreateFolder}
+        className={`flex w-full items-center justify-center gap-2 rounded-xl border py-2 transition ${
+          theme === "light"
+            ? "border-slate-300 hover:bg-slate-100"
+            : "border-slate-700 hover:bg-slate-800"
+        }`}
+      >
+        <FolderPlus size={18} />
+        New Folder
+      </button>
     </div>
+
+    {/* Search */}
+    <div
+      className={`border-b p-4 ${
+        theme === "light"
+          ? "border-slate-200"
+          : "border-slate-800"
+      }`}
+    >
+      <div className="relative">
+        <Search
+          size={18}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        />
+
+        <input
+          value={searchQuery}
+          onChange={(e) =>
+            onSearchChange(e.target.value)
+          }
+          placeholder="Search chats..."
+          className={`w-full rounded-xl border py-3 pl-10 pr-4 outline-none ${
+            theme === "light"
+              ? "border-slate-300 bg-white"
+              : "border-slate-700 bg-slate-900 text-white"
+          }`}
+        />
+      </div>
+    </div>
+
+    {/* Chat List */}
+    <div className="flex-1 overflow-y-auto p-3">
+      {Object.entries(groupedChats).map(
+        ([folder, folderChats]) => (
+          <div key={folder} className="mb-4">
+
+            {/* Folder Header */}
+
+            <button
+              onClick={() => toggleFolder(folder)}
+              className={`mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-bold uppercase transition ${
+                theme === "light"
+                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+  <span>📂 {folder}</span>
+
+  {folder !== "Uncategorized" && (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onDeleteFolder(folder);
+      }}
+      className={`rounded p-1 transition ${
+        theme === "light"
+          ? "hover:bg-red-100"
+          : "hover:bg-red-900/20"
+      }`}
+      title="Delete Folder"
+    >
+      🗑️
+    </button>
   )}
 </div>
 
-            </div>
-          ))
-        )}
-      </div>
-            {/* Archived Chats */}
-      {chats.filter((chat) => chat.archived).length > 0 && (
-        <div className="border-t border-slate-800 p-3">
-          <button
-  onClick={() => setShowArchived(!showArchived)}
-  className="mb-2 flex w-full items-center justify-between rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wider text-slate-500 transition hover:bg-slate-800"
+              {collapsedFolders[folder] ? (
+                <ChevronRight size={16} />
+              ) : (
+                <ChevronDown size={16} />
+              )}
+            </button>
+
+            {!collapsedFolders[folder] &&
+              folderChats.map((chat) => (
+                <div
+  key={chat.id}
+  className={`group mb-2 flex items-center justify-between rounded-xl p-3 transition-all duration-200 ${
+    currentChatId === chat.id
+      ? theme === "light"
+        ? "bg-cyan-100 shadow-md"
+        : "bg-slate-800 shadow-md"
+      : theme === "light"
+        ? "bg-white hover:bg-slate-100 hover:scale-[1.02]"
+        : "bg-slate-900 hover:bg-slate-800 hover:scale-[1.02]"
+  }`}
 >
-  <span>
-    📦 Archived ({chats.filter(chat => chat.archived).length})
-  </span>
+  {/* Chat */}
+  <button
+    onClick={() => onSelectChat(chat.id)}
+    className="flex flex-1 items-center gap-2 overflow-hidden text-left"
+  >
+    <MessageSquare
+      size={18}
+      className="shrink-0 text-cyan-400"
+    />
 
-  <span>
-    {showArchived ? "▼" : "▶"}
-  </span>
-</button>
+    {chat.pinned && <span>📌</span>}
 
-          {showArchived &&
-  chats
-    .filter((chat) => chat.archived)
-    .filter((chat) =>
-      chat.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
-    )
-    .map((chat) => (
+    <span
+      className={`truncate text-sm ${
+        theme === "light"
+          ? "text-slate-900"
+          : "text-slate-200"
+      }`}
+    >
+      {chat.title}
+    </span>
+  </button>
+
+  {/* 3 Dot */}
+  <div className="relative ml-2">
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        setOpenMenu(
+          openMenu === chat.id ? null : chat.id
+        );
+      }}
+      className={`rounded-md p-1 transition ${
+        theme === "light"
+          ? "hover:bg-slate-200"
+          : "hover:bg-slate-700"
+      }`}
+    >
+      <MoreVertical
+        size={18}
+        className={
+          theme === "light"
+            ? "text-slate-700"
+            : "text-slate-300"
+        }
+      />
+    </button>
+
+    {openMenu === chat.id && (
+      <div
+        ref={menuRef}
+        className={`absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border shadow-2xl ${
+          theme === "light"
+            ? "border-slate-200 bg-white"
+            : "border-slate-700 bg-slate-900"
+        }`}
+      >
+        <button
+          onClick={() => {
+            onPinChat(chat.id);
+            setOpenMenu(null);
+          }}
+          className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
+            theme === "light"
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          <Pin size={16} />
+          {chat.pinned ? "Unpin" : "Pin"}
+        </button>
+
+        <button
+          onClick={() => {
+            onDuplicateChat(chat.id);
+            setOpenMenu(null);
+          }}
+          className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
+            theme === "light"
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          <Copy size={16} />
+          Duplicate
+        </button>
+
+        <button
+          onClick={() => {
+            onArchiveChat(chat.id);
+            setOpenMenu(null);
+          }}
+          className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
+            theme === "light"
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          <Archive size={16} />
+          Archive
+        </button>
+
+        <button
+          onClick={() => {
+            onRenameChat(chat.id);
+            setOpenMenu(null);
+          }}
+          className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
+            theme === "light"
+              ? "hover:bg-slate-100"
+              : "hover:bg-slate-800"
+          }`}
+        >
+          <Pencil size={16} />
+          Rename
+        </button>
+
+        <hr
+          className={
+            theme === "light"
+              ? "border-slate-200"
+              : "border-slate-700"
+          }
+        />
+
+        <button
+          onClick={() => {
+            onDeleteChat(chat.id);
+            setOpenMenu(null);
+          }}
+          className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
+            theme === "light"
+              ? "text-red-600 hover:bg-red-50"
+              : "text-red-400 hover:bg-red-900/20"
+          }`}
+        >
+          <Trash2 size={16} />
+          Delete
+        </button>
+      </div>
+    )}
+  </div>
+</div>
+      ))
+    }
+  </div>
+))
+}
+</div>
+    {/* Archived Chats */}
+    {chats.filter((chat) => chat.archived).length > 0 && (
+      <div
+        className={`border-t p-3 ${
+          theme === "light"
+            ? "border-slate-200"
+            : "border-slate-800"
+        }`}
+      >
+        <button
+          onClick={() => setShowArchived(!showArchived)}
+          className={`mb-2 flex w-full items-center justify-between rounded-lg px-2 py-2 text-xs font-semibold uppercase tracking-wider transition ${
+            theme === "light"
+              ? "text-slate-600 hover:bg-slate-100"
+              : "text-slate-400 hover:bg-slate-800"
+          }`}
+        >
+          <span>
+            📦 Archived (
+            {chats.filter((chat) => chat.archived).length})
+          </span>
+
+          {showArchived ? (
+            <ChevronDown size={16} />
+          ) : (
+            <ChevronRight size={16} />
+          )}
+        </button>
+
+        {showArchived &&
+          chats
+            .filter((chat) => chat.archived)
+            .map((chat) => (
               <div
                 key={chat.id}
                 className={`mb-2 flex items-center justify-between rounded-lg p-2 ${
-  theme === "light"
-    ? "bg-slate-100"
-    : "bg-slate-900"
-}`}
+                  theme === "light"
+                    ? "bg-slate-100"
+                    : "bg-slate-900"
+                }`}
               >
-                <span className={`truncate text-sm ${
-  theme === "light"
-    ? "text-slate-900"
-    : "text-slate-300"
-}`}>
+                <span
+                  className={`truncate text-sm ${
+                    theme === "light"
+                      ? "text-slate-700"
+                      : "text-slate-300"
+                  }`}
+                >
                   {chat.title}
                 </span>
 
                 <button
-  onClick={() => onArchiveChat(chat.id)}
-  className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs transition ${
-    theme === "light"
-      ? "text-slate-900 hover:bg-slate-200"
-      : "text-green-400 hover:bg-slate-800"
-  }`}
->
-  <RotateCcw size={14} />
-  Restore
-</button>
+                  onClick={() => onArchiveChat(chat.id)}
+                  className={`rounded-md px-2 py-1 text-xs font-medium transition ${
+                    theme === "light"
+                      ? "text-slate-900 hover:bg-slate-200"
+                      : "text-green-400 hover:bg-slate-800"
+                  }`}
+                >
+                  ♻ Restore
+                </button>
               </div>
             ))}
-        </div>
-      )}
-
-      {/* Bottom Settings */}
-      <div className="border-t border-slate-800 p-3">
-        <button
-          onClick={() => navigate("/settings")}
-          className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition md:text-base ${
-  theme === "light"
-    ? "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-    : "text-slate-300 hover:bg-slate-800 hover:text-white"
-}`}
-        >
-          <Settings size={20} />
-          <span>Settings</span>
-        </button>
       </div>
-    </aside>
-  );
+    )}
+
+    {/* Settings */}
+    <div
+      className={`border-t p-3 ${
+        theme === "light"
+          ? "border-slate-200"
+          : "border-slate-800"
+      }`}
+    >
+      <button
+        onClick={() => navigate("/settings")}
+        className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition ${
+          theme === "light"
+            ? "text-slate-700 hover:bg-slate-100"
+            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+        }`}
+      >
+        <Settings size={20} />
+        <span>Settings</span>
+      </button>
+    </div>
+  </aside>
+);
 }
 
 export default ChatSidebar;
