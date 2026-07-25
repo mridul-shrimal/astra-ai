@@ -27,6 +27,7 @@ function ChatSidebar({
   onNewChat,
   onCreateFolder,
   onDeleteFolder,
+  onMoveChatToFolder,
   onSelectChat,
   onDeleteChat,
   onRenameChat,
@@ -40,6 +41,7 @@ function ChatSidebar({
   const menuRef = useRef(null);
 
   const [openMenu, setOpenMenu] = useState(null);
+  const [moveFolderMenu, setMoveFolderMenu] = useState(null);
   const [showArchived, setShowArchived] = useState(true);
 
   // collapsed folders
@@ -305,34 +307,93 @@ function ChatSidebar({
         </button>
 
         <button
-          onClick={() => {
-            onDuplicateChat(chat.id);
-            setOpenMenu(null);
-          }}
-          className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
-            theme === "light"
-              ? "hover:bg-slate-100"
-              : "hover:bg-slate-800"
-          }`}
-        >
-          <Copy size={16} />
-          Duplicate
-        </button>
+  onClick={() => {
+    onDuplicateChat(chat.id);
+    setOpenMenu(null);
+  }}
+  className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
+    theme === "light"
+      ? "hover:bg-slate-100"
+      : "hover:bg-slate-800"
+  }`}
+>
+  <Copy size={16} />
+  Duplicate
+</button>
 
-        <button
-          onClick={() => {
-            onArchiveChat(chat.id);
-            setOpenMenu(null);
-          }}
-          className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
-            theme === "light"
-              ? "hover:bg-slate-100"
-              : "hover:bg-slate-800"
-          }`}
-        >
-          <Archive size={16} />
-          Archive
-        </button>
+{/* Move to Folder */}
+<div
+  className={`border-t ${
+    theme === "light"
+      ? "border-slate-200"
+      : "border-slate-700"
+  }`}
+>
+  <button
+    onClick={() =>
+      setMoveFolderMenu(
+        moveFolderMenu === chat.id ? null : chat.id
+      )
+    }
+    className={`flex w-full items-center justify-between px-4 py-3 text-sm transition ${
+      theme === "light"
+        ? "hover:bg-slate-100"
+        : "hover:bg-slate-800"
+    }`}
+  >
+    <span className="flex items-center gap-3">
+      📂 Move to Folder
+    </span>
+
+    <span>
+      {moveFolderMenu === chat.id ? "▼" : "▶"}
+    </span>
+  </button>
+
+  {moveFolderMenu === chat.id && (
+    <div
+      className={`overflow-hidden ${
+        theme === "light"
+          ? "bg-slate-50"
+          : "bg-slate-800"
+      }`}
+    >
+      {[...new Set(["Uncategorized", ...folders])].map(
+        (folder) => (
+          <button
+            key={folder}
+            onClick={() => {
+              onMoveChatToFolder(chat.id, folder);
+              setMoveFolderMenu(null);
+              setOpenMenu(null);
+            }}
+            className={`flex w-full items-center gap-3 px-8 py-2 text-sm transition ${
+              theme === "light"
+                ? "hover:bg-slate-100"
+                : "hover:bg-slate-700"
+            }`}
+          >
+            📂 {folder}
+          </button>
+        )
+      )}
+    </div>
+  )}
+</div>
+<button
+  onClick={() => {
+    onArchiveChat(chat.id);
+    setOpenMenu(null);
+  }}
+  className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
+    theme === "light"
+      ? "hover:bg-slate-100"
+      : "hover:bg-slate-800"
+  }`}
+>
+  <Archive size={16} />
+  Archive
+</button>
 
         <button
           onClick={() => {

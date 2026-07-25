@@ -40,6 +40,7 @@ onCloseFavorites,
   handleRenameChat,
   handlePinChat,
   handleDeleteFolder,
+  handleMoveChatToFolder,
   handleDuplicateChat,
   handleArchiveChat,
   handleSendMessage,
@@ -82,6 +83,7 @@ return (
   onNewChat={handleNewChat}
   onCreateFolder={handleCreateFolder}
   onDeleteFolder={handleDeleteFolder}
+  onMoveChatToFolder={handleMoveChatToFolder}
   onSelectChat={(id) => {
     setCurrentChatId(id);
 

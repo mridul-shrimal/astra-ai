@@ -814,6 +814,20 @@ const handleDeleteFolder = (folderName) => {
 
   toast.success("Folder deleted.");
 };
+const handleMoveChatToFolder = (chatId, folderName) => {
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === chatId
+        ? {
+            ...chat,
+            folder: folderName,
+          }
+        : chat
+    )
+  );
+
+  toast.success(`Moved to "${folderName}"`);
+};
 return (
   
 <ChatDesktop
@@ -839,7 +853,7 @@ return (
   favoritesOpen={favoritesOpen}
 onOpenFavorites={() => setFavoritesOpen(true)}
 onCloseFavorites={() => setFavoritesOpen(false)}
-
+handleMoveChatToFolder={handleMoveChatToFolder}
   isTyping={isTyping}
   isGenerating={isGenerating}
 
