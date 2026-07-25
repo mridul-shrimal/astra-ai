@@ -11,15 +11,17 @@ function Chat() {
   pinned: false,
     archived: false,
   messages: [
-      {
-  id: Date.now(),
-  sender: "ai",
-  message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
-  timestamp: Date.now(),
-},
-    ],
+  {
+    id: Date.now(),
+    sender: "ai",
+    message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
+    timestamp: Date.now(),
+    favorite: false,
+  },
+],
   });
 const [statsOpen, setStatsOpen] = useState(false);
+const [favoritesOpen, setFavoritesOpen] = useState(false);
   // Load chats
   const [chats, setChats] = useState(() => {
   const saved = localStorage.getItem("astra-chats");
@@ -122,6 +124,28 @@ const handleFeedback = (messageId, type) => {
   });
 
   updateCurrentMessages(updatedMessages);
+};
+// Toggle Favorite Message
+const handleFavoriteMessage = (messageId) => {
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id !== currentChatId
+        ? chat
+        : {
+            ...chat,
+            messages: chat.messages.map((msg) =>
+              msg.id === messageId
+                ? {
+                    ...msg,
+                    favorite: !msg.favorite,
+                  }
+                : msg
+            ),
+          }
+    )
+  );
+
+  toast.success("⭐ Favorites updated!");
 };
   // Rename Chat
   const handleRenameChat = (chatId) => {
@@ -515,6 +539,7 @@ const userMessage = {
   sender: "user",
   message: text || "Uploaded document(s)",
   timestamp: Date.now(),
+  favorite: false,
 
   files: files.map((file) => ({
     name: file.name,
@@ -607,7 +632,9 @@ const aiMessage = {
   timestamp: Date.now(),
   liked: false,
   disliked: false,
+  favourite:false,
 };
+
 
 const newMessages = [
   ...updatedMessages,
@@ -753,6 +780,10 @@ return (
   onOpenStats={() => setStatsOpen(true)}
   onCloseStats={() => setStatsOpen(false)}
 
+  favoritesOpen={favoritesOpen}
+onOpenFavorites={() => setFavoritesOpen(true)}
+onCloseFavorites={() => setFavoritesOpen(false)}
+
   isTyping={isTyping}
   isGenerating={isGenerating}
 
@@ -766,6 +797,7 @@ return (
   handleStopGenerating={handleStopGenerating}
   handleRegenerate={handleRegenerate}
   handleFeedback={handleFeedback}
+  handleFavoriteMessage={handleFavoriteMessage}
 
   handleExportChat={handleExportChat}
 

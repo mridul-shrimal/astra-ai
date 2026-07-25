@@ -10,6 +10,7 @@ function ChatContainer({
   onStopGenerating,
   onRegenerate,
   onFeedback,
+  onFavorite,
   statsOpen,
   onCloseStats,
   setShowScrollButton,
@@ -123,6 +124,7 @@ function ChatContainer({
   }
   onRegenerate={onRegenerate}
   onFeedback={onFeedback}
+  onFavorite={onFavorite}
 />
           </div>
         ))}

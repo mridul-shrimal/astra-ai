@@ -15,6 +15,7 @@ import {
   Volume2,
   ThumbsUp,
   ThumbsDown,
+  Star,
   RotateCcw,
   ExternalLink,
   Download,
@@ -29,8 +30,10 @@ function ChatMessage({
   files,
   liked,
   disliked,
+  favorite,
   onRegenerate,
   onFeedback,
+  onFavorite,
 }) {
   const isUser = sender === "user";
 const { theme } = useTheme();
@@ -618,7 +621,22 @@ return (
                     <Copy size={18} />
                   )}
                 </button>
-
+<button
+  onClick={() => onFavorite(id)}
+  className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+    favorite
+      ? "bg-yellow-500 text-white"
+      : isLight
+        ? "bg-slate-100 text-slate-700 hover:bg-yellow-400 hover:text-white"
+        : "bg-slate-900 text-slate-300 hover:bg-yellow-500 hover:text-white"
+  }`}
+  title={favorite ? "Remove Favorite" : "Add to Favorites"}
+>
+  <Star
+    size={18}
+    fill={favorite ? "currentColor" : "none"}
+  />
+</button>
                 <button
   onClick={speakMessage}
   className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${

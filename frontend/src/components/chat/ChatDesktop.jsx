@@ -6,6 +6,7 @@ import ChatInput from "./ChatInput";
 import ExportModal from "./ExportModal";
 import { useRef, useState } from "react";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
+import FavoritesModal from "./FavoritesModal";
 
 function ChatDesktop({
   chats,
@@ -14,6 +15,10 @@ function ChatDesktop({
   statsOpen,
   onOpenStats,
   onCloseStats,
+
+  favoritesOpen,
+onOpenFavorites,
+onCloseFavorites,
 
   sidebarOpen,
   setSidebarOpen,
@@ -38,7 +43,8 @@ function ChatDesktop({
   handleStopGenerating,
   handleRegenerate,
   handleFeedback,
-
+  handleFavoriteMessage,
+   
   handleExportChat,
 
   setCurrentChatId,
@@ -147,7 +153,13 @@ return (
             >
               📊
             </button>
-
+<button
+  onClick={onOpenFavorites}
+  className="rounded-lg bg-yellow-500 px-3 py-2 text-white transition hover:bg-yellow-600"
+  title="Favorite Messages"
+>
+  ⭐
+</button>
             <button
               onClick={() => setExportOpen(true)}
               className="rounded-lg bg-cyan-500 px-3 py-2 text-white transition hover:bg-cyan-600"
@@ -171,6 +183,7 @@ return (
           onStopGenerating={handleStopGenerating}
           onRegenerate={handleRegenerate}
           onFeedback={handleFeedback}
+          onFavorite={handleFavoriteMessage}
           onExport={() => setExportOpen(true)}
           statsOpen={statsOpen}
           onOpenStats={onOpenStats}
@@ -207,7 +220,23 @@ return (
       </div>
 
     </div>
+<FavoritesModal
+  open={favoritesOpen}
+  onClose={onCloseFavorites}
+  messages={currentChat.messages}
+  onSelectMessage={(messageId) => {
+    const element = document.getElementById(
+      `message-${messageId}`
+    );
 
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }}
+/>
     <ExportModal
       open={exportOpen}
       selectedFormat={selectedFormat}
