@@ -16,11 +16,13 @@ function ChatSidebar({
   onSelectChat,
   onDeleteChat,
   onRenameChat,
+  onPinChat,
 }) {
   const navigate = useNavigate();
 const { theme } = useTheme();
 
 console.log("ChatSidebar Theme:", theme);
+console.log("onPinChat =", onPinChat);
   return (
     <aside
   className={`flex h-full w-72 max-w-[85vw] flex-col border-r shadow-xl md:shadow-none ${
@@ -94,7 +96,9 @@ console.log("ChatSidebar Theme:", theme);
   No chats found
 </div>
         ) : (
-          chats.map((chat) => (
+  [...chats]
+    .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+    .map((chat) => (
             <div
               key={chat.id}
               className={`group flex items-center justify-between rounded-xl p-3 transition-all duration-200 ${
@@ -112,11 +116,16 @@ console.log("ChatSidebar Theme:", theme);
                 onClick={() => onSelectChat(chat.id)}
                 className="flex flex-1 items-center gap-2 overflow-hidden text-left text-slate-200"
               >
-                <MessageSquare
-                  size={18}
-                  className="shrink-0 text-cyan-400"
-                />
+                <div className="flex items-center gap-2">
+  <MessageSquare
+    size={18}
+    className="shrink-0 text-cyan-400"
+  />
 
+  {chat.pinned && (
+    <span title="Pinned">📌</span>
+  )}
+</div>
                 <span
   className={`truncate text-sm md:text-base ${
     theme === "light"
@@ -130,6 +139,17 @@ console.log("ChatSidebar Theme:", theme);
 
               {/* Actions */}
               <div className="ml-2 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                 <button
+    onClick={() => onPinChat(chat.id)}
+    className={`rounded-md p-1 transition ${
+      chat.pinned
+        ? "text-cyan-400 hover:bg-slate-700"
+        : "text-slate-400 hover:bg-slate-700 hover:text-cyan-400"
+    }`}
+    title={chat.pinned ? "Unpin" : "Pin"}
+  >
+    📌
+  </button>
                 <button
                   onClick={() => onRenameChat(chat.id)}
                   className="rounded-md p-1 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300"

@@ -6,9 +6,10 @@ import ChatDesktop from "../components/chat/ChatDesktop";
 function Chat() {
   const createNewChat = () => ({
     id: crypto.randomUUID(),
-    sessionId: crypto.randomUUID(),
-    title: "New Chat",
-    messages: [
+  sessionId: crypto.randomUUID(),
+  title: "New Chat",
+  pinned: false,
+  messages: [
       {
   id: Date.now(),
   sender: "ai",
@@ -20,13 +21,17 @@ function Chat() {
 const [statsOpen, setStatsOpen] = useState(false);
   // Load chats
   const [chats, setChats] = useState(() => {
-    const saved = localStorage.getItem("astra-chats");
-    if (saved) {
-      return JSON.parse(saved);
-    }
+  const saved = localStorage.getItem("astra-chats");
 
-    return [createNewChat()];
-  });
+  if (saved) {
+    return JSON.parse(saved).map((chat) => ({
+      pinned: false,
+      ...chat,
+    }));
+  }
+
+  return [createNewChat()];
+});
 
   // Export Modal State
 const [exportOpen, setExportOpen] = useState(false);
@@ -140,7 +145,22 @@ const handleFeedback = (messageId, type) => {
   );
   toast.success("Chat renamed!");
 };
+const handlePinChat = (chatId) => {
+   console.log("PIN CLICKED:", chatId);
 
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === chatId
+        ? {
+            ...chat,
+            pinned: !chat.pinned,
+          }
+        : chat
+    )
+  );
+
+  toast.success("Chat updated!");
+};
   // Export Chat
   const handleExportChat = () => {
   setExportOpen(false);
@@ -659,7 +679,7 @@ return (
   handleNewChat={handleNewChat}
   handleDeleteChat={handleDeleteChat}
   handleRenameChat={handleRenameChat}
-
+handlePinChat={handlePinChat}
   handleSendMessage={handleSendMessage}
   handleStopGenerating={handleStopGenerating}
   handleRegenerate={handleRegenerate}

@@ -31,7 +31,7 @@ statsOpen,
   handleNewChat,
   handleDeleteChat,
   handleRenameChat,
-
+  handlePinChat,
   handleSendMessage,
   handleStopGenerating,
   handleRegenerate,
@@ -88,6 +88,7 @@ return (
         }}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
+        onPinChat={handlePinChat}
       />
     </div>
 
