@@ -9,6 +9,7 @@ function Chat() {
   sessionId: crypto.randomUUID(),
   title: "New Chat",
   pinned: false,
+    archived: false,
   messages: [
       {
   id: Date.now(),
@@ -25,9 +26,10 @@ const [statsOpen, setStatsOpen] = useState(false);
 
   if (saved) {
     return JSON.parse(saved).map((chat) => ({
-      pinned: false,
-      ...chat,
-    }));
+  pinned: false,
+  archived: false,
+  ...chat,
+}));
   }
 
   return [createNewChat()];
@@ -160,6 +162,84 @@ const handlePinChat = (chatId) => {
   );
 
   toast.success("Chat updated!");
+};
+//Chat Duplicate
+const handleDuplicateChat = (chatId) => {
+  const chat = chats.find((c) => c.id === chatId);
+
+  if (!chat) return;
+
+  // Remove any existing "(Copy)" or "(Copy X)"
+  const baseTitle = chat.title.replace(
+    /\s\(Copy(?: \d+)?\)$/i,
+    ""
+  );
+
+  // Find the next available copy number
+  let copyNumber = 1;
+  let newTitle = `${baseTitle} (Copy)`;
+
+  while (
+    chats.some(
+      (c) =>
+        c.title.toLowerCase() ===
+        newTitle.toLowerCase()
+    )
+  ) {
+    copyNumber++;
+    newTitle = `${baseTitle} (Copy ${copyNumber})`;
+  }
+
+  const duplicatedChat = {
+    ...chat,
+    id: crypto.randomUUID(),
+    sessionId: crypto.randomUUID(),
+    title: newTitle,
+    pinned: false,
+    archived: false,
+    messages: chat.messages.map((msg) => ({
+      ...msg,
+      id: crypto.randomUUID(),
+    })),
+  };
+
+  setChats((prev) => [duplicatedChat, ...prev]);
+
+  setCurrentChatId(duplicatedChat.id);
+
+  toast.success("📑 Chat duplicated successfully!");
+};
+//Archive Chat
+const handleArchiveChat = (chatId) => {
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === chatId
+        ? {
+            ...chat,
+            archived: !chat.archived,
+          }
+        : chat
+    )
+  );
+
+  // If the current chat was archived, switch to another active chat
+  if (currentChatId === chatId) {
+    const nextChat = chats.find(
+      (chat) => chat.id !== chatId && !chat.archived
+    );
+
+    if (nextChat) {
+      setCurrentChatId(nextChat.id);
+    } else {
+      const newChat = createNewChat();
+
+      setChats((prev) => [newChat, ...prev]);
+
+      setCurrentChatId(newChat.id);
+    }
+  }
+
+  toast.success("📦 Chat archived!");
 };
   // Export Chat
   const handleExportChat = () => {
@@ -679,7 +759,9 @@ return (
   handleNewChat={handleNewChat}
   handleDeleteChat={handleDeleteChat}
   handleRenameChat={handleRenameChat}
-handlePinChat={handlePinChat}
+  handlePinChat={handlePinChat}
+  handleDuplicateChat={handleDuplicateChat}
+  handleArchiveChat={handleArchiveChat}
   handleSendMessage={handleSendMessage}
   handleStopGenerating={handleStopGenerating}
   handleRegenerate={handleRegenerate}

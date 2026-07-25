@@ -1,4 +1,5 @@
 import { useTheme } from "../../context/ThemeContext";
+import { useState } from "react";
 import {
   Search,
   MessageSquare,
@@ -17,7 +18,10 @@ function ChatSidebar({
   onDeleteChat,
   onRenameChat,
   onPinChat,
+  onDuplicateChat,
+  onArchiveChat,
 }) {
+  const [showArchived, setShowArchived] = useState(true);
   const navigate = useNavigate();
 const { theme } = useTheme();
 
@@ -97,8 +101,9 @@ console.log("onPinChat =", onPinChat);
 </div>
         ) : (
   [...chats]
-    .sort((a, b) => Number(b.pinned) - Number(a.pinned))
-    .map((chat) => (
+  .filter((chat) => !chat.archived)
+  .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+  .map((chat) => (
             <div
               key={chat.id}
               className={`group flex items-center justify-between rounded-xl p-3 transition-all duration-200 ${
@@ -150,6 +155,24 @@ console.log("onPinChat =", onPinChat);
   >
     📌
   </button>
+  <button
+  onClick={() => onDuplicateChat(chat.id)}
+  className="rounded-md p-1 text-cyan-400 hover:bg-slate-700 hover:text-cyan-300"
+  title="Duplicate"
+>
+  📑
+</button>
+<button
+  onClick={() => onArchiveChat(chat.id)}
+  className={`rounded-md p-1 transition ${
+    chat.archived
+      ? "text-orange-400 hover:bg-slate-700"
+      : "text-slate-400 hover:bg-slate-700 hover:text-orange-400"
+  }`}
+  title={chat.archived ? "Restore" : "Archive"}
+>
+  📦
+</button>
                 <button
                   onClick={() => onRenameChat(chat.id)}
                   className="rounded-md p-1 text-yellow-400 hover:bg-slate-700 hover:text-yellow-300"
@@ -170,6 +193,44 @@ console.log("onPinChat =", onPinChat);
           ))
         )}
       </div>
+            {/* Archived Chats */}
+      {chats.filter((chat) => chat.archived).length > 0 && (
+        <div className="border-t border-slate-800 p-3">
+          <button
+  onClick={() => setShowArchived(!showArchived)}
+  className="mb-2 flex w-full items-center justify-between rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wider text-slate-500 transition hover:bg-slate-800"
+>
+  <span>
+    📦 Archived ({chats.filter(chat => chat.archived).length})
+  </span>
+
+  <span>
+    {showArchived ? "▼" : "▶"}
+  </span>
+</button>
+
+          {showArchived &&
+  chats
+    .filter((chat) => chat.archived)
+    .map((chat) => (
+              <div
+                key={chat.id}
+                className="mb-2 flex items-center justify-between rounded-lg bg-slate-900 p-2"
+              >
+                <span className="truncate text-sm text-slate-300">
+                  {chat.title}
+                </span>
+
+                <button
+                  onClick={() => onArchiveChat(chat.id)}
+                  className="rounded-md px-2 py-1 text-xs text-green-400 hover:bg-slate-800"
+                >
+                  ♻ Restore
+                </button>
+              </div>
+            ))}
+        </div>
+      )}
 
       {/* Bottom Settings */}
       <div className="border-t border-slate-800 p-3">

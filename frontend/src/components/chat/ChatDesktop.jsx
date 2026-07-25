@@ -11,7 +11,7 @@ function ChatDesktop({
   chats,
   currentChat,
   currentChatId,
-statsOpen,
+  statsOpen,
   onOpenStats,
   onCloseStats,
 
@@ -32,6 +32,8 @@ statsOpen,
   handleDeleteChat,
   handleRenameChat,
   handlePinChat,
+  handleDuplicateChat,
+  handleArchiveChat,
   handleSendMessage,
   handleStopGenerating,
   handleRegenerate,
@@ -49,6 +51,7 @@ statsOpen,
   inputRef,
 });
   const { theme } = useTheme();
+
 return (
   <div
     className={`relative flex h-[calc(100vh-80px)] overflow-hidden transition-colors duration-300 ${
@@ -62,34 +65,24 @@ return (
       }`}
     >
       <ChatSidebar
-        chats={chats.filter((chat) => {
-          const query = searchQuery.toLowerCase();
+  chats={chats}
+  currentChatId={currentChatId}
+  searchQuery={searchQuery}
+  onSearchChange={setSearchQuery}
+  onNewChat={handleNewChat}
+  onSelectChat={(id) => {
+    setCurrentChatId(id);
 
-          const titleMatch = chat.title
-            .toLowerCase()
-            .includes(query);
-
-          const messageMatch = chat.messages.some((msg) =>
-            (msg.message || "").toLowerCase().includes(query)
-          );
-
-          return titleMatch || messageMatch;
-        })}
-        currentChatId={currentChatId}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onNewChat={handleNewChat}
-        onSelectChat={(id) => {
-          setCurrentChatId(id);
-
-          if (window.innerWidth < 768) {
-            setSidebarOpen(false);
-          }
-        }}
-        onDeleteChat={handleDeleteChat}
-        onRenameChat={handleRenameChat}
-        onPinChat={handlePinChat}
-      />
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  }}
+  onDeleteChat={handleDeleteChat}
+  onRenameChat={handleRenameChat}
+  onPinChat={handlePinChat}
+  onDuplicateChat={handleDuplicateChat}
+  onArchiveChat={handleArchiveChat}
+/>
     </div>
 
     {/* Main Content */}
