@@ -12,6 +12,8 @@ function Chat() {
     archived: false,
     folder: "Uncategorized",
     tags: [],
+    locked: false,
+    lockPin: "",
   messages: [
   {
     id: Date.now(),
@@ -50,6 +52,8 @@ const [tags, setTags] = useState(() => {
   archived: false,
   folder: "Uncategorized",
   tags: [],
+  locked: false,
+lockPin: "",
   ...chat,
 }));
   }
@@ -257,6 +261,8 @@ const handleDuplicateChat = (chatId) => {
     title: newTitle,
     pinned: false,
     archived: false,
+    locked: false,
+  lockPin: "",
     messages: chat.messages.map((msg) => ({
       ...msg,
       id: crypto.randomUUID(),
@@ -306,6 +312,82 @@ const handleArchiveChat = (chatId) => {
       ? "🔄 Chat restored!"
       : "📦 Chat archived!"
   );
+};
+const handleToggleLock = (chatId) => {
+  const chat = chats.find((c) => c.id === chatId);
+
+  if (!chat) return;
+
+  // Remove lock (requires PIN)
+if (chat.locked) {
+  const pin = prompt("🔑 Enter PIN to remove the lock:");
+
+  if (pin === null) return;
+
+  if (pin !== chat.lockPin) {
+    toast.error("❌ Incorrect PIN");
+    return;
+  }
+
+  setChats((prev) =>
+    prev.map((c) =>
+      c.id === chatId
+        ? {
+            ...c,
+            locked: false,
+            lockPin: "",
+          }
+        : c
+    )
+  );
+
+  toast.success("🔓 Lock removed");
+  return;
+}
+  // Lock
+  const pin = prompt("Enter a 4-digit PIN to lock this chat:");
+
+  if (!pin) return;
+
+  if (!/^\d{4}$/.test(pin)) {
+    toast.error("PIN must be exactly 4 digits.");
+    return;
+  }
+
+  setChats((prev) =>
+    prev.map((c) =>
+      c.id === chatId
+        ? {
+            ...c,
+            locked: true,
+            lockPin: pin,
+          }
+        : c
+    )
+  );
+
+  toast.success("🔒 Chat locked");
+};
+const handleSelectChat = (chatId) => {
+  const chat = chats.find((c) => c.id === chatId);
+
+  if (!chat) return;
+
+  if (!chat.locked) {
+    setCurrentChatId(chatId);
+    return;
+  }
+
+  const pin = prompt("🔒 Enter your PIN");
+
+  if (pin === null) return;
+
+  if (pin === chat.lockPin) {
+    setCurrentChatId(chatId);
+    toast.success("🔓 Chat unlocked");
+  } else {
+    toast.error("❌ Incorrect PIN");
+  }
 };
   // Export Chat
   const handleExportChat = () => {
@@ -1032,6 +1114,7 @@ handleRenameFolder={handleRenameFolder}
   tags={tags}
   onDeleteTag={handleDeleteTag}
   onRenameTag={handleRenameTag}
+  onToggleLock={handleToggleLock}
   selectedTag={selectedTag}
 setSelectedTag={setSelectedTag}
   handlePinChat={handlePinChat}
@@ -1045,7 +1128,7 @@ setSelectedTag={setSelectedTag}
 
   handleExportChat={handleExportChat}
 
-  setCurrentChatId={setCurrentChatId}
+  setCurrentChatId={handleSelectChat}
   setExportOpen={setExportOpen}
 />
 );

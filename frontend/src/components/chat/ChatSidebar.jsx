@@ -38,6 +38,7 @@ function ChatSidebar({
 onToggleTag,
 onDeleteTag,
 onRenameTag,
+onToggleLock,
   onRenameFolder,
   onRenameChat,
   onPinChat,
@@ -334,6 +335,7 @@ onRenameTag,
     size={18}
     className="mt-0.5 shrink-0 text-cyan-400"
   />
+{chat.locked && <span title="Locked Chat">🔒</span>}
 
   <div className="min-w-0 flex-1">
     <div className="flex items-center gap-1">
@@ -508,6 +510,20 @@ onRenameTag,
 >
   <Archive size={16} />
   Archive
+</button>
+<button
+  onClick={() => {
+    onToggleLock(chat.id);
+    setOpenMenu(null);
+  }}
+  className={`flex w-full items-center gap-3 px-4 py-3 text-sm ${
+    theme === "light"
+      ? "hover:bg-slate-100"
+      : "hover:bg-slate-800"
+  }`}
+>
+  {chat.locked ? "🔓" : "🔒"}
+  {chat.locked ? "🔑 Remove Lock" : "🔒 Lock Chat"}
 </button>
 {/* Manage Tags */}
 <div

@@ -47,6 +47,7 @@ onCloseFavorites,
   onToggleTag,
   onDeleteTag,
   onRenameTag,
+  onToggleLock,
    handleRenameFolder,
   handleMoveChatToFolder,
   handleDuplicateChat,
@@ -95,6 +96,7 @@ return (
    tags={tags}
    selectedTag={selectedTag}
   setSelectedTag={setSelectedTag}
+  onToggleLock={onToggleLock}
    onToggleTag={onToggleTag}
    onDeleteTag={onDeleteTag}
    onRenameTag={onRenameTag}
