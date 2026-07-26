@@ -30,6 +30,7 @@ function ChatSidebar({
   onMoveChatToFolder,
   onSelectChat,
   onDeleteChat,
+  onRenameFolder,
   onRenameChat,
   onPinChat,
   onDuplicateChat,
@@ -196,20 +197,37 @@ function ChatSidebar({
   <span>📂 {folder}</span>
 
   {folder !== "Uncategorized" && (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onDeleteFolder(folder);
-      }}
-      className={`rounded p-1 transition ${
-        theme === "light"
-          ? "hover:bg-red-100"
-          : "hover:bg-red-900/20"
-      }`}
-      title="Delete Folder"
-    >
-      🗑️
-    </button>
+    <>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onRenameFolder(folder);
+        }}
+        className={`rounded p-1 transition ${
+          theme === "light"
+            ? "hover:bg-slate-200"
+            : "hover:bg-slate-700"
+        }`}
+        title="Rename Folder"
+      >
+        ✏️
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDeleteFolder(folder);
+        }}
+        className={`rounded p-1 transition ${
+          theme === "light"
+            ? "hover:bg-red-100"
+            : "hover:bg-red-900/20"
+        }`}
+        title="Delete Folder"
+      >
+        🗑️
+      </button>
+    </>
   )}
 </div>
 
@@ -362,6 +380,7 @@ function ChatSidebar({
         (folder) => (
           <button
             key={folder}
+            disabled={chat.folder === folder}
             onClick={() => {
               onMoveChatToFolder(chat.id, folder);
               setMoveFolderMenu(null);
@@ -373,7 +392,9 @@ function ChatSidebar({
                 : "hover:bg-slate-700"
             }`}
           >
-            📂 {folder}
+            <>
+  {chat.folder === folder ? "✔" : "📂"} {folder}
+</>
           </button>
         )
       )}

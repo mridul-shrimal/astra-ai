@@ -250,8 +250,10 @@ const handleDuplicateChat = (chatId) => {
 
   toast.success("📑 Chat duplicated successfully!");
 };
-//Archive Chat
+// Archive Chat
 const handleArchiveChat = (chatId) => {
+  const chat = chats.find((c) => c.id === chatId);
+
   setChats((prev) =>
     prev.map((chat) =>
       chat.id === chatId
@@ -264,7 +266,7 @@ const handleArchiveChat = (chatId) => {
   );
 
   // If the current chat was archived, switch to another active chat
-  if (currentChatId === chatId) {
+  if (currentChatId === chatId && !chat?.archived) {
     const nextChat = chats.find(
       (chat) => chat.id !== chatId && !chat.archived
     );
@@ -280,7 +282,11 @@ const handleArchiveChat = (chatId) => {
     }
   }
 
-  toast.success("📦 Chat archived!");
+  toast.success(
+    chat?.archived
+      ? "🔄 Chat restored!"
+      : "📦 Chat archived!"
+  );
 };
   // Export Chat
   const handleExportChat = () => {
@@ -814,6 +820,42 @@ const handleDeleteFolder = (folderName) => {
 
   toast.success("Folder deleted.");
 };
+const handleRenameFolder = (oldName) => {
+  const newName = prompt(
+    "Enter new folder name:",
+    oldName
+  );
+
+  if (!newName) return;
+
+  const trimmedName = newName.trim();
+
+  if (!trimmedName || trimmedName === oldName) return;
+
+  if (folders.includes(trimmedName)) {
+    toast.error("Folder already exists.");
+    return;
+  }
+
+  setFolders((prev) =>
+    prev.map((folder) =>
+      folder === oldName ? trimmedName : folder
+    )
+  );
+
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.folder === oldName
+        ? {
+            ...chat,
+            folder: trimmedName,
+          }
+        : chat
+    )
+  );
+
+  toast.success("Folder renamed.");
+};
 const handleMoveChatToFolder = (chatId, folderName) => {
   setChats((prev) =>
     prev.map((chat) =>
@@ -854,6 +896,7 @@ return (
 onOpenFavorites={() => setFavoritesOpen(true)}
 onCloseFavorites={() => setFavoritesOpen(false)}
 handleMoveChatToFolder={handleMoveChatToFolder}
+handleRenameFolder={handleRenameFolder}
   isTyping={isTyping}
   isGenerating={isGenerating}
 
