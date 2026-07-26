@@ -42,7 +42,11 @@ onCloseFavorites,
   handleDeleteFolder,
   handleCreateTag,
   tags,
+  selectedTag,
+  setSelectedTag,
   onToggleTag,
+  onDeleteTag,
+  onRenameTag,
    handleRenameFolder,
   handleMoveChatToFolder,
   handleDuplicateChat,
@@ -89,7 +93,11 @@ return (
   onDeleteFolder={handleDeleteFolder}
    onCreateTag={handleCreateTag}
    tags={tags}
+   selectedTag={selectedTag}
+  setSelectedTag={setSelectedTag}
    onToggleTag={onToggleTag}
+   onDeleteTag={onDeleteTag}
+   onRenameTag={onRenameTag}
   onRenameFolder={handleRenameFolder}
   onMoveChatToFolder={handleMoveChatToFolder}
   onSelectChat={(id) => {

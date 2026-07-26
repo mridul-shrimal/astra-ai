@@ -23,9 +23,11 @@ function Chat() {
 ],
   });
 const [statsOpen, setStatsOpen] = useState(false);
+const [selectedTag, setSelectedTag] = useState("All");
 const [favoritesOpen, setFavoritesOpen] = useState(false);
 const [folders, setFolders] = useState(() => {
   const saved = localStorage.getItem("astra-folders");
+  
 
   return saved
     ? JSON.parse(saved)
@@ -873,6 +875,73 @@ const handleToggleTag = (chatId, tag) => {
     })
   );
 };
+const handleDeleteTag = (tagName) => {
+  if (
+    !window.confirm(
+      `Delete "${tagName}" tag from Astra AI?`
+    )
+  )
+    return;
+
+  // Remove from global tags
+  setTags((prev) =>
+    prev.filter((tag) => tag !== tagName)
+  );
+
+  // Remove from every chat
+  setChats((prev) =>
+    prev.map((chat) => ({
+      ...chat,
+      tags: chat.tags.filter(
+        (tag) => tag !== tagName
+      ),
+    }))
+  );
+
+  toast.success("🗑️ Tag deleted!");
+};
+const handleRenameTag = (oldTag) => {
+  const newTag = window.prompt(
+    "Enter new tag name:",
+    oldTag
+  );
+
+  if (!newTag) return;
+
+  const trimmedTag = newTag.trim();
+
+  if (!trimmedTag) return;
+
+  if (
+    tags.some(
+      (tag) =>
+        tag.toLowerCase() === trimmedTag.toLowerCase() &&
+        tag !== oldTag
+    )
+  ) {
+    toast.error("Tag already exists!");
+    return;
+  }
+
+  // Update global tags
+  setTags((prev) =>
+    prev.map((tag) =>
+      tag === oldTag ? trimmedTag : tag
+    )
+  );
+
+  // Update every chat
+  setChats((prev) =>
+    prev.map((chat) => ({
+      ...chat,
+      tags: chat.tags.map((tag) =>
+        tag === oldTag ? trimmedTag : tag
+      ),
+    }))
+  );
+
+  toast.success("🏷️ Tag renamed!");
+};
 const handleRenameFolder = (oldName) => {
   const newName = prompt(
     "Enter new folder name:",
@@ -961,6 +1030,10 @@ handleRenameFolder={handleRenameFolder}
   handleCreateTag={handleCreateTag}
   onToggleTag={handleToggleTag}
   tags={tags}
+  onDeleteTag={handleDeleteTag}
+  onRenameTag={handleRenameTag}
+  selectedTag={selectedTag}
+setSelectedTag={setSelectedTag}
   handlePinChat={handlePinChat}
   handleDuplicateChat={handleDuplicateChat}
   handleArchiveChat={handleArchiveChat}

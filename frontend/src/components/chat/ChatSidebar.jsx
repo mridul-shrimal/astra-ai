@@ -32,7 +32,12 @@ function ChatSidebar({
   onDeleteChat,
    onCreateTag,
    tags,
+  selectedTag,
+  setSelectedTag,
+
 onToggleTag,
+onDeleteTag,
+onRenameTag,
   onRenameFolder,
   onRenameChat,
   onPinChat,
@@ -72,17 +77,28 @@ onToggleTag,
   }, []);
 
   const visibleChats = useMemo(() => {
-    return chats
-      .filter((chat) => !chat.archived)
-      .filter((chat) =>
-        chat.title
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())
-      )
-      .sort(
-        (a, b) => Number(b.pinned) - Number(a.pinned)
-      );
-  }, [chats, searchQuery]);
+  return chats
+    .filter((chat) => !chat.archived)
+
+    // Search
+    .filter((chat) =>
+      chat.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    )
+
+    // Tag Filter
+    .filter(
+      (chat) =>
+        selectedTag === "All" ||
+        chat.tags?.includes(selectedTag)
+    )
+
+    // Pin Sort
+    .sort(
+      (a, b) => Number(b.pinned) - Number(a.pinned)
+    );
+}, [chats, searchQuery, selectedTag]);
 
   const groupedChats = useMemo(() => {
     const groups = {};
@@ -180,6 +196,58 @@ onToggleTag,
         />
       </div>
     </div>
+
+{/* Tags */}
+{tags.length > 0 && (
+  <div
+    className={`border-b p-4 ${
+      theme === "light"
+        ? "border-slate-200"
+        : "border-slate-800"
+    }`}
+  >
+    <p
+      className={`mb-2 text-xs font-bold uppercase ${
+        theme === "light"
+          ? "text-slate-500"
+          : "text-slate-400"
+      }`}
+    >
+      🏷 Tags
+    </p>
+
+    <div className="flex flex-wrap gap-2">
+      <button
+        onClick={() => setSelectedTag("All")}
+        className={`rounded-full px-3 py-1 text-xs transition ${
+          selectedTag === "All"
+            ? "bg-cyan-500 text-white"
+            : theme === "light"
+            ? "bg-slate-100 hover:bg-slate-200"
+            : "bg-slate-800 hover:bg-slate-700"
+        }`}
+      >
+        All
+      </button>
+
+      {tags.map((tag) => (
+        <button
+          key={tag}
+          onClick={() => setSelectedTag(tag)}
+          className={`rounded-full px-3 py-1 text-xs transition ${
+            selectedTag === tag
+              ? "bg-cyan-500 text-white"
+              : theme === "light"
+              ? "bg-slate-100 hover:bg-slate-200"
+              : "bg-slate-800 hover:bg-slate-700"
+          }`}
+        >
+          {tag}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
 
     {/* Chat List */}
     <div className="flex-1 overflow-y-auto p-3">
@@ -482,18 +550,48 @@ onToggleTag,
         </div>
       ) : (
         tags.map((tag) => (
-          <button
-            key={tag}
-            onClick={() => onToggleTag(chat.id, tag)}
-            className={`flex w-full items-center gap-3 px-8 py-2 text-sm transition ${
-              theme === "light"
-                ? "hover:bg-slate-100"
-                : "hover:bg-slate-700"
-            }`}
-          >
-            {chat.tags.includes(tag) ? "✔" : "○"} {tag}
-          </button>
-        ))
+  <div
+    key={tag}
+    className={`flex items-center justify-between px-8 py-2 ${
+      theme === "light"
+        ? "hover:bg-slate-100"
+        : "hover:bg-slate-700"
+    }`}
+  >
+    <button
+      onClick={() => onToggleTag(chat.id, tag)}
+      className="flex flex-1 items-center gap-3 text-left text-sm"
+    >
+      {chat.tags.includes(tag) ? "✔" : "○"} {tag}
+    </button>
+
+    <div className="flex items-center gap-1">
+  <button
+    onClick={() => onRenameTag(tag)}
+    className={`rounded p-1 transition ${
+      theme === "light"
+        ? "hover:bg-slate-200"
+        : "hover:bg-slate-600"
+    }`}
+    title="Rename Tag"
+  >
+    ✏️
+  </button>
+
+  <button
+    onClick={() => onDeleteTag(tag)}
+    className={`rounded p-1 transition ${
+      theme === "light"
+        ? "hover:bg-red-100"
+        : "hover:bg-red-900/20"
+    }`}
+    title="Delete Tag"
+  >
+    🗑️
+  </button>
+</div>
+  </div>
+))
       )}
 
       <button
