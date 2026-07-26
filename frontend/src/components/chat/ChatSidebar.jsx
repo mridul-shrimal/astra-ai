@@ -30,6 +30,9 @@ function ChatSidebar({
   onMoveChatToFolder,
   onSelectChat,
   onDeleteChat,
+   onCreateTag,
+   tags,
+onToggleTag,
   onRenameFolder,
   onRenameChat,
   onPinChat,
@@ -43,6 +46,7 @@ function ChatSidebar({
 
   const [openMenu, setOpenMenu] = useState(null);
   const [moveFolderMenu, setMoveFolderMenu] = useState(null);
+  const [tagMenu, setTagMenu] = useState(null);
   const [showArchived, setShowArchived] = useState(true);
 
   // collapsed folders
@@ -185,24 +189,24 @@ function ChatSidebar({
 
             {/* Folder Header */}
 
-            <button
-              onClick={() => toggleFolder(folder)}
-              className={`mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-bold uppercase transition ${
-                theme === "light"
-                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-  <span>📂 {folder}</span>
+            <div
+  className={`mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-bold uppercase transition ${
+    theme === "light"
+      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+  }`}
+>
+  <span
+    onClick={() => toggleFolder(folder)}
+    className="cursor-pointer flex-1"
+  >
+    📂 {folder}
+  </span>
 
   {folder !== "Uncategorized" && (
-    <>
+    <div className="flex items-center gap-1">
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onRenameFolder(folder);
-        }}
+        onClick={() => onRenameFolder(folder)}
         className={`rounded p-1 transition ${
           theme === "light"
             ? "hover:bg-slate-200"
@@ -214,10 +218,7 @@ function ChatSidebar({
       </button>
 
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDeleteFolder(folder);
-        }}
+        onClick={() => onDeleteFolder(folder)}
         className={`rounded p-1 transition ${
           theme === "light"
             ? "hover:bg-red-100"
@@ -227,16 +228,20 @@ function ChatSidebar({
       >
         🗑️
       </button>
-    </>
+    </div>
   )}
 </div>
 
-              {collapsedFolders[folder] ? (
-                <ChevronRight size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              )}
-            </button>
+              <span
+  onClick={() => toggleFolder(folder)}
+  className="cursor-pointer"
+>
+  {collapsedFolders[folder] ? (
+    <ChevronRight size={16} />
+  ) : (
+    <ChevronDown size={16} />
+  )}
+</span>
 
             {!collapsedFolders[folder] &&
               folderChats.map((chat) => (
@@ -253,27 +258,48 @@ function ChatSidebar({
   }`}
 >
   {/* Chat */}
-  <button
-    onClick={() => onSelectChat(chat.id)}
-    className="flex flex-1 items-center gap-2 overflow-hidden text-left"
-  >
-    <MessageSquare
-      size={18}
-      className="shrink-0 text-cyan-400"
-    />
+<button
+  onClick={() => onSelectChat(chat.id)}
+  className="flex flex-1 items-start gap-2 overflow-hidden text-left"
+>
+  <MessageSquare
+    size={18}
+    className="mt-0.5 shrink-0 text-cyan-400"
+  />
 
-    {chat.pinned && <span>📌</span>}
+  <div className="min-w-0 flex-1">
+    <div className="flex items-center gap-1">
+      {chat.pinned && <span>📌</span>}
 
-    <span
-      className={`truncate text-sm ${
-        theme === "light"
-          ? "text-slate-900"
-          : "text-slate-200"
-      }`}
-    >
-      {chat.title}
-    </span>
-  </button>
+      <span
+        className={`block truncate text-sm ${
+          theme === "light"
+            ? "text-slate-900"
+            : "text-slate-200"
+        }`}
+      >
+        {chat.title}
+      </span>
+    </div>
+
+    {chat.tags?.length > 0 && (
+      <div className="mt-1 flex flex-wrap gap-1">
+        {chat.tags.map((tag) => (
+          <span
+            key={tag}
+            className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              theme === "light"
+                ? "bg-cyan-100 text-cyan-700"
+                : "bg-cyan-500/20 text-cyan-300"
+            }`}
+          >
+            🏷️ {tag}
+          </span>
+        ))}
+      </div>
+    )}
+  </div>
+</button>
 
   {/* 3 Dot */}
   <div className="relative ml-2">
@@ -414,6 +440,87 @@ function ChatSidebar({
 >
   <Archive size={16} />
   Archive
+</button>
+{/* Manage Tags */}
+<div
+  className={`border-t ${
+    theme === "light"
+      ? "border-slate-200"
+      : "border-slate-700"
+  }`}
+>
+  <button
+    onClick={() =>
+      setTagMenu(
+        tagMenu === chat.id ? null : chat.id
+      )
+    }
+    className={`flex w-full items-center justify-between px-4 py-3 text-sm transition ${
+      theme === "light"
+        ? "hover:bg-slate-100"
+        : "hover:bg-slate-800"
+    }`}
+  >
+    <span>🏷️ Manage Tags</span>
+
+    <span>
+      {tagMenu === chat.id ? "▼" : "▶"}
+    </span>
+  </button>
+
+  {tagMenu === chat.id && (
+    <div
+      className={`overflow-hidden ${
+        theme === "light"
+          ? "bg-slate-50"
+          : "bg-slate-800"
+      }`}
+    >
+      {tags.length === 0 ? (
+        <div className="px-6 py-3 text-xs opacity-70">
+          No tags created yet.
+        </div>
+      ) : (
+        tags.map((tag) => (
+          <button
+            key={tag}
+            onClick={() => onToggleTag(chat.id, tag)}
+            className={`flex w-full items-center gap-3 px-8 py-2 text-sm transition ${
+              theme === "light"
+                ? "hover:bg-slate-100"
+                : "hover:bg-slate-700"
+            }`}
+          >
+            {chat.tags.includes(tag) ? "✔" : "○"} {tag}
+          </button>
+        ))
+      )}
+
+      <button
+        onClick={onCreateTag}
+        className={`flex w-full items-center gap-3 px-8 py-2 text-sm font-medium ${
+          theme === "light"
+            ? "hover:bg-slate-100"
+            : "hover:bg-slate-700"
+        }`}
+      >
+        ➕ Create New Tag
+      </button>
+    </div>
+  )}
+</div>
+<button
+  onClick={() => {
+    onCreateTag();
+    setOpenMenu(null);
+  }}
+  className={`flex w-full items-center gap-3 px-4 py-3 text-sm transition ${
+    theme === "light"
+      ? "hover:bg-slate-100"
+      : "hover:bg-slate-800"
+  }`}
+>
+  🏷️ Create Tag
 </button>
 
         <button

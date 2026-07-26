@@ -40,6 +40,9 @@ onCloseFavorites,
   handleRenameChat,
   handlePinChat,
   handleDeleteFolder,
+  handleCreateTag,
+  tags,
+  onToggleTag,
    handleRenameFolder,
   handleMoveChatToFolder,
   handleDuplicateChat,
@@ -84,6 +87,9 @@ return (
   onNewChat={handleNewChat}
   onCreateFolder={handleCreateFolder}
   onDeleteFolder={handleDeleteFolder}
+   onCreateTag={handleCreateTag}
+   tags={tags}
+   onToggleTag={onToggleTag}
   onRenameFolder={handleRenameFolder}
   onMoveChatToFolder={handleMoveChatToFolder}
   onSelectChat={(id) => {

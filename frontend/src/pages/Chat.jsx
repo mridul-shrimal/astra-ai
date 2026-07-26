@@ -11,6 +11,7 @@ function Chat() {
   pinned: false,
     archived: false,
     folder: "Uncategorized",
+    tags: [],
   messages: [
   {
     id: Date.now(),
@@ -30,6 +31,13 @@ const [folders, setFolders] = useState(() => {
     ? JSON.parse(saved)
     : ["Uncategorized"];
 });
+const [tags, setTags] = useState(() => {
+  const saved = localStorage.getItem("astra-tags");
+
+  return saved
+    ? JSON.parse(saved)
+    : [];
+});
   // Load chats
   const [chats, setChats] = useState(() => {
   const saved = localStorage.getItem("astra-chats");
@@ -38,7 +46,8 @@ const [folders, setFolders] = useState(() => {
     return JSON.parse(saved).map((chat) => ({
   pinned: false,
   archived: false,
-    folder: "Uncategorized",
+  folder: "Uncategorized",
+  tags: [],
   ...chat,
 }));
   }
@@ -102,6 +111,14 @@ useEffect(() => {
     JSON.stringify(folders)
   );
 }, [folders]);
+
+// Save tags
+useEffect(() => {
+  localStorage.setItem(
+    "astra-tags",
+    JSON.stringify(tags)
+  );
+}, [tags]);
 
   const currentChat =
     chats.find((chat) => chat.id === currentChatId) || chats[0];
@@ -820,6 +837,42 @@ const handleDeleteFolder = (folderName) => {
 
   toast.success("Folder deleted.");
 };
+
+const handleCreateTag = () => {
+  const tagName = prompt("Enter tag name:");
+
+  if (!tagName) return;
+
+  const trimmedTag = tagName.trim();
+
+  if (!trimmedTag) return;
+
+  if (tags.includes(trimmedTag)) {
+    toast.error("Tag already exists.");
+    return;
+  }
+
+  setTags((prev) => [...prev, trimmedTag]);
+
+  toast.success("🏷️ Tag created!");
+};
+
+const handleToggleTag = (chatId, tag) => {
+  setChats((prev) =>
+    prev.map((chat) => {
+      if (chat.id !== chatId) return chat;
+
+      const hasTag = chat.tags.includes(tag);
+
+      return {
+        ...chat,
+        tags: hasTag
+          ? chat.tags.filter((t) => t !== tag)
+          : [...chat.tags, tag],
+      };
+    })
+  );
+};
 const handleRenameFolder = (oldName) => {
   const newName = prompt(
     "Enter new folder name:",
@@ -905,6 +958,9 @@ handleRenameFolder={handleRenameFolder}
   handleDeleteChat={handleDeleteChat}
   handleRenameChat={handleRenameChat}
   handleDeleteFolder={handleDeleteFolder}
+  handleCreateTag={handleCreateTag}
+  onToggleTag={handleToggleTag}
+  tags={tags}
   handlePinChat={handlePinChat}
   handleDuplicateChat={handleDuplicateChat}
   handleArchiveChat={handleArchiveChat}
