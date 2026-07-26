@@ -317,14 +317,20 @@ return (
           key={index}
           className={`rounded-2xl border p-4 ${
   isLight
-    ? "border-cyan-200 bg-cyan-50"
-    : "border-cyan-300/20 bg-cyan-600/10"
+    ? "border-slate-200 bg-slate-50"
+    : "border-slate-700 bg-slate-800"
 }`}
         >
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-cyan-500/20 p-3">
-              <FileText size={22} />
-            </div>
+            <div
+  className={`rounded-xl p-3 ${
+    isLight
+      ? "bg-slate-200 text-cyan-600"
+      : "bg-slate-700 text-cyan-400"
+  }`}
+>
+  <FileText size={22} />
+</div>
 
             <div className="flex-1">
               <p className="font-semibold">{file.name}</p>
@@ -341,21 +347,29 @@ return (
             {fileUrl && (
               <div className="flex gap-2">
                 <a
-                  href={fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-lg bg-cyan-500 p-2 hover:bg-cyan-600"
-                >
-                  <ExternalLink size={16} />
-                </a>
+  href={fileUrl}
+  target="_blank"
+  rel="noreferrer"
+  className={`rounded-lg p-2 transition ${
+    isLight
+      ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
+      : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+  }`}
+>
+  <ExternalLink size={16} />
+</a>
 
-                <a
-                  href={fileUrl}
-                  download
-                  className="rounded-lg bg-slate-700 p-2 hover:bg-slate-600"
-                >
-                  <Download size={16} />
-                </a>
+<a
+  href={fileUrl}
+  download
+  className={`rounded-lg p-2 transition ${
+    isLight
+      ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
+      : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+  }`}
+>
+  <Download size={16} />
+</a>
               </div>
             )}
           </div>
