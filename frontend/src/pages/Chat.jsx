@@ -2,30 +2,40 @@ import { useEffect, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
+import ModelSelectorModal from "../components/chat/ModelSelectorModal";
 
-function Chat() {
-  const createNewChat = () => ({
+const createNewChat = (selectedModel) => {
+  const now = Date.now();
+
+  return {
     id: crypto.randomUUID(),
-  sessionId: crypto.randomUUID(),
-  title: "New Chat",
-  pinned: false,
+    sessionId: crypto.randomUUID(),
+    title: "New Chat",
+    pinned: false,
     archived: false,
     folder: "Uncategorized",
     tags: [],
     locked: false,
     lockPin: "",
-  messages: [
-  {
-    id: Date.now(),
-    sender: "ai",
-    message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
-    timestamp: Date.now(),
-    favorite: false,
-  },
-],
-  });
+    model: selectedModel,
+    messages: [
+      {
+        id: crypto.randomUUID(),
+        sender: "ai",
+        message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
+        timestamp: now,
+        favorite: false,
+      },
+    ],
+  };
+};
+
+function Chat() {
+
 const [statsOpen, setStatsOpen] = useState(false);
 const [selectedTag, setSelectedTag] = useState("All");
+const [modelModalOpen, setModelModalOpen] = useState(false);
+const [selectedModel, setSelectedModel] = useState("GPT-4o");
 const [favoritesOpen, setFavoritesOpen] = useState(false);
 const [folders, setFolders] = useState(() => {
   const saved = localStorage.getItem("astra-folders");
@@ -70,12 +80,14 @@ const [selectedFormat, setSelectedFormat] = useState("pdf");
     return localStorage.getItem("astra-current-chat") || null;
   });
 
+
   // Select first chat
   useEffect(() => {
     if (!currentChatId && chats.length) {
       setCurrentChatId(chats[0].id);
     }
   }, [currentChatId, chats]);
+
 // 🔍 Search Query
 const [searchQuery, setSearchQuery] = useState("");
 const [sidebarOpen, setSidebarOpen] = useState(
@@ -143,6 +155,13 @@ const stopGenerationRef = useRef(false);
       )
     );
   };
+
+useEffect(() => {
+  if (!currentChat) return;
+
+  setSelectedModel(currentChat.model || "GPT-4o");
+}, [currentChat]);
+
 const handleFeedback = (messageId, type) => {
   const updatedMessages = currentChat.messages.map((msg) => {
     if (msg.id !== messageId) return msg;
@@ -186,6 +205,21 @@ const handleFavoriteMessage = (messageId) => {
   );
 
   toast.success("⭐ Favorites updated!");
+};
+
+const handleModelChange = (model) => {
+  setSelectedModel(model);
+
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === currentChatId
+        ? {
+            ...chat,
+            model,
+          }
+        : chat
+    )
+  );
 };
   // Rename Chat
   const handleRenameChat = (chatId) => {
@@ -876,13 +910,9 @@ const handleStopGenerating = () => {
   setIsTyping(false);
 };
   const handleNewChat = () => {
-    const newChat = createNewChat();
+  setModelModalOpen(true);
+};
 
-    setChats((prev) => [newChat, ...prev]);
-
-    setCurrentChatId(newChat.id);
-     toast.success("New chat created!");
-  };
   const handleCreateFolder = () => {
   const name = prompt("Enter folder name:");
 
@@ -896,6 +926,18 @@ const handleStopGenerating = () => {
   setFolders((prev) => [...prev, name.trim()]);
   toast.success("📂 Folder created!");
 };
+
+const handleCreateChatWithModel = () => {
+  const newChat = createNewChat(selectedModel);
+
+  setChats((prev) => [newChat, ...prev]);
+  setCurrentChatId(newChat.id);
+
+  setModelModalOpen(false);
+
+  toast.success("New chat created!");
+};
+
 const handleDeleteFolder = (folderName) => {
   if (
     !window.confirm(
@@ -1075,63 +1117,79 @@ const handleMoveChatToFolder = (chatId, folderName) => {
   toast.success(`Moved to "${folderName}"`);
 };
 return (
-  
-<ChatDesktop
-  chats={chats}
-    folders={folders}
-  currentChat={currentChat}
-  currentChatId={currentChatId}
+  <>
+    <ChatDesktop
+      chats={chats}
+      folders={folders}
+      currentChat={currentChat}
+      currentChatId={currentChatId}
 
-  sidebarOpen={sidebarOpen}
-  setSidebarOpen={setSidebarOpen}
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
 
-  searchQuery={searchQuery}
-  setSearchQuery={setSearchQuery}
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
 
-  exportOpen={exportOpen}
-  selectedFormat={selectedFormat}
-  setSelectedFormat={setSelectedFormat}
+      exportOpen={exportOpen}
+      selectedFormat={selectedFormat}
+      setSelectedFormat={setSelectedFormat}
 
-  statsOpen={statsOpen}
-  onOpenStats={() => setStatsOpen(true)}
-  onCloseStats={() => setStatsOpen(false)}
+      statsOpen={statsOpen}
+      onOpenStats={() => setStatsOpen(true)}
+      onCloseStats={() => setStatsOpen(false)}
 
-  favoritesOpen={favoritesOpen}
-onOpenFavorites={() => setFavoritesOpen(true)}
-onCloseFavorites={() => setFavoritesOpen(false)}
-handleMoveChatToFolder={handleMoveChatToFolder}
-handleRenameFolder={handleRenameFolder}
-  isTyping={isTyping}
-  isGenerating={isGenerating}
+      favoritesOpen={favoritesOpen}
+      onOpenFavorites={() => setFavoritesOpen(true)}
+      onCloseFavorites={() => setFavoritesOpen(false)}
 
-  handleNewChat={handleNewChat}
-  handleCreateFolder={handleCreateFolder}
-  handleDeleteChat={handleDeleteChat}
-  handleRenameChat={handleRenameChat}
-  handleDeleteFolder={handleDeleteFolder}
-  handleCreateTag={handleCreateTag}
-  onToggleTag={handleToggleTag}
-  tags={tags}
-  onDeleteTag={handleDeleteTag}
-  onRenameTag={handleRenameTag}
-  onToggleLock={handleToggleLock}
-  selectedTag={selectedTag}
-setSelectedTag={setSelectedTag}
-  handlePinChat={handlePinChat}
-  handleDuplicateChat={handleDuplicateChat}
-  handleArchiveChat={handleArchiveChat}
-  handleSendMessage={handleSendMessage}
-  handleStopGenerating={handleStopGenerating}
-  handleRegenerate={handleRegenerate}
-  handleFeedback={handleFeedback}
-  handleFavoriteMessage={handleFavoriteMessage}
+      handleMoveChatToFolder={handleMoveChatToFolder}
+      handleRenameFolder={handleRenameFolder}
 
-  handleExportChat={handleExportChat}
+      isTyping={isTyping}
+      isGenerating={isGenerating}
 
-  setCurrentChatId={handleSelectChat}
-  setExportOpen={setExportOpen}
-/>
+      selectedModel={selectedModel}
+      setSelectedModel={setSelectedModel}
+      handleModelChange={handleModelChange}
+
+      handleNewChat={handleNewChat}
+      handleCreateFolder={handleCreateFolder}
+      handleDeleteChat={handleDeleteChat}
+      handleRenameChat={handleRenameChat}
+      handleDeleteFolder={handleDeleteFolder}
+      handleCreateTag={handleCreateTag}
+      onToggleTag={handleToggleTag}
+      tags={tags}
+      onDeleteTag={handleDeleteTag}
+      onRenameTag={handleRenameTag}
+      onToggleLock={handleToggleLock}
+
+      selectedTag={selectedTag}
+      setSelectedTag={setSelectedTag}
+
+      handlePinChat={handlePinChat}
+      handleDuplicateChat={handleDuplicateChat}
+      handleArchiveChat={handleArchiveChat}
+      handleSendMessage={handleSendMessage}
+      handleStopGenerating={handleStopGenerating}
+      handleRegenerate={handleRegenerate}
+      handleFeedback={handleFeedback}
+      handleFavoriteMessage={handleFavoriteMessage}
+
+      handleExportChat={handleExportChat}
+
+      setCurrentChatId={handleSelectChat}
+      setExportOpen={setExportOpen}
+    />
+
+    <ModelSelectorModal
+      open={modelModalOpen}
+      selectedModel={selectedModel}
+      setSelectedModel={setSelectedModel}
+      onCancel={() => setModelModalOpen(false)}
+      onCreate={handleCreateChatWithModel}
+    />
+  </>
 );
 }
-
 export default Chat;

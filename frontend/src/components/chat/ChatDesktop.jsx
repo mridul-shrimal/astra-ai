@@ -34,6 +34,10 @@ onCloseFavorites,
   isTyping,
   isGenerating,
 
+  selectedModel,
+setSelectedModel,
+handleModelChange,
+
   handleNewChat,
   handleCreateFolder,
   handleDeleteChat,
@@ -200,9 +204,54 @@ return (
       </div>
 
       {/* Chat Area */}
-      <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3 md:gap-4 md:p-6">
+<div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3 md:gap-4 md:p-6">
 
-        <ChatContainer
+  {/* AI Model Selector */}
+  <div
+    className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
+      theme === "light"
+        ? "border-slate-200 bg-white"
+        : "border-slate-800 bg-slate-900"
+    }`}
+  >
+    <div>
+      <h2 className="text-lg font-semibold">Astra AI</h2>
+      <p
+        className={`text-sm ${
+          theme === "light"
+            ? "text-slate-500"
+            : "text-slate-400"
+        }`}
+      >
+        Active Model
+      </p>
+    </div>
+
+    <select
+      value={selectedModel}
+      onChange={(e) => {
+  const model = e.target.value;
+
+  setSelectedModel(model);
+
+  handleModelChange(model);
+}}
+      className={`rounded-lg border px-3 py-2 text-sm ${
+        theme === "light"
+          ? "border-slate-300 bg-white"
+          : "border-slate-700 bg-slate-800 text-white"
+      }`}
+    >
+      <option>GPT-4o</option>
+      <option>GPT-4.1</option>
+      <option>Claude 4 Sonnet</option>
+      <option>Gemini 2.5 Pro</option>
+      <option>Llama 3.3</option>
+      <option>DeepSeek V3</option>
+    </select>
+  </div>
+
+  <ChatContainer
           messages={currentChat.messages}
           isTyping={isTyping}
           isGenerating={isGenerating}
