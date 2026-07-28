@@ -14,11 +14,21 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
-    "application/pdf",
-    "text/plain",
-    "text/csv",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ];
+  // Documents
+  "application/pdf",
+  "text/plain",
+  "text/csv",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+  // Images
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/bmp",
+"image/svg+xml",
+];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);

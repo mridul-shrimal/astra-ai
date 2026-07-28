@@ -31,8 +31,19 @@ async function extractText(file) {
       return fs.readFileSync(file.path, "utf8");
     }
 
+    // Images
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+    case "webp":
+    case "bmp":
+    case "svg": {
+      return `[Image uploaded: ${file.originalname}]`;
+    }
+
     default:
-      throw new Error("Unsupported file type");
+      return `[Unsupported file: ${file.originalname}]`;
   }
 }
 
