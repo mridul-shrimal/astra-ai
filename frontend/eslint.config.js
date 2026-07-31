@@ -28,12 +28,15 @@ export default defineConfig([
     },
 
     rules: {
-      // Keep important React Hook rules
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
+  // Keep important React Hook rules
+  "react-hooks/rules-of-hooks": "error",
+  "react-hooks/exhaustive-deps": "warn",
 
-      // Disable React Compiler rules
-      "react-hooks/set-state-in-effect": "off",
-    },
+  // Disable React Compiler rules
+  "react-hooks/set-state-in-effect": "off",
+
+  // Allow React Context exports
+  "react-refresh/only-export-components": "off",
+},
   },
 ]);

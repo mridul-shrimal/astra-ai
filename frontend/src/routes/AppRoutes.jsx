@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MainLayout from "../components/layout/MainLayout";
-
+import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import Chat from "../pages/Chat";
 import Memory from "../pages/Memory";
@@ -12,6 +12,7 @@ function AppRoutes() {
     <BrowserRouter>
       <MainLayout>
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/memory" element={<Memory />} />
