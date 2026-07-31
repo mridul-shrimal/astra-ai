@@ -21,7 +21,7 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} /> 
+        <Route path="/profile" element={<Profile />} />
         {/* Private Pages */}
        <Route
   path="/dashboard"

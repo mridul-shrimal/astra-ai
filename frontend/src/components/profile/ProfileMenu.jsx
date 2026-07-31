@@ -6,6 +6,7 @@ import {
   MessageSquare,
   Brain,
   Settings,
+  UserCircle2,
   ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +19,6 @@ function ProfileMenu() {
   const { user, logout } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
-
   const menuRef = useRef(null);
 
   const [open, setOpen] = useState(false);
@@ -31,7 +31,6 @@ function ProfileMenu() {
   const email = user?.email || "";
 
   const firstName = fullName.trim().split(" ")[0];
-
   const initial = firstName.charAt(0).toUpperCase();
 
   useEffect(() => {
@@ -117,6 +116,7 @@ function ProfileMenu() {
               : "border-slate-700 bg-slate-900"
           }`}
         >
+          {/* User Info */}
           <div className="border-b border-slate-700 p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-lg font-bold text-white">
@@ -128,26 +128,30 @@ function ProfileMenu() {
                   {fullName}
                 </h3>
 
-                <p className="text-sm text-slate-400 break-all">
+                <p className="break-all text-sm text-slate-400">
                   {email}
                 </p>
               </div>
             </div>
           </div>
 
+          {/* Navigation */}
           <div className="p-2">
+            {menuItem(UserCircle2, "Profile", "/profile")}
             {menuItem(LayoutDashboard, "Dashboard", "/dashboard")}
             {menuItem(MessageSquare, "Chat", "/chat")}
             {menuItem(Brain, "Memory", "/memory")}
             {menuItem(Settings, "Settings", "/settings")}
           </div>
 
+          {/* Account */}
           <div className="border-t border-slate-700 p-2">
             <button
               onClick={() => {
                 logout();
                 toast("Switch account");
                 navigate("/login");
+                setOpen(false);
               }}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 transition ${
                 theme === "light"
@@ -164,6 +168,7 @@ function ProfileMenu() {
                 logout();
                 toast.success("Logged out");
                 navigate("/login");
+                setOpen(false);
               }}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-red-500 transition hover:bg-red-500/10"
             >
