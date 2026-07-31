@@ -1,30 +1,50 @@
 import { useTheme } from "../../context/ThemeContext";
 
-
-
-function Card({ title, children }) {
+function Card({
+  title,
+  children,
+  className = "",
+  headerAction = null,
+  bodyClassName = "",
+}) {
   const { theme } = useTheme();
   const isLight = theme === "light";
 
   return (
     <div
-  className={`rounded-2xl border p-6 shadow-lg transition-all duration-300 ${
-    isLight
-      ? "border-slate-200 bg-white shadow-slate-200/60"
-      : "border-slate-800 bg-slate-900"
-  }`}
->
-      {title && (
-        <h3
-  className={`mb-4 text-lg font-semibold ${
-    isLight ? "text-cyan-700" : "text-cyan-400"
-  }`}
->
-          {title}
-        </h3>
+      className={`rounded-2xl border shadow-sm transition-all duration-300 ${
+        isLight
+          ? "bg-white border-slate-200 shadow-slate-200/50"
+          : "bg-slate-900 border-slate-800"
+      } ${className}`}
+    >
+      {(title || headerAction) && (
+        <div
+          className={`flex items-center justify-between px-6 py-5 border-b ${
+            isLight
+              ? "border-slate-200"
+              : "border-slate-800"
+          }`}
+        >
+          {title && (
+            <h2
+              className={`text-xl font-semibold ${
+                isLight
+                  ? "text-slate-900"
+                  : "text-white"
+              }`}
+            >
+              {title}
+            </h2>
+          )}
+
+          {headerAction}
+        </div>
       )}
 
-      {children}
+      <div className={`p-6 ${bodyClassName}`}>
+        {children}
+      </div>
     </div>
   );
 }

@@ -10,7 +10,7 @@ import Dashboard from "../pages/Dashboard";
 import Chat from "../pages/Chat";
 import Memory from "../pages/Memory";
 import Settings from "../pages/Settings";
-
+import Profile from "../pages/Profile";
 import ProtectedRoute from "./ProtectedRoute";
 function AppRoutes() {
   return (
@@ -21,7 +21,7 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
+        <Route path="/profile" element={<Profile />} /> 
         {/* Private Pages */}
        <Route
   path="/dashboard"
