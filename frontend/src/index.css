@@ -1,2 +1,13 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+/* Chrome Autofill - Dark Theme Friendly */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px #1e293b inset !important;
+  transition: background-color 99999s ease-in-out 0s;
+}
