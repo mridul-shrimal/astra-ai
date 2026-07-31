@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
 import ModelSelectorModal from "../components/chat/ModelSelectorModal";
 import { useAuth } from "../hooks/useAuth";
+import { speak } from "../utils/speech";
 
 const createNewChat = (selectedModel, firstName) => {
   const now = Date.now();
@@ -820,6 +821,12 @@ await streamMessage(
   setIsTyping(false);
 setIsGenerating(false);
 
+const settings =
+  JSON.parse(localStorage.getItem("astra-settings")) || {};
+
+if (settings.autoRead) {
+  speak(data.reply);
+}
     } catch (error) {
       console.error(error);
 toast.error("Unable to connect to backend.");
@@ -1127,6 +1134,17 @@ const handleMoveChatToFolder = (chatId, folderName) => {
 
   toast.success(`Moved to "${folderName}"`);
 };
+
+<button
+  onClick={() => {
+    console.log("Button clicked");
+    speak("Hello from Astra AI");
+  }}
+  className="rounded-xl bg-cyan-500 px-4 py-2 text-white"
+>
+  Test Auto Read Aloud
+</button>
+
 return (
   <>
     <ChatDesktop
