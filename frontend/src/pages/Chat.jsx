@@ -3,8 +3,9 @@ import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
 import ModelSelectorModal from "../components/chat/ModelSelectorModal";
+import { useAuth } from "../hooks/useAuth";
 
-const createNewChat = (selectedModel) => {
+const createNewChat = (selectedModel, firstName) => {
   const now = Date.now();
 
   return {
@@ -22,7 +23,7 @@ const createNewChat = (selectedModel) => {
       {
         id: crypto.randomUUID(),
         sender: "ai",
-        message: "Hello Mridul 👋 I'm Astra. How can I help you today?",
+        message: `Hello ${firstName} 👋 I'm Astra. How can I help you today?`,
         timestamp: now,
         favorite: false,
       },
@@ -45,6 +46,15 @@ const [folders, setFolders] = useState(() => {
     ? JSON.parse(saved)
     : ["Uncategorized"];
 });
+const { user } = useAuth();
+
+const fullName =
+  user?.user_metadata?.full_name ||
+  user?.full_name ||
+  "User";
+
+const firstName = fullName.trim().split(" ")[0];
+
 const [tags, setTags] = useState(() => {
   const saved = localStorage.getItem("astra-tags");
 
@@ -52,6 +62,7 @@ const [tags, setTags] = useState(() => {
     ? JSON.parse(saved)
     : [];
 });
+
   // Load chats
   const [chats, setChats] = useState(() => {
   const saved = localStorage.getItem("astra-chats");
@@ -928,7 +939,7 @@ const handleStopGenerating = () => {
 };
 
 const handleCreateChatWithModel = () => {
-  const newChat = createNewChat(selectedModel);
+  const newChat = createNewChat(selectedModel, firstName)
 
   setChats((prev) => [newChat, ...prev]);
   setCurrentChatId(newChat.id);

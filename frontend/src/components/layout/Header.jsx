@@ -1,8 +1,18 @@
 import { Bell, Mic, Search, UserCircle } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../hooks/useAuth";
 
 function Header() {
   const { theme } = useTheme();
+  const { user } = useAuth();
+
+const fullName =
+  user?.user_metadata?.full_name ||
+  user?.full_name ||
+  "User";
+
+const firstName = fullName.trim().split(" ")[0];
+
   return (
     <header
   className={`h-16 flex items-center justify-between px-6 border-b transition-colors duration-300 ${
@@ -87,7 +97,7 @@ function Header() {
       : "text-white"
   }`}
 >
-    Mridul
+    {firstName}
   </span>
 </div>
 
