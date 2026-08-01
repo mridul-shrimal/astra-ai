@@ -10,11 +10,18 @@ async function extractText(file) {
 
   switch (extension) {
     case "pdf": {
-      const buffer = fs.readFileSync(file.path);
-      const data = await pdfParse(buffer);
-      return data.text;
-    }
+  try {
+    const buffer = fs.readFileSync(file.path);
 
+    const data = await pdfParse(buffer);
+
+    return data.text;
+  } catch (err) {
+    console.error("PDF Parse Error:", err);
+
+    return "[Unable to read PDF]";
+  }
+}
     case "txt": {
       return fs.readFileSync(file.path, "utf8");
     }
