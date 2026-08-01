@@ -207,7 +207,7 @@ function ChatSidebar({
       folderChats={folderChats}
       folders={folders}
       currentChatId={currentChatId}
-      collapsedFolders={collapsedFolders}
+      collapsed={collapsedFolders[folder]}
       toggleFolder={toggleFolder}
       theme={theme}
       openMenu={openMenu}
