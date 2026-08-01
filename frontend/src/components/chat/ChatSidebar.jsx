@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { useTheme } from "../../context/ThemeContext";
+
 import {
   Search,
   MessageSquare,
@@ -15,35 +18,41 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 function ChatSidebar({
+  // Chat Data
   chats,
   folders,
   currentChatId,
+
+  // Search
   searchQuery,
   onSearchChange,
 
+  // Chat Actions
   onNewChat,
-  onCreateFolder,
-  onDeleteFolder,
-  onMoveChatToFolder,
   onSelectChat,
   onDeleteChat,
-   onCreateTag,
-   tags,
-  selectedTag,
-  setSelectedTag,
-
-onToggleTag,
-onDeleteTag,
-onRenameTag,
-onToggleLock,
-  onRenameFolder,
   onRenameChat,
   onPinChat,
   onDuplicateChat,
   onArchiveChat,
+
+  // Folder Actions
+  onCreateFolder,
+  onDeleteFolder,
+  onRenameFolder,
+  onMoveChatToFolder,
+
+  // Tag Actions
+  onCreateTag,
+  tags,
+  selectedTag,
+  setSelectedTag,
+  onToggleTag,
+  onDeleteTag,
+  onRenameTag,
+  onToggleLock,
 }) {
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -51,12 +60,22 @@ onToggleLock,
   const menuRef = useRef(null);
 
   const [openMenu, setOpenMenu] = useState(null);
-  const [moveFolderMenu, setMoveFolderMenu] = useState(null);
+  const [moveFolderMenu, setMoveFolderMenu] =
+    useState(null);
   const [tagMenu, setTagMenu] = useState(null);
-  const [showArchived, setShowArchived] = useState(true);
+  const [showArchived, setShowArchived] =
+    useState(true);
 
-  // collapsed folders
-  const [collapsedFolders, setCollapsedFolders] = useState({});
+  // =========================
+  // Folder Collapse State
+  // =========================
+
+  const [collapsedFolders, setCollapsedFolders] =
+    useState({});
+
+  // =========================
+  // Close Menu on Outside Click
+  // =========================
 
   useEffect(() => {
     const closeMenu = (e) => {
@@ -68,7 +87,10 @@ onToggleLock,
       }
     };
 
-    document.addEventListener("mousedown", closeMenu);
+    document.addEventListener(
+      "mousedown",
+      closeMenu
+    );
 
     return () =>
       document.removeEventListener(
@@ -77,29 +99,43 @@ onToggleLock,
       );
   }, []);
 
+  // =========================
+  // Visible Chats
+  // =========================
+
   const visibleChats = useMemo(() => {
-  return chats
-    .filter((chat) => !chat.archived)
+    return chats
+      .filter((chat) => !chat.archived)
 
-    // Search
-    .filter((chat) =>
-      chat.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
-    )
+      // Search
+      .filter((chat) =>
+        chat.title
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      )
 
-    // Tag Filter
-    .filter(
-      (chat) =>
-        selectedTag === "All" ||
-        chat.tags?.includes(selectedTag)
-    )
+      // Tag Filter
+      .filter(
+        (chat) =>
+          selectedTag === "All" ||
+          chat.tags?.includes(selectedTag)
+      )
 
-    // Pin Sort
-    .sort(
-      (a, b) => Number(b.pinned) - Number(a.pinned)
-    );
-}, [chats, searchQuery, selectedTag]);
+      // Pin Sorting
+      .sort(
+        (a, b) =>
+          Number(b.pinned) -
+          Number(a.pinned)
+      );
+  }, [
+    chats,
+    searchQuery,
+    selectedTag,
+  ]);
+
+  // =========================
+  // Group Chats by Folder
+  // =========================
 
   const groupedChats = useMemo(() => {
     const groups = {};
@@ -126,48 +162,56 @@ onToggleLock,
     return groups;
   }, [folders, visibleChats]);
 
+  // =========================
+  // Toggle Folder
+  // =========================
+
   const toggleFolder = (folder) => {
     setCollapsedFolders((prev) => ({
       ...prev,
       [folder]: !prev[folder],
     }));
   };
+
   return (
-  <aside
-    className={`flex h-full w-72 max-w-[85vw] flex-col border-r shadow-xl md:shadow-none ${
-      theme === "light"
-        ? "border-slate-200 bg-white"
-        : "border-slate-800 bg-slate-950"
-    }`}
-  >
-    {/* New Chat */}
-    <div
-      className={`border-b p-4 ${
+    <aside
+      className={`flex h-full w-72 max-w-[85vw] flex-col border-r shadow-xl md:shadow-none ${
         theme === "light"
-          ? "border-slate-200"
-          : "border-slate-800"
+          ? "border-slate-200 bg-white"
+          : "border-slate-800 bg-slate-950"
       }`}
     >
-      <button
-        onClick={onNewChat}
-        className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-600"
-      >
-        <MessageSquarePlus size={20} />
-        New Chat
-      </button>
+      {/* =========================
+          New Chat Section
+      ========================= */}
 
-      <button
-        onClick={onCreateFolder}
-        className={`flex w-full items-center justify-center gap-2 rounded-xl border py-2 transition ${
+      <div
+        className={`border-b p-4 ${
           theme === "light"
-            ? "border-slate-300 hover:bg-slate-100"
-            : "border-slate-700 hover:bg-slate-800"
+            ? "border-slate-200"
+            : "border-slate-800"
         }`}
       >
-        <FolderPlus size={18} />
-        New Folder
-      </button>
-    </div>
+        <button
+          onClick={onNewChat}
+          className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-600"
+        >
+          <MessageSquarePlus size={20} />
+          New Chat
+        </button>
+
+        <button
+          onClick={onCreateFolder}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl border py-2 transition ${
+            theme === "light"
+              ? "border-slate-300 hover:bg-slate-100"
+              : "border-slate-700 hover:bg-slate-800"
+          }`}
+        >
+          <FolderPlus size={18} />
+          New Folder
+        </button>
+      </div>
 
     {/* Search */}
     <div
