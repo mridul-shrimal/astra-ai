@@ -4,6 +4,7 @@ import SidebarHeader from "./sidebar/SidebarHeader";
 import SearchBar from "./sidebar/SearchBar";
 import TagsSection from "./sidebar/TagsSection";
 import FolderSection from "./sidebar/FolderSection";
+import ChatItem from "./sidebar/ChatItem";
 import { useTheme } from "../../context/ThemeContext";
 
 import {
@@ -204,35 +205,40 @@ function ChatSidebar({
     <FolderSection
       key={folder}
       folder={folder}
-      folderChats={folderChats}
-      folders={folders}
-      currentChatId={currentChatId}
       collapsed={collapsedFolders[folder]}
-      toggleFolder={toggleFolder}
-      theme={theme}
-      openMenu={openMenu}
-      setOpenMenu={setOpenMenu}
-      moveFolderMenu={moveFolderMenu}
-      setMoveFolderMenu={setMoveFolderMenu}
-      tagMenu={tagMenu}
-      setTagMenu={setTagMenu}
-      menuRef={menuRef}
-      onSelectChat={onSelectChat}
+      toggleFolder={() => toggleFolder(folder)}
       onRenameFolder={onRenameFolder}
       onDeleteFolder={onDeleteFolder}
-      onPinChat={onPinChat}
-      onDuplicateChat={onDuplicateChat}
-      onArchiveChat={onArchiveChat}
-      onToggleLock={onToggleLock}
-      onRenameChat={onRenameChat}
-      onDeleteChat={onDeleteChat}
-      onMoveChatToFolder={onMoveChatToFolder}
-      tags={tags}
-      onToggleTag={onToggleTag}
-      onCreateTag={onCreateTag}
-      onDeleteTag={onDeleteTag}
-      onRenameTag={onRenameTag}
-    />
+    >
+      {folderChats.map((chat) => (
+        <ChatItem
+          key={chat.id}
+          chat={chat}
+          folders={folders}
+          currentChatId={currentChatId}
+          openMenu={openMenu}
+          setOpenMenu={setOpenMenu}
+          moveFolderMenu={moveFolderMenu}
+          setMoveFolderMenu={setMoveFolderMenu}
+          tagMenu={tagMenu}
+          setTagMenu={setTagMenu}
+          menuRef={menuRef}
+          onSelectChat={onSelectChat}
+          onPinChat={onPinChat}
+          onDuplicateChat={onDuplicateChat}
+          onArchiveChat={onArchiveChat}
+          onToggleLock={onToggleLock}
+          onRenameChat={onRenameChat}
+          onDeleteChat={onDeleteChat}
+          onMoveChatToFolder={onMoveChatToFolder}
+          tags={tags}
+          onToggleTag={onToggleTag}
+          onCreateTag={onCreateTag}
+          onDeleteTag={onDeleteTag}
+          onRenameTag={onRenameTag}
+        />
+      ))}
+    </FolderSection>
   ))}
 </div>
     {/* Archived Chats */}

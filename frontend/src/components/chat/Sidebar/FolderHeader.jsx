@@ -7,7 +7,7 @@ function FolderHeader({
 }) {
   return (
     <div
-      className={`mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-bold uppercase transition ${
+      className={`mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-bold transition ${
         theme === "light"
           ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
           : "bg-slate-800 text-slate-300 hover:bg-slate-700"
