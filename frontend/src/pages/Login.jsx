@@ -57,7 +57,7 @@ function Login() {
       className={`min-h-screen flex items-center justify-center px-6 ${
         isLight
           ? "bg-slate-100"
-          : "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+          : "bg-linear-to-br from-slate-950 via-slate-900 to-slate-950"
       }`}
     >
       <div
