@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTheme } from "../../context/ThemeContext";
+
 import ChatMessage from "./ChatMessage";
 import StatsModal from "./StatsModal";
 
@@ -15,13 +16,24 @@ function ChatContainer({
   onCloseStats,
   setShowScrollButton,
 }) {
+  // =========================
+  // Refs
+  // =========================
+
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
   const shouldAutoScroll = useRef(true);
 
+  // =========================
+  // Theme
+  // =========================
+
   const { theme } = useTheme();
 
-  // Detect scroll position
+  // =========================
+  // Scroll Detection
+  // =========================
+
   useEffect(() => {
     const container = containerRef.current;
 
@@ -33,23 +45,35 @@ function ChatContainer({
         container.scrollTop -
         container.clientHeight;
 
-      shouldAutoScroll.current = distanceFromBottom < 120;
+      shouldAutoScroll.current =
+        distanceFromBottom < 120;
 
       if (setShowScrollButton) {
-        setShowScrollButton(distanceFromBottom > 250);
+        setShowScrollButton(
+          distanceFromBottom > 250
+        );
       }
     };
 
-    container.addEventListener("scroll", handleScroll);
+    container.addEventListener(
+      "scroll",
+      handleScroll
+    );
 
     handleScroll();
 
     return () => {
-      container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener(
+        "scroll",
+        handleScroll
+      );
     };
   }, [setShowScrollButton]);
 
-  // Initial scroll
+  // =========================
+  // Initial Scroll
+  // =========================
+
   useEffect(() => {
     requestAnimationFrame(() => {
       bottomRef.current?.scrollIntoView({
@@ -59,7 +83,10 @@ function ChatContainer({
     });
   }, []);
 
-  // Auto scroll on new messages
+  // =========================
+  // Auto Scroll
+  // =========================
+
   useEffect(() => {
     if (shouldAutoScroll.current) {
       bottomRef.current?.scrollIntoView({
@@ -69,7 +96,10 @@ function ChatContainer({
     }
   }, [messages]);
 
+  // =========================
   // Statistics
+  // =========================
+
   const totalMessages = messages.length;
 
   const userMessages = messages.filter(
@@ -83,22 +113,31 @@ function ChatContainer({
   const totalWords = messages.reduce(
     (count, msg) =>
       count +
-      msg.message.trim().split(/\s+/).filter(Boolean).length,
+      msg.message
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length,
     0
   );
 
   const totalCharacters = messages.reduce(
-    (count, msg) => count + msg.message.length,
+    (count, msg) =>
+      count + msg.message.length,
     0
   );
 
   const totalFiles = messages.reduce(
-    (count, msg) => count + (msg.files?.length || 0),
+    (count, msg) =>
+      count + (msg.files?.length || 0),
     0
   );
 
-  return (
+    return (
     <>
+      {/* =========================
+          Chat Messages
+      ========================= */}
+
       <div
         ref={containerRef}
         id="chat-export"
@@ -108,26 +147,38 @@ function ChatContainer({
             : "border-slate-800 bg-slate-900"
         }`}
       >
+        {/* =========================
+            Messages
+        ========================= */}
+
         {messages.map((message, index) => (
-          <div key={message.id} id={`message-${message.id}`}>
+          <div
+            key={message.id}
+            id={`message-${message.id}`}
+          >
             <ChatMessage
-  id={message.id}
-  sender={message.sender}
-  message={message.message}
-  timestamp={message.timestamp}
-  files={message.files}
-  liked={message.liked}
-  disliked={message.disliked}
-  isLastAI={
-    message.sender === "ai" &&
-    index === messages.length - 1
-  }
-  onRegenerate={onRegenerate}
-  onFeedback={onFeedback}
-  onFavorite={onFavorite}
-/>
+              id={message.id}
+              sender={message.sender}
+              message={message.message}
+              timestamp={message.timestamp}
+              files={message.files}
+              liked={message.liked}
+              disliked={message.disliked}
+              favorite={message.favorite}
+              isLastAI={
+                message.sender === "ai" &&
+                index === messages.length - 1
+              }
+              onRegenerate={onRegenerate}
+              onFeedback={onFeedback}
+              onFavorite={onFavorite}
+            />
           </div>
         ))}
+
+        {/* =========================
+            Typing Indicator
+        ========================= */}
 
         {isTyping && (
           <div className="mb-4 flex justify-start">
@@ -143,19 +194,29 @@ function ChatContainer({
 
                 <span className="flex gap-1">
                   <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400"></span>
+
                   <span
                     className="h-2 w-2 animate-bounce rounded-full bg-cyan-400"
-                    style={{ animationDelay: "0.2s" }}
+                    style={{
+                      animationDelay: "0.2s",
+                    }}
                   ></span>
+
                   <span
                     className="h-2 w-2 animate-bounce rounded-full bg-cyan-400"
-                    style={{ animationDelay: "0.4s" }}
+                    style={{
+                      animationDelay: "0.4s",
+                    }}
                   ></span>
                 </span>
               </div>
             </div>
           </div>
         )}
+
+        {/* =========================
+            Stop Generating
+        ========================= */}
 
         {isGenerating && (
           <div className="my-4 flex justify-center">
@@ -172,8 +233,14 @@ function ChatContainer({
           </div>
         )}
 
+        {/* Bottom Scroll Target */}
+
         <div ref={bottomRef} />
       </div>
+
+      {/* =========================
+          Statistics Modal
+      ========================= */}
 
       <StatsModal
         open={statsOpen}
