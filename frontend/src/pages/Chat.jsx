@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
-
 import ChatDesktop from "../components/chat/ChatDesktop";
+import useExportChat from "../hooks/useChatExport";
+import useChatStream from "../hooks/useChatStream";
+import useChatManagement from "../hooks/useChatManagement";
 import ModelSelectorModal from "../components/chat/ModelSelectorModal";
-
+import useMessageActions from "../hooks/useMessageActions";
 import { useAuth } from "../hooks/useAuth";
 import { speak } from "../utils/speech";
 
@@ -121,7 +122,36 @@ function Chat() {
 
   const currentChat =
     chats.find((chat) => chat.id === currentChatId) || chats[0];
+const {
+  updateCurrentMessages,
+  handleFeedback,
+  handleFavoriteMessage,
+} = useMessageActions({
+  currentChat,
+  currentChatId,
+  setChats,
+});
+const {
+  handleRenameChat,
+  handlePinChat,
+  handleDuplicateChat,
+  handleArchiveChat,
+  handleToggleLock,
+  handleSelectChat,
+  handleDeleteChat,
+} = useChatManagement({
+  chats,
+  setChats,
+  currentChatId,
+  setCurrentChatId,
+  createNewChat,
+});
 
+const { handleExportChat } = useExportChat({
+  currentChat,
+  selectedFormat,
+  setExportOpen,
+});
   // =========================
   // Generation State
   // =========================
@@ -134,6 +164,16 @@ function Chat() {
   // =========================
 
   const stopGenerationRef = useRef(false);
+
+  // Hooks
+const { streamMessage } = useChatStream({
+  currentChat,
+  updateCurrentMessages,
+  stopGenerationRef,
+  setIsTyping,
+  setIsGenerating,
+  setChats,
+});
 
   // =========================
   // Effects
@@ -200,70 +240,6 @@ function Chat() {
     setSelectedModel(currentChat.model || "GPT-4o");
   }, [currentChat]);
 
-  // =========================
-  // Chat Helpers
-  // =========================
-
-  const updateCurrentMessages = (messages) => {
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === currentChat.id
-          ? {
-              ...chat,
-              messages,
-            }
-          : chat
-      )
-    );
-  };
-
-  // =========================
-  // Message Functions
-  // =========================
-
-  const handleFeedback = (messageId, type) => {
-    const updatedMessages = currentChat.messages.map((msg) => {
-      if (msg.id !== messageId) return msg;
-
-      if (type === "like") {
-        return {
-          ...msg,
-          liked: !msg.liked,
-          disliked: false,
-        };
-      }
-
-      return {
-        ...msg,
-        disliked: !msg.disliked,
-        liked: false,
-      };
-    });
-
-    updateCurrentMessages(updatedMessages);
-  };
-
-  const handleFavoriteMessage = (messageId) => {
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id !== currentChatId
-          ? chat
-          : {
-              ...chat,
-              messages: chat.messages.map((msg) =>
-                msg.id === messageId
-                  ? {
-                      ...msg,
-                      favorite: !msg.favorite,
-                    }
-                  : msg
-              ),
-            }
-      )
-    );
-
-    toast.success("⭐ Favorites updated!");
-  };
 
   // =========================
   // Model Functions
@@ -285,537 +261,8 @@ function Chat() {
   };
 
   // =========================
-  // Chat Functions
-  // =========================
-
-  const handleRenameChat = (chatId) => {
-    const chat = chats.find((c) => c.id === chatId);
-
-    const newTitle = prompt(
-      "Rename chat",
-      chat?.title || ""
-    );
-
-    if (!newTitle || !newTitle.trim()) return;
-
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
-          ? {
-              ...chat,
-              title: newTitle.trim(),
-            }
-          : chat
-      )
-    );
-
-    toast.success("Chat renamed!");
-  };
-
-  const handlePinChat = (chatId) => {
-    console.log("PIN CLICKED:", chatId);
-
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
-          ? {
-              ...chat,
-              pinned: !chat.pinned,
-            }
-          : chat
-      )
-    );
-
-    toast.success("Chat updated!");
-  };
-
-  // =========================
-  // Chat Functions
-  // =========================
-
-  // Duplicate Chat
-  const handleDuplicateChat = (chatId) => {
-    const chat = chats.find((c) => c.id === chatId);
-
-    if (!chat) return;
-
-    // Remove any existing "(Copy)" or "(Copy X)"
-    const baseTitle = chat.title.replace(
-      /\s\(Copy(?: \d+)?\)$/i,
-      ""
-    );
-
-    // Find the next available copy number
-    let copyNumber = 1;
-    let newTitle = `${baseTitle} (Copy)`;
-
-    while (
-      chats.some(
-        (c) =>
-          c.title.toLowerCase() ===
-          newTitle.toLowerCase()
-      )
-    ) {
-      copyNumber++;
-      newTitle = `${baseTitle} (Copy ${copyNumber})`;
-    }
-
-    const duplicatedChat = {
-      ...chat,
-      id: crypto.randomUUID(),
-      sessionId: crypto.randomUUID(),
-      title: newTitle,
-      pinned: false,
-      archived: false,
-      locked: false,
-      lockPin: "",
-      messages: chat.messages.map((msg) => ({
-        ...msg,
-        id: crypto.randomUUID(),
-      })),
-    };
-
-    setChats((prev) => [duplicatedChat, ...prev]);
-    setCurrentChatId(duplicatedChat.id);
-
-    toast.success("📑 Chat duplicated successfully!");
-  };
-
-  // Archive / Restore Chat
-  const handleArchiveChat = (chatId) => {
-    const chat = chats.find((c) => c.id === chatId);
-
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
-          ? {
-              ...chat,
-              archived: !chat.archived,
-            }
-          : chat
-      )
-    );
-
-    // If the current chat was archived, switch to another active chat
-    if (currentChatId === chatId && !chat?.archived) {
-      const nextChat = chats.find(
-        (chat) =>
-          chat.id !== chatId &&
-          !chat.archived
-      );
-
-      if (nextChat) {
-        setCurrentChatId(nextChat.id);
-      } else {
-        const newChat = createNewChat();
-
-        setChats((prev) => [newChat, ...prev]);
-        setCurrentChatId(newChat.id);
-      }
-    }
-
-    toast.success(
-      chat?.archived
-        ? "🔄 Chat restored!"
-        : "📦 Chat archived!"
-    );
-  };
-
-  // Lock / Unlock Chat
-  const handleToggleLock = (chatId) => {
-    const chat = chats.find((c) => c.id === chatId);
-
-    if (!chat) return;
-
-    // Remove lock (requires PIN)
-    if (chat.locked) {
-      const pin = prompt(
-        "🔑 Enter PIN to remove the lock:"
-      );
-
-      if (pin === null) return;
-
-      if (pin !== chat.lockPin) {
-        toast.error("❌ Incorrect PIN");
-        return;
-      }
-
-      setChats((prev) =>
-        prev.map((c) =>
-          c.id === chatId
-            ? {
-                ...c,
-                locked: false,
-                lockPin: "",
-              }
-            : c
-        )
-      );
-
-      toast.success("🔓 Lock removed");
-      return;
-    }
-      // Create Lock
-    const pin = prompt(
-      "Enter a 4-digit PIN to lock this chat:"
-    );
-
-    if (!pin) return;
-
-    if (!/^\d{4}$/.test(pin)) {
-      toast.error("PIN must be exactly 4 digits.");
-      return;
-    }
-
-    setChats((prev) =>
-      prev.map((c) =>
-        c.id === chatId
-          ? {
-              ...c,
-              locked: true,
-              lockPin: pin,
-            }
-          : c
-      )
-    );
-
-    toast.success("🔒 Chat locked");
-  };
-
-  // Select Chat
-  const handleSelectChat = (chatId) => {
-    const chat = chats.find((c) => c.id === chatId);
-
-    if (!chat) return;
-
-    if (!chat.locked) {
-      setCurrentChatId(chatId);
-      return;
-    }
-
-    const pin = prompt("🔒 Enter your PIN");
-
-    if (pin === null) return;
-
-    if (pin === chat.lockPin) {
-      setCurrentChatId(chatId);
-      toast.success("🔓 Chat unlocked");
-    } else {
-      toast.error("❌ Incorrect PIN");
-    }
-  };
-
-  // =========================
-  // Export Functions
-  // =========================
-
-  const handleExportChat = () => {
-    setExportOpen(false);
-
-    if (!currentChat) return;
-
-    const messages = currentChat.messages;
-
-    const plainText = messages
-      .map((msg) => {
-        const sender =
-          msg.sender === "user" ? "You" : "Astra";
-
-        return `${sender}\n\n${msg.message}`;
-      })
-      .join(
-        "\n\n----------------------------------------\n\n"
-      );
-
-    const markdown = messages
-      .map((msg) => {
-        const sender =
-          msg.sender === "user"
-            ? "## You"
-            : "## Astra";
-
-        return `${sender}\n\n${msg.message}`;
-      })
-      .join("\n\n---\n\n");
-
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>${currentChat.title}</title>
-
-<style>
-body{
-font-family:Arial,sans-serif;
-background:#0f172a;
-color:white;
-padding:40px;
-line-height:1.7;
-}
-
-.message{
-margin-bottom:30px;
-padding:20px;
-border-radius:12px;
-background:#1e293b;
-}
-
-.user{
-border-left:5px solid #06b6d4;
-}
-
-.ai{
-border-left:5px solid #8b5cf6;
-}
-
-h2{
-margin-top:0;
-}
-</style>
-
-</head>
-
-<body>
-
-<h1>${currentChat.title}</h1>
-
-${messages
-  .map(
-    (msg) => `
-<div class="message ${msg.sender}">
-<h2>${msg.sender === "user" ? "You" : "Astra"}</h2>
-<p>${msg.message.replace(/\n/g, "<br>")}</p>
-</div>
-`
-  )
-  .join("")}
-
-</body>
-</html>
-`;
-
-    const json = JSON.stringify(messages, null, 2);
-
-    const downloadFile = (
-      content,
-      filename,
-      type
-    ) => {
-      const blob = new Blob([content], { type });
-
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-
-      link.href = url;
-      link.download = filename;
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      URL.revokeObjectURL(url);
-    };
-
-    // PDF
-    if (selectedFormat === "pdf") {
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pageWidth =
-        pdf.internal.pageSize.getWidth();
-      const pageHeight =
-        pdf.internal.pageSize.getHeight();
-
-      const margin = 15;
-      const lineHeight = 7;
-
-      let y = 20;
-      let page = 1;
-
-        // Title
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(18);
-      pdf.text("Astra AI Conversation", margin, y);
-
-      y += 12;
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
-
-      const lines = pdf.splitTextToSize(
-        plainText,
-        pageWidth - margin * 2
-      );
-
-      lines.forEach((line) => {
-        // Create a new page if required
-        if (y > pageHeight - 20) {
-          pdf.setFontSize(10);
-          pdf.text(
-            `Page ${page}`,
-            pageWidth - 30,
-            pageHeight - 8
-          );
-
-          pdf.addPage();
-
-          page++;
-          y = 20;
-
-          pdf.setFont("helvetica", "normal");
-          pdf.setFontSize(11);
-        }
-
-        pdf.text(line, margin, y);
-        y += lineHeight;
-      });
-
-      // Last page number
-      pdf.setFontSize(10);
-      pdf.text(
-        `Page ${page}`,
-        pageWidth - 30,
-        pageHeight - 8
-      );
-
-      pdf.save(
-        `${currentChat.title || "chat"} - Astra AI.pdf`
-      );
-
-      toast.success("Chat exported as PDF!");
-      return;
-    }
-
-    // =========================
-    // Export Formats
-    // =========================
-
-    // TXT
-    if (selectedFormat === "txt") {
-      downloadFile(
-        plainText,
-        `${currentChat.title || "chat"}.txt`,
-        "text/plain;charset=utf-8"
-      );
-
-      toast.success("Chat exported as TXT!");
-      return;
-    }
-
-    // Markdown
-    if (selectedFormat === "md") {
-      downloadFile(
-        markdown,
-        `${currentChat.title || "chat"}.md`,
-        "text/markdown;charset=utf-8"
-      );
-
-      toast.success("Chat exported as Markdown!");
-      return;
-    }
-
-    // HTML
-    if (selectedFormat === "html") {
-      downloadFile(
-        html,
-        `${currentChat.title || "chat"}.html`,
-        "text/html;charset=utf-8"
-      );
-
-      toast.success("Chat exported as HTML!");
-      return;
-    }
-
-    // JSON
-    if (selectedFormat === "json") {
-      downloadFile(
-        json,
-        `${currentChat.title || "chat"}.json`,
-        "application/json"
-      );
-
-      toast.success("Chat exported as JSON!");
-      return;
-    }
-
-    toast(
-      `${selectedFormat.toUpperCase()} export coming next.`
-    );
-  };
-
-  // =========================
-  // Chat Functions
-  // =========================
-
-  // Delete Chat
-  const handleDeleteChat = (chatId) => {
-    if (chats.length === 1) {
-      toast.error("At least one chat must remain.");
-      return;
-    }
-
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this chat?"
-      )
-    ) {
-      return;
-    }
-
-    const updatedChats = chats.filter(
-      (chat) => chat.id !== chatId
-    );
-
-    setChats(updatedChats);
-
-    if (currentChatId === chatId) {
-      setCurrentChatId(updatedChats[0].id);
-    }
-
-    toast.success("Chat deleted!");
-  };
-
-  // =========================
   // Message Functions
   // =========================
-
-  const streamMessage = async (
-    text,
-    messageId,
-    existingMessages
-  ) => {
-    let current = "";
-
-    for (let i = 0; i < text.length; i += 3) {
-      if (stopGenerationRef.current) {
-        setIsTyping(false);
-        setIsGenerating(false);
-        return;
-      }
-
-      current += text.slice(i, i + 3);
-
-      updateCurrentMessages(
-        existingMessages.map((msg) =>
-          msg.id === messageId
-            ? {
-                ...msg,
-                message: current,
-              }
-            : msg
-        )
-      );
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 8)
-      );
-    }
-  };
 
   const handleSendMessage = async (
     text,
