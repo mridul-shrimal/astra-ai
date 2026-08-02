@@ -311,6 +311,11 @@ formData.append(
   "useMemory",
   settings.memoryEnabled ?? true
 );
+formData.append(
+  "autoSaveMemory",
+  settings.memoryAutoSave ?? true
+);
+
       files.forEach((file) => {
         formData.append("files", file);
       });

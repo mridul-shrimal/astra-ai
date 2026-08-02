@@ -72,10 +72,25 @@ function clearMemories(sessionId) {
     );
   });
 }
-
+/**
+ * Count all stored memories
+ */
+function getMemoryCount() {
+  return new Promise((resolve, reject) => {
+    db.get(
+      `SELECT COUNT(*) AS count FROM memories`,
+      [],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row.count);
+      }
+    );
+  });
+}
 module.exports = {
   saveMemory,
   getRecentMemories,
   getMemoryContext,
   clearMemories,
+  getMemoryCount,
 };

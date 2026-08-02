@@ -5,6 +5,7 @@ import SettingsSection from "./SettingsSection";
 function MemorySection() {
   const [enabled, setEnabled] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
+const [memoryCount, setMemoryCount] = useState(0);
 
   useEffect(() => {
     const saved =
@@ -27,7 +28,26 @@ function MemorySection() {
       })
     );
   }, [enabled, autoSave]);
+  
+useEffect(() => {
+  const loadMemoryCount = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/memory/count/all"
+      );
 
+      const data = await response.json();
+
+      if (data.success) {
+        setMemoryCount(data.count);
+      }
+    } catch (error) {
+      console.error("Failed to load memory count:", error);
+    }
+  };
+
+  loadMemoryCount();
+}, []);
   const clearMemory = () => {
     alert("Memory system will be connected later.");
   };
@@ -99,8 +119,8 @@ function MemorySection() {
             </h3>
 
             <p className="text-sm text-slate-400">
-              0 memories stored
-            </p>
+  {memoryCount} memories stored
+</p>
           </div>
         </div>
       </div>
