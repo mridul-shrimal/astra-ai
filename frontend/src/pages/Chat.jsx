@@ -107,26 +107,40 @@ function Chat() {
   // =========================
 
   const [chats, setChats] = useState(() => {
-    const saved = localStorage.getItem("astra-chats");
+  const settings =
+    JSON.parse(localStorage.getItem("astra-settings")) || {};
 
-    if (saved) {
-      return JSON.parse(saved).map((chat) => ({
-        pinned: false,
-        archived: false,
-        folder: "Uncategorized",
-        tags: [],
-        locked: false,
-        lockPin: "",
-        ...chat,
-      }));
-    }
-
+  if (!(settings.saveHistory ?? true)) {
     return [createNewChat()];
-  });
+  }
+
+  const saved = localStorage.getItem("astra-chats");
+
+  if (saved) {
+    return JSON.parse(saved).map((chat) => ({
+      pinned: false,
+      archived: false,
+      folder: "Uncategorized",
+      tags: [],
+      locked: false,
+      lockPin: "",
+      ...chat,
+    }));
+  }
+
+  return [createNewChat()];
+});
 
   const [currentChatId, setCurrentChatId] = useState(() => {
-    return localStorage.getItem("astra-current-chat") || null;
-  });
+  const settings =
+    JSON.parse(localStorage.getItem("astra-settings")) || {};
+
+  if (!(settings.saveHistory ?? true)) {
+    return null;
+  }
+
+  return localStorage.getItem("astra-current-chat") || null;
+});
 
   const currentChat =
     chats.find((chat) => chat.id === currentChatId) || chats[0];

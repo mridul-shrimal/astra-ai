@@ -239,13 +239,16 @@ function useChatManagement({
       return;
     }
 
+  const settings =
+    JSON.parse(localStorage.getItem("astra-settings")) || {};
     if (
-      !window.confirm(
-        "Are you sure you want to delete this chat?"
-      )
-    ) {
-      return;
-    }
+  (settings.deleteConfirmation ?? true) &&
+  !window.confirm(
+    "Are you sure you want to delete this chat?"
+  )
+) {
+  return;
+}
 
     const updatedChats = chats.filter(
       (chat) => chat.id !== chatId

@@ -10,14 +10,24 @@ import SettingToggle from "./SettingToggle";
 
 function PrivacySection() {
   const [saveHistory, setSaveHistory] = useState(true);
-  const [analytics, setAnalytics] = useState(false);
+
+  const [deleteConfirmation, setDeleteConfirmation] =
+    useState(true);
+
+  const [autoLock, setAutoLock] =
+    useState("never");
 
   useEffect(() => {
     const saved =
       JSON.parse(localStorage.getItem("astra-settings")) || {};
 
     setSaveHistory(saved.saveHistory ?? true);
-    setAnalytics(saved.analytics ?? false);
+
+    setDeleteConfirmation(
+      saved.deleteConfirmation ?? true
+    );
+
+    setAutoLock(saved.autoLock ?? "never");
   }, []);
 
   useEffect(() => {
@@ -29,10 +39,15 @@ function PrivacySection() {
       JSON.stringify({
         ...saved,
         saveHistory,
-        analytics,
+        deleteConfirmation,
+        autoLock,
       })
     );
-  }, [saveHistory, analytics]);
+  }, [
+    saveHistory,
+    deleteConfirmation,
+    autoLock,
+  ]);
 
   return (
     <SettingsSection
@@ -40,6 +55,8 @@ function PrivacySection() {
       title="Privacy & Security"
       description="Manage your privacy and account data."
     >
+      {/* Save Chat History */}
+
       <SettingToggle
         title="Save Chat History"
         description="Keep conversations for future access."
@@ -47,12 +64,48 @@ function PrivacySection() {
         onChange={setSaveHistory}
       />
 
+      {/* Delete Confirmation */}
+
       <SettingToggle
-        title="Share Anonymous Analytics"
-        description="Help improve Astra AI."
-        checked={analytics}
-        onChange={setAnalytics}
+        title="Require Delete Confirmation"
+        description="Ask before permanently deleting a chat."
+        checked={deleteConfirmation}
+        onChange={setDeleteConfirmation}
       />
+
+      {/* Auto Lock */}
+
+      <div>
+        <label className="mb-2 block font-medium">
+          Auto Lock Astra
+        </label>
+
+        <select
+          value={autoLock}
+          onChange={(e) =>
+            setAutoLock(e.target.value)
+          }
+          className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3 text-white"
+        >
+          <option value="never">
+            Never
+          </option>
+
+          <option value="5">
+            5 Minutes
+          </option>
+
+          <option value="10">
+            10 Minutes
+          </option>
+
+          <option value="30">
+            30 Minutes
+          </option>
+        </select>
+      </div>
+
+      {/* Action Buttons */}
 
       <div className="flex flex-wrap gap-4">
         <button
@@ -66,7 +119,7 @@ function PrivacySection() {
           className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-medium text-white transition hover:bg-red-700"
         >
           <Trash2 size={18} />
-          Delete Account
+          Clear All Local Data
         </button>
       </div>
     </SettingsSection>

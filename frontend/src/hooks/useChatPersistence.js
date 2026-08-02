@@ -7,16 +7,33 @@ function useChatPersistence({
   tags,
 }) {
   // Save chats
-  useEffect(() => {
-    localStorage.setItem("astra-chats", JSON.stringify(chats));
-  }, [chats]);
+useEffect(() => {
+  const settings =
+    JSON.parse(localStorage.getItem("astra-settings")) || {};
+
+  if (settings.saveHistory ?? true) {
+    localStorage.setItem(
+      "astra-chats",
+      JSON.stringify(chats)
+    );
+  }
+}, [chats]);
 
   // Save current chat
-  useEffect(() => {
-    if (currentChatId) {
-      localStorage.setItem("astra-current-chat", currentChatId);
-    }
-  }, [currentChatId]);
+useEffect(() => {
+  const settings =
+    JSON.parse(localStorage.getItem("astra-settings")) || {};
+
+  if (
+    (settings.saveHistory ?? true) &&
+    currentChatId
+  ) {
+    localStorage.setItem(
+      "astra-current-chat",
+      currentChatId
+    );
+  }
+}, [currentChatId]);
 
   // Save folders
   useEffect(() => {
