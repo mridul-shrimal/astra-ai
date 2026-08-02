@@ -297,6 +297,11 @@ formData.append(
   "model",
   settings.model || "mistralai/mistral-small-3.2-24b-instruct"
 );
+
+formData.append(
+  "temperature",
+  settings.temperature ?? 0.7
+);
       files.forEach((file) => {
         formData.append("files", file);
       });

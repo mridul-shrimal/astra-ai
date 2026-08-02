@@ -5,7 +5,8 @@ async function generateResponse(
   sessionId,
   prompt,
   useMemory = true,
-  model = process.env.OPENROUTER_MODEL
+  model = process.env.OPENROUTER_MODEL,
+  temperature = 0.7
 ){
   try {
     // Get memory only for this session
@@ -76,11 +77,12 @@ ANSWER
     console.log("\n===========================================================\n");
 console.time("OpenRouter Response");
 console.log("Using model:", model);
-
+console.log("Using temperature:", temperature);
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
           model,
+          temperature,
           messages: [
           {
             role: "user",

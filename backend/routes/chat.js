@@ -11,6 +11,7 @@ const { saveMemory } = require("../services/memoryService");
   message,
   sessionId,
   model,
+  temperature,
 } = req.body;
 
 let finalPrompt = message || "Summarize this document.";
@@ -69,11 +70,12 @@ ${message || "Summarize all uploaded documents."}
     const currentSession = sessionId || "default";
 console.log("Incoming Session:", currentSession);
     // Generate AI response
-  const aiReply = await generateResponse(
+ const aiReply = await generateResponse(
   currentSession,
   finalPrompt,
   !(req.files && req.files.length),
-  model
+  model,
+  Number(temperature)
 );
 
     // Save only normal conversations
