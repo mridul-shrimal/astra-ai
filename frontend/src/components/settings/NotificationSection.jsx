@@ -43,7 +43,16 @@ function NotificationSection() {
         title="Desktop Notifications"
         description="Show browser notifications."
         checked={desktop}
-        onChange={setDesktop}
+        onChange={(value) => {
+  setDesktop(value);
+
+  if (
+    value &&
+    Notification.permission === "default"
+  ) {
+    Notification.requestPermission();
+  }
+}}
       />
 
       <SettingToggle

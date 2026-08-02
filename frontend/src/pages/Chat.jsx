@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
+import notificationSound from "../assets/sounds/notification.mp3";
 import useExportChat from "../hooks/useChatExport";
 import useChatStream from "../hooks/useChatStream";
 import useChatManagement from "../hooks/useChatManagement";
@@ -390,14 +391,30 @@ formData.append(
       // =========================
 
       await streamMessage(
-        data.reply,
-        aiId,
-        newMessages
-      );
+  data.reply,
+  aiId,
+  newMessages
+);
 
-      setIsTyping(false);
-      setIsGenerating(false);
+// Desktop Notification
+if (
+  settings.desktopNotification &&
+  Notification.permission === "granted"
+) {
+  new Notification("Astra AI", {
+    body: "Your response is ready.",
+  });
+}
 
+// Notification Sound
+if (settings.notificationSound) {
+  const audio = new Audio(notificationSound);
+  audio.volume = 0.5;
+  audio.play().catch(() => {});
+}
+
+setIsTyping(false);
+setIsGenerating(false);
       // =========================
       // Auto Read Aloud
       // =========================
