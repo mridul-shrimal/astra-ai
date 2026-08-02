@@ -8,8 +8,6 @@ import useChatManagement from "../hooks/useChatManagement";
 import useChatEffects from "../hooks/useChatEffects";
 import useChatPersistence from "../hooks/useChatPersistence";
 import ModelSelectorModal from "../components/chat/ModelSelectorModal";
-import useAutoLock from "../hooks/useAutoLock";
-import AppLockOverlay from "../components/lock/AppLockOverlay";
 import useMessageActions from "../hooks/useMessageActions";
 import { useAuth } from "../hooks/useAuth";
 import { speak } from "../utils/speech";
@@ -218,7 +216,7 @@ useChatPersistence({
   tags,
 });
 
-const { locked, setLocked } = useAutoLock();
+
   // =========================
   // Model Functions
   // =========================
@@ -843,11 +841,6 @@ setIsGenerating(false);
 
   return (
     <>
-    {locked && (
-  <AppLockOverlay
-    onUnlock={() => setLocked(false)}
-  />
-)}
       <ChatDesktop
         // =========================
         // Chat Data
