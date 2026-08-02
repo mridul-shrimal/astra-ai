@@ -4,8 +4,9 @@ const { getMemoryContext } = require("./memoryService");
 async function generateResponse(
   sessionId,
   prompt,
-  useMemory = true
-) {
+  useMemory = true,
+  model = process.env.OPENROUTER_MODEL
+){
   try {
     // Get memory only for this session
     const memory = useMemory
@@ -74,11 +75,13 @@ ANSWER
     console.log(fullPrompt);
     console.log("\n===========================================================\n");
 console.time("OpenRouter Response");
+console.log("Using model:", model);
+
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: process.env.OPENROUTER_MODEL || "openai/gpt-oss-20b:free",
-        messages: [
+          model,
+          messages: [
           {
             role: "user",
             content: fullPrompt,

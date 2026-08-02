@@ -288,7 +288,15 @@ useChatPersistence({
         "sessionId",
         currentChat.sessionId
       );
+const settings =
+  JSON.parse(localStorage.getItem("astra-settings")) || {};
 
+console.log("Frontend model:", settings.model);
+
+formData.append(
+  "model",
+  settings.model || "mistralai/mistral-small-3.2-24b-instruct"
+);
       files.forEach((file) => {
         formData.append("files", file);
       });
@@ -375,14 +383,9 @@ useChatPersistence({
       // Auto Read Aloud
       // =========================
 
-      const settings =
-        JSON.parse(
-          localStorage.getItem("astra-settings")
-        ) || {};
-
       if (settings.autoRead) {
-        speak(data.reply);
-      }
+  speak(data.reply);
+}
     } catch (error) {
       console.error(error);
 

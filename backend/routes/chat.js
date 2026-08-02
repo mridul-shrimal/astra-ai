@@ -7,7 +7,12 @@ const { saveMemory } = require("../services/memoryService");
 
   router.post("/", upload.array("files", 10), async (req, res) => {
   try {
-    const { message, sessionId } = req.body;
+    const {
+  message,
+  sessionId,
+  model,
+} = req.body;
+
 let finalPrompt = message || "Summarize this document.";
 
 let documentText = "";
@@ -67,7 +72,8 @@ console.log("Incoming Session:", currentSession);
   const aiReply = await generateResponse(
   currentSession,
   finalPrompt,
-  !(req.files && req.files.length)
+  !(req.files && req.files.length),
+  model
 );
 
     // Save only normal conversations
