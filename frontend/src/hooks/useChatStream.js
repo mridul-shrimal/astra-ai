@@ -1,13 +1,12 @@
-import toast from "react-hot-toast";
 
 function useChatStream({
-  currentChat,
   updateCurrentMessages,
   stopGenerationRef,
   setIsTyping,
   setIsGenerating,
-  setChats,
 }) {
+  
+
   // =========================
   // Stream Message
   // =========================
@@ -46,8 +45,8 @@ function useChatStream({
   };
 
   return {
-    streamMessage,
-  };
+  streamMessage,
+};
 }
 
 export default useChatStream;

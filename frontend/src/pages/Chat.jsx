@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
 import useExportChat from "../hooks/useChatExport";
 import useChatStream from "../hooks/useChatStream";
 import useChatManagement from "../hooks/useChatManagement";
+import useChatEffects from "../hooks/useChatEffects";
+import useChatPersistence from "../hooks/useChatPersistence";
 import ModelSelectorModal from "../components/chat/ModelSelectorModal";
 import useMessageActions from "../hooks/useMessageActions";
 import { useAuth } from "../hooks/useAuth";
@@ -165,82 +167,34 @@ const { handleExportChat } = useExportChat({
 
   const stopGenerationRef = useRef(false);
 
-  // Hooks
-const { streamMessage } = useChatStream({
-  currentChat,
+// Hooks
+
+  const {
+  streamMessage,
+} = useChatStream({
   updateCurrentMessages,
   stopGenerationRef,
   setIsTyping,
   setIsGenerating,
-  setChats,
 });
 
-  // =========================
-  // Effects
-  // =========================
+useChatEffects({
+  chats,
+  currentChat,
+  currentChatId,
+  folders,
+  tags,
+  setSidebarOpen,
+  setCurrentChatId,
+  setSelectedModel,
+});
 
-  // Select first chat
-  useEffect(() => {
-    if (!currentChatId && chats.length) {
-      setCurrentChatId(chats[0].id);
-    }
-  }, [currentChatId, chats]);
-
-  // Sidebar responsiveness
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
-      }
-    };
-
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  // Save chats
-  useEffect(() => {
-    localStorage.setItem("astra-chats", JSON.stringify(chats));
-  }, [chats]);
-
-  // Save current chat
-  useEffect(() => {
-    if (currentChatId) {
-      localStorage.setItem("astra-current-chat", currentChatId);
-    }
-  }, [currentChatId]);
-
-  // Save folders
-  useEffect(() => {
-    localStorage.setItem(
-      "astra-folders",
-      JSON.stringify(folders)
-    );
-  }, [folders]);
-
-  // Save tags
-  useEffect(() => {
-    localStorage.setItem(
-      "astra-tags",
-      JSON.stringify(tags)
-    );
-  }, [tags]);
-
-  // Sync selected model
-  useEffect(() => {
-    if (!currentChat) return;
-
-    setSelectedModel(currentChat.model || "GPT-4o");
-  }, [currentChat]);
-
-
+useChatPersistence({
+  chats,
+  currentChatId,
+  folders,
+  tags,
+});
   // =========================
   // Model Functions
   // =========================
