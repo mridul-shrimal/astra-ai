@@ -307,6 +307,10 @@ formData.append(
   "temperature",
   settings.temperature ?? 0.7
 );
+formData.append(
+  "useMemory",
+  settings.memoryEnabled ?? true
+);
       files.forEach((file) => {
         formData.append("files", file);
       });
