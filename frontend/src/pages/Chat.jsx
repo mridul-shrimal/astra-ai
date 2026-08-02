@@ -59,7 +59,12 @@ function Chat() {
   // =========================
 
   const [selectedModel, setSelectedModel] = useState("GPT-4o");
-  const [selectedFormat, setSelectedFormat] = useState("pdf");
+  const [selectedFormat, setSelectedFormat] = useState(() => {
+  const settings =
+    JSON.parse(localStorage.getItem("astra-settings")) || {};
+
+  return settings.exportFormat || "pdf";
+});
   const [selectedTag, setSelectedTag] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 

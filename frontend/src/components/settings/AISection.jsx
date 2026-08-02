@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bot, Volume2 } from "lucide-react";
 import SettingsSection from "./SettingsSection";
+import { useTheme } from "../../context/ThemeContext";
 
 function AISection() {
   const [temperature, setTemperature] = useState(0.7);
@@ -8,6 +9,9 @@ function AISection() {
   const [model, setModel] = useState(
     "mistralai/mistral-small-3.2-24b-instruct"
   );
+
+ const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   useEffect(() => {
     const saved = JSON.parse(
@@ -69,7 +73,11 @@ function AISection() {
             );
             setModel(e.target.value);
           }}
-          className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3"
+          className={`w-full rounded-xl border p-3 ${
+  isLight
+    ? "border-slate-300 bg-white text-slate-900"
+    : "border-slate-700 bg-slate-900 text-white"
+}`}
         >
           <option value="mistralai/mistral-small-3.2-24b-instruct">
             ⭐ Mistral Small 3.2 (Recommended)
@@ -110,7 +118,7 @@ function AISection() {
           onChange={(e) =>
             setTemperature(Number(e.target.value))
           }
-          className="w-full"
+          className="h-2 w-full cursor-pointer appearance-none rounded-lg accent-cyan-500"
         />
       </div>
 
@@ -139,7 +147,7 @@ function AISection() {
           onChange={(e) =>
             setAutoRead(e.target.checked)
           }
-          className="h-5 w-5"
+          className="h-5 w-5 cursor-pointer rounded accent-cyan-500"
         />
       </div>
     </SettingsSection>

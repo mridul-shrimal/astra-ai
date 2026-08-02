@@ -57,7 +57,7 @@ function MemorySection() {
           onChange={(e) =>
             setEnabled(e.target.checked)
           }
-          className="h-5 w-5"
+          className="h-5 w-5 cursor-pointer rounded accent-cyan-500"
         />
       </div>
 
@@ -80,7 +80,7 @@ function MemorySection() {
           onChange={(e) =>
             setAutoSave(e.target.checked)
           }
-          className="h-5 w-5"
+          className="h-5 w-5 cursor-pointer rounded accent-cyan-500"
         />
       </div>
 

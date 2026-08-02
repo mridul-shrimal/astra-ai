@@ -47,10 +47,20 @@ function ChatInput({ onSend, inputRef }) {
   // =========================
 
   const handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      handleSend();
-    }
-  };
+  const settings =
+    JSON.parse(localStorage.getItem("astra-settings")) || {};
+
+  const enterToSend = settings.enterToSend ?? true;
+
+  if (!enterToSend) {
+    return;
+  }
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    handleSend();
+  }
+};
 
   // =========================
   // File Selection

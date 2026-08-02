@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import SettingsSection from "./SettingsSection";
-
+import { useTheme } from "../../context/ThemeContext";
 function ChatSection() {
   const [fontSize, setFontSize] = useState("medium");
   const [exportFormat, setExportFormat] = useState("pdf");
   const [enterToSend, setEnterToSend] = useState(true);
   const [showTimestamp, setShowTimestamp] = useState(true);
+const { resolvedTheme } = useTheme();
 
+const isLight = resolvedTheme === "light";
   useEffect(() => {
     const saved =
       JSON.parse(localStorage.getItem("astra-settings")) || {};
@@ -55,7 +57,11 @@ function ChatSection() {
         <select
           value={fontSize}
           onChange={(e) => setFontSize(e.target.value)}
-          className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3"
+          className={`w-full rounded-xl border p-3 ${
+  isLight
+    ? "border-slate-300 bg-white text-slate-900"
+    : "border-slate-700 bg-slate-900 text-white"
+}`}
         >
           <option value="small">Small</option>
           <option value="medium">Medium</option>
@@ -75,7 +81,11 @@ function ChatSection() {
           onChange={(e) =>
             setExportFormat(e.target.value)
           }
-          className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3"
+          className={`w-full rounded-xl border p-3 ${
+  isLight
+    ? "border-slate-300 bg-white text-slate-900"
+    : "border-slate-700 bg-slate-900 text-white"
+}`}
         >
           <option value="pdf">PDF</option>
           <option value="txt">TXT</option>
@@ -104,7 +114,7 @@ function ChatSection() {
           onChange={(e) =>
             setEnterToSend(e.target.checked)
           }
-          className="h-5 w-5"
+          className="h-5 w-5 cursor-pointer rounded accent-cyan-500"
         />
       </div>
 
@@ -125,7 +135,7 @@ function ChatSection() {
           onChange={(e) =>
             setShowTimestamp(e.target.checked)
           }
-          className="h-5 w-5"
+          className="h-5 w-5 cursor-pointer rounded accent-cyan-500"
         />
       </div>
     </SettingsSection>

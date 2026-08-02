@@ -18,7 +18,7 @@ function SettingToggle({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-5 w-5"
+        className="h-5 w-5 cursor-pointer rounded accent-cyan-500"
       />
     </div>
   );

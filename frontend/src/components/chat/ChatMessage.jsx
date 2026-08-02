@@ -44,8 +44,15 @@ function ChatMessage({
 
   const { theme } = useTheme();
 
-  const isLight = theme === "light";
+const isLight = theme === "light";
 
+const settings =
+  JSON.parse(localStorage.getItem("astra-settings")) || {};
+
+const fontSize = settings.fontSize || "medium";
+
+const showTimestamp =
+  settings.showTimestamp ?? true;
 const {
   copiedCode,
   copiedMessage,
@@ -148,24 +155,42 @@ const {
 
               {/* User Message */}
 
-              <p className="whitespace-pre-wrap leading-7">
+              <p
+  className={`whitespace-pre-wrap leading-7 ${
+  fontSize === "small"
+    ? "text-xs"
+    : fontSize === "large"
+    ? "text-2xl"
+    : "text-base"
+}`}
+>
                 {message}
               </p>
             </>
           ) : (
                         <>
-             <MarkdownRenderer
-  message={message}
-  isLight={isLight}
-  copyCode={copyCode}
-  copiedCode={copiedCode}
-  CodeBlock={CodeBlock}
-/>
+ <div
+  className={`${
+    fontSize === "small"
+      ? "text-xs"
+      : fontSize === "large"
+      ? "text-2xl"
+      : "text-base"
+  }`}
+>
+  <MarkdownRenderer
+    message={message}
+    isLight={isLight}
+    copyCode={copyCode}
+    copiedCode={copiedCode}
+    CodeBlock={CodeBlock}
+  />
+</div>
               {/* =========================
                   Timestamp
               ========================= */}
 
-              {timestamp && (
+              {showTimestamp && timestamp && (
                 <div
                   className={`mt-3 text-xs ${
                     isLight
