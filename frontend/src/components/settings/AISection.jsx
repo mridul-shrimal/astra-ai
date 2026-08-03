@@ -1,56 +1,22 @@
-import { useEffect, useState } from "react";
+import { useSettings } from "../../context/SettingsContext";
 import { Bot, Volume2 } from "lucide-react";
 import SettingsSection from "./SettingsSection";
 import { useTheme } from "../../context/ThemeContext";
 
 function AISection() {
-  const [temperature, setTemperature] = useState(0.7);
-  const [autoRead, setAutoRead] = useState(false);
-  const [model, setModel] = useState(
-    "mistralai/mistral-small-3.2-24b-instruct"
-  );
+  const {
+  temperature,
+  setTemperature,
+
+  autoRead,
+  setAutoRead,
+
+  model,
+  setModel,
+} = useSettings();
 
  const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
-
-  useEffect(() => {
-    const saved = JSON.parse(
-      localStorage.getItem("astra-settings")
-    );
-
-    console.log("Loaded settings:", saved);
-
-    if (!saved) return;
-
-    setTemperature(saved.temperature ?? 0.7);
-    setAutoRead(saved.autoRead ?? false);
-    setModel(
-      saved.model ??
-        "mistralai/mistral-small-3.2-24b-instruct"
-    );
-  }, []);
-
-  useEffect(() => {
-    console.log("Saving model:", model);
-
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) ||
-      {};
-
-    const newSettings = {
-      ...saved,
-      temperature,
-      autoRead,
-      model,
-    };
-
-    console.log("Saving settings:", newSettings);
-
-    localStorage.setItem(
-      "astra-settings",
-      JSON.stringify(newSettings)
-    );
-  }, [temperature, autoRead, model]);
 
   return (
     <SettingsSection
@@ -67,10 +33,6 @@ function AISection() {
         <select
           value={model}
           onChange={(e) => {
-            console.log(
-              "Dropdown changed to:",
-              e.target.value
-            );
             setModel(e.target.value);
           }}
           className={`w-full rounded-xl border p-3 ${

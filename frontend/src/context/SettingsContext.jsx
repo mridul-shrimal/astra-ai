@@ -78,6 +78,22 @@ notificationSound:
 setNotificationSound: (value) =>
   setSetting("notificationSound", value),
 
+// ---------- AI Preferences ----------
+
+temperature: settings.temperature,
+
+setTemperature: (value) =>
+  setSetting("temperature", value),
+
+autoRead: settings.autoRead,
+
+setAutoRead: (value) =>
+  setSetting("autoRead", value),
+
+model: settings.model,
+
+setModel: (value) =>
+  setSetting("model", value),
     // Generic setter (keep for future)
     setSetting,
   }),

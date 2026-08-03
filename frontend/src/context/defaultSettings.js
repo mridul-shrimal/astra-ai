@@ -15,6 +15,12 @@ notificationSound: true,
 
   // Chat
   exportFormat: "pdf",
+
+  // AI Preferences
+temperature: 0.7,
+autoRead: false,
+model: "mistralai/mistral-small-3.2-24b-instruct",
+
 };
 
 export default defaultSettings;
