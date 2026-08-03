@@ -1,37 +1,21 @@
-import { useEffect, useState } from "react";
+import { useSettings } from "../../context/SettingsContext";
 import { Bell } from "lucide-react";
 
 import SettingsSection from "./SettingsSection";
 import SettingToggle from "./SettingToggle";
 
 function NotificationSection() {
-  const [desktop, setDesktop] = useState(true);
-  const [email, setEmail] = useState(false);
-  const [sound, setSound] = useState(true);
+const {
+  desktopNotification,
+  setDesktopNotification,
 
-  useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) || {};
+  emailNotification,
+  setEmailNotification,
 
-    setDesktop(saved.desktopNotification ?? true);
-    setEmail(saved.emailNotification ?? false);
-    setSound(saved.notificationSound ?? true);
-  }, []);
+  notificationSound,
+  setNotificationSound,
+} = useSettings();
 
-  useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) || {};
-
-    localStorage.setItem(
-      "astra-settings",
-      JSON.stringify({
-        ...saved,
-        desktopNotification: desktop,
-        emailNotification: email,
-        notificationSound: sound,
-      })
-    );
-  }, [desktop, email, sound]);
 
   return (
     <SettingsSection
@@ -40,33 +24,33 @@ function NotificationSection() {
       description="Choose how Astra AI keeps you informed."
     >
       <SettingToggle
-        title="Desktop Notifications"
-        description="Show browser notifications."
-        checked={desktop}
-        onChange={(value) => {
-  setDesktop(value);
+  title="Desktop Notifications"
+  description="Show browser notifications."
+  checked={desktopNotification}
+  onChange={(value) => {
+    setDesktopNotification(value);
 
-  if (
-    value &&
-    Notification.permission === "default"
-  ) {
-    Notification.requestPermission();
-  }
-}}
-      />
+    if (
+      value &&
+      Notification.permission === "default"
+    ) {
+      Notification.requestPermission();
+    }
+  }}
+/>
 
       <SettingToggle
         title="Email Notifications"
         description="Receive important updates by email."
-        checked={email}
-        onChange={setEmail}
+        checked={emailNotification}
+        onChange={setEmailNotification}
       />
 
       <SettingToggle
         title="Notification Sound"
         description="Play a sound for new messages."
-        checked={sound}
-        onChange={setSound}
+        checked={notificationSound}
+        onChange={setNotificationSound}
       />
     </SettingsSection>
   );

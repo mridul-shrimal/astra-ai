@@ -6,8 +6,9 @@ const defaultSettings = {
   appPin: "",
 
   // Notifications
-  desktopNotifications: true,
-  notificationSound: true,
+desktopNotification: true,
+emailNotification: false,
+notificationSound: true,
 
   // Appearance
   theme: "system",

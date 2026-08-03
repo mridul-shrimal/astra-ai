@@ -58,6 +58,25 @@ export function SettingsProvider({ children }) {
     appPin: settings.appPin,
     setAppPin: (value) =>
       setSetting("appPin", value),
+// ---------- Notifications ----------
+
+desktopNotification:
+  settings.desktopNotification,
+
+setDesktopNotification: (value) =>
+  setSetting("desktopNotification", value),
+
+emailNotification:
+  settings.emailNotification,
+
+setEmailNotification: (value) =>
+  setSetting("emailNotification", value),
+
+notificationSound:
+  settings.notificationSound,
+
+setNotificationSound: (value) =>
+  setSetting("notificationSound", value),
 
     // Generic setter (keep for future)
     setSetting,
