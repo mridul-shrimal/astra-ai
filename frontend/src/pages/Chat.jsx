@@ -23,6 +23,7 @@ const createNewChat = (selectedModel, firstName) => {
   return {
     id: crypto.randomUUID(),
     sessionId: crypto.randomUUID(),
+      timestamp: now,
     title: "New Chat",
     pinned: false,
     archived: false,

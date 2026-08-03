@@ -12,6 +12,7 @@ export default function useMessageActions({
           ? {
               ...chat,
               messages,
+              timestamp: Date.now(), // Update last activity
             }
           : chat
       )

@@ -50,6 +50,7 @@ function ChatSidebar({
   onToggleLock,
 }) {
   const { theme } = useTheme();
+  const isLight = theme === "light";
   const navigate = useNavigate();
 
   const menuRef = useRef(null);
@@ -61,6 +62,8 @@ function ChatSidebar({
   const [showArchived, setShowArchived] =
     useState(true);
 
+const [dateFilter, setDateFilter] =
+  useState("all");
   // =========================
   // Folder Collapse State
   // =========================
@@ -108,7 +111,47 @@ function ChatSidebar({
           .toLowerCase()
           .includes(searchQuery.toLowerCase())
       )
+// Date Filter
+.filter((chat) => {
+  if (dateFilter === "all") return true;
 
+  const chatDate = new Date(chat.timestamp);
+  const today = new Date();
+
+  if (dateFilter === "today") {
+    return (
+      chatDate.toDateString() ===
+      today.toDateString()
+    );
+  }
+
+  if (dateFilter === "yesterday") {
+    const yesterday = new Date(today);
+
+    yesterday.setDate(today.getDate() - 1);
+
+    return (
+      chatDate.toDateString() ===
+      yesterday.toDateString()
+    );
+  }
+
+  if (dateFilter === "week") {
+    const weekAgo = new Date(today);
+
+    weekAgo.setDate(today.getDate() - 7);
+
+    return chatDate >= weekAgo;
+  }
+if (dateFilter === "month") {
+  const monthAgo = new Date(today);
+
+  monthAgo.setDate(today.getDate() - 30);
+
+  return chatDate >= monthAgo;
+}
+  return true;
+})
       // Tag Filter
       .filter(
         (chat) =>
@@ -123,10 +166,11 @@ function ChatSidebar({
           Number(a.pinned)
       );
   }, [
-    chats,
-    searchQuery,
-    selectedTag,
-  ]);
+  chats,
+  searchQuery,
+  selectedTag,
+  dateFilter,
+]);
 
   // =========================
   // Group Chats by Folder
@@ -199,7 +243,35 @@ function ChatSidebar({
   selectedTag={selectedTag}
   setSelectedTag={setSelectedTag}
 />
-
+<div
+  className={`mb-4 rounded-2xl border p-1.5 transition-all ${
+    isLight
+      ? "border-slate-200 bg-slate-100"
+      : "border-slate-800 bg-slate-900/60 backdrop-blur-sm"
+  }`}
+>
+  <div className="grid grid-cols-5 gap-1">
+  {[
+    { id: "all", label: "All" },
+    { id: "today", label: "Today" },
+    { id: "yesterday", label: "Yesterday" },
+    { id: "week", label: "7 Days" },
+{ id: "month", label: "30 Days" },
+  ].map((filter) => (
+    <button
+  key={filter.id}
+  onClick={() => setDateFilter(filter.id)}
+  className={`rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-300 ${
+    dateFilter === filter.id
+      ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/30"
+      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+  }`}
+>
+  {filter.label}
+</button>
+  ))}
+  </div>
+</div>
  {/* Chat List */}
 <div className="flex-1 overflow-y-auto p-3">
   {visibleChats.length === 0 ? (
