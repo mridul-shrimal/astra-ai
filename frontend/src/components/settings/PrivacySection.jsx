@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+
 import {
   Shield,
   Download,
@@ -7,58 +7,26 @@ import {
 
 import SettingsSection from "./SettingsSection";
 import SettingToggle from "./SettingToggle";
-
+import { useSettings } from "../../context/SettingsContext";
 function PrivacySection() {
-  const [saveHistory, setSaveHistory] = useState(true);
 
-  const [deleteConfirmation, setDeleteConfirmation] =
-    useState(true);
+  const {
+  saveHistory,
+  setSaveHistory,
 
-  const [autoLock, setAutoLock] =
-    useState("never");
+  deleteConfirmation,
+  setDeleteConfirmation,
 
-  const [appPin, setAppPin] = useState("");
+  autoLock,
+  setAutoLock,
 
-  const [hasPin, setHasPin] = useState(false);
+  appPin,
+  setAppPin,
+} = useSettings();
 
-  useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) || {};
+const hasPin = !!appPin;
 
-    setSaveHistory(saved.saveHistory ?? true);
-
-    setDeleteConfirmation(
-      saved.deleteConfirmation ?? true
-    );
-
-    setAutoLock(saved.autoLock ?? "never");
-
-    setAppPin(saved.appPin ?? "");
-
-    setHasPin(!!saved.appPin);
-  }, []);
-
-  useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) || {};
-
-    localStorage.setItem(
-      "astra-settings",
-      JSON.stringify({
-        ...saved,
-        saveHistory,
-        deleteConfirmation,
-        autoLock,
-        appPin,
-      })
-    );
-  }, [
-    saveHistory,
-    deleteConfirmation,
-    autoLock,
-    appPin,
-  ]);
-
+  
   const handleSetPin = () => {
     const pin = prompt(
       "Enter a new 4-digit PIN"
@@ -75,9 +43,7 @@ function PrivacySection() {
 
     setAppPin(pin);
 
-    setHasPin(true);
-
-    alert("App PIN saved successfully.");
+alert("App PIN saved successfully.");
   };
 
   const handleChangePin = () => {
@@ -119,9 +85,8 @@ const handleRemovePin = () => {
   }
 
   setAppPin("");
-  setHasPin(false);
 
-  alert("App PIN removed.");
+alert("App PIN removed.");
 };
 const handleExportData = () => {
   const exportData = {
@@ -193,11 +158,11 @@ const handleClearLocalData = () => {
       {/* Save Chat History */}
 
       <SettingToggle
-        title="Save Chat History"
-        description="Keep conversations for future access."
-        checked={saveHistory}
-        onChange={setSaveHistory}
-      />
+  title="Save Chat History"
+  description="Keep conversations for future access."
+  checked={saveHistory}
+  onChange={setSaveHistory}
+/>
 
       {/* Delete Confirmation */}
 

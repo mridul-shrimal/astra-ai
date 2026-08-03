@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
+import { SettingsProvider } from "./context/SettingsContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import "./index.css";
 import App from "./App.jsx";
@@ -34,7 +35,9 @@ createRoot(document.getElementById("root")).render(
 
     <AuthProvider>
   <ThemeProvider>
-    <App />
+    <SettingsProvider>
+      <App />
+    </SettingsProvider>
   </ThemeProvider>
 </AuthProvider>
   </>
