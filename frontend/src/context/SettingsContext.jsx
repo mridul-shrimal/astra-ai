@@ -94,6 +94,20 @@ model: settings.model,
 
 setModel: (value) =>
   setSetting("model", value),
+
+// ---------- Memory ----------
+
+memoryEnabled: settings.memoryEnabled,
+
+setMemoryEnabled: (value) =>
+  setSetting("memoryEnabled", value),
+
+memoryAutoSave: settings.memoryAutoSave,
+
+setMemoryAutoSave: (value) =>
+  setSetting("memoryAutoSave", value),
+
+
     // Generic setter (keep for future)
     setSetting,
   }),

@@ -1,34 +1,19 @@
 import { useEffect, useState } from "react";
+import { useSettings } from "../../context/SettingsContext";
 import { Brain, Trash2, Database } from "lucide-react";
 import SettingsSection from "./SettingsSection";
 
 function MemorySection() {
-  const [enabled, setEnabled] = useState(true);
-  const [autoSave, setAutoSave] = useState(true);
+const {
+  memoryEnabled,
+  setMemoryEnabled,
+
+  memoryAutoSave,
+  setMemoryAutoSave,
+} = useSettings();
 const [memoryCount, setMemoryCount] = useState(0);
 
-  useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) || {};
 
-    setEnabled(saved.memoryEnabled ?? true);
-    setAutoSave(saved.memoryAutoSave ?? true);
-  }, []);
-
-  useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) || {};
-
-    localStorage.setItem(
-      "astra-settings",
-      JSON.stringify({
-        ...saved,
-        memoryEnabled: enabled,
-        memoryAutoSave: autoSave,
-      })
-    );
-  }, [enabled, autoSave]);
-  
 useEffect(() => {
   const loadMemoryCount = async () => {
     try {
@@ -73,9 +58,9 @@ useEffect(() => {
 
         <input
           type="checkbox"
-          checked={enabled}
+          checked={memoryEnabled}
           onChange={(e) =>
-            setEnabled(e.target.checked)
+            setMemoryEnabled(e.target.checked)
           }
           className="h-5 w-5 cursor-pointer rounded accent-cyan-500"
         />
@@ -96,9 +81,9 @@ useEffect(() => {
 
         <input
           type="checkbox"
-          checked={autoSave}
+          checked={memoryAutoSave}
           onChange={(e) =>
-            setAutoSave(e.target.checked)
+            setMemoryAutoSave(e.target.checked)
           }
           className="h-5 w-5 cursor-pointer rounded accent-cyan-500"
         />
