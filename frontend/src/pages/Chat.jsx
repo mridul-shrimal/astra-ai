@@ -7,6 +7,7 @@ import useChatStream from "../hooks/useChatStream";
 import useChatManagement from "../hooks/useChatManagement";
 import useChatEffects from "../hooks/useChatEffects";
 import useChatPersistence from "../hooks/useChatPersistence";
+import { generateChatTitle } from "../utils/generateChatTitle";
 import ModelSelectorModal from "../components/chat/ModelSelectorModal";
 import useMessageActions from "../hooks/useMessageActions";
 import { useAuth } from "../hooks/useAuth";
@@ -263,23 +264,25 @@ useChatPersistence({
       })),
     };
 
-        // Rename first message automatically
-    if (currentChat.title === "New Chat") {
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === currentChat.id
-            ? {
-                ...chat,
-                title: text.trim()
-                  ? text.substring(0, 30)
-                  : files.length
-                  ? files[0].name
-                  : "New Chat",
-              }
-            : chat
-        )
-      );
-    }
+       // Rename first message automatically
+if (currentChat.title === "New Chat") {
+  const newTitle = text.trim()
+    ? generateChatTitle(text)
+    : files.length
+    ? files[0].name
+    : "New Chat";
+
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === currentChat.id
+        ? {
+            ...chat,
+            title: newTitle,
+          }
+        : chat
+    )
+  );
+}
 
     // =========================
     // Start Generation
