@@ -1,45 +1,24 @@
-import { useEffect, useState } from "react";
+import { useSettings } from "../../context/SettingsContext";
 import { MessageSquare } from "lucide-react";
 import SettingsSection from "./SettingsSection";
 import { useTheme } from "../../context/ThemeContext";
 function ChatSection() {
-  const [fontSize, setFontSize] = useState("medium");
-  const [exportFormat, setExportFormat] = useState("pdf");
-  const [enterToSend, setEnterToSend] = useState(true);
-  const [showTimestamp, setShowTimestamp] = useState(true);
+const {
+  fontSize,
+  setFontSize,
+
+  exportFormat,
+  setExportFormat,
+
+  enterToSend,
+  setEnterToSend,
+
+  showTimestamp,
+  setShowTimestamp,
+} = useSettings();
 const { resolvedTheme } = useTheme();
 
 const isLight = resolvedTheme === "light";
-  useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) || {};
-
-    setFontSize(saved.fontSize || "medium");
-    setExportFormat(saved.exportFormat || "pdf");
-    setEnterToSend(saved.enterToSend ?? true);
-    setShowTimestamp(saved.showTimestamp ?? true);
-  }, []);
-
-  useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("astra-settings")) || {};
-
-    localStorage.setItem(
-      "astra-settings",
-      JSON.stringify({
-        ...saved,
-        fontSize,
-        exportFormat,
-        enterToSend,
-        showTimestamp,
-      })
-    );
-  }, [
-    fontSize,
-    exportFormat,
-    enterToSend,
-    showTimestamp,
-  ]);
 
   return (
     <SettingsSection

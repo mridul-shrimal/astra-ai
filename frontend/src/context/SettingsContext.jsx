@@ -107,6 +107,28 @@ memoryAutoSave: settings.memoryAutoSave,
 setMemoryAutoSave: (value) =>
   setSetting("memoryAutoSave", value),
 
+// ---------- Chat Preferences ----------
+
+fontSize: settings.fontSize,
+
+setFontSize: (value) =>
+  setSetting("fontSize", value),
+
+exportFormat: settings.exportFormat,
+
+setExportFormat: (value) =>
+  setSetting("exportFormat", value),
+
+enterToSend: settings.enterToSend,
+
+setEnterToSend: (value) =>
+  setSetting("enterToSend", value),
+
+showTimestamp: settings.showTimestamp,
+
+setShowTimestamp: (value) =>
+  setSetting("showTimestamp", value),
+
 
     // Generic setter (keep for future)
     setSetting,

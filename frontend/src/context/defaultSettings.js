@@ -13,8 +13,11 @@ notificationSound: true,
   // Appearance
   theme: "system",
 
-  // Chat
-  exportFormat: "pdf",
+ // Chat Preferences
+fontSize: "medium",
+exportFormat: "pdf",
+enterToSend: true,
+showTimestamp: true,
 
   // AI Preferences
 temperature: 0.7,
