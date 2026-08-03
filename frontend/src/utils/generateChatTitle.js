@@ -1,17 +1,17 @@
-import {
-  STOP_WORDS,
-  TOPIC_PATTERNS,
-} from "../constants/chatTitlePatterns";
+import { STOP_WORDS } from "../constants/stopWords";
+import { TOPIC_PATTERNS } from "../constants/chatTitlePatterns";
 
 export function generateChatTitle(text) {
-  if (!text.trim()) return "New Chat";
+  if (!text?.trim()) {
+    return "New Chat";
+  }
 
   const lower = text.toLowerCase();
 
-  // Check predefined topics
+  // Check predefined topic patterns
   for (const topic of TOPIC_PATTERNS) {
-    const matched = topic.keywords.every((word) =>
-      lower.includes(word)
+    const matched = topic.keywords.every((keyword) =>
+      lower.includes(keyword.toLowerCase())
     );
 
     if (matched) {
@@ -19,7 +19,7 @@ export function generateChatTitle(text) {
     }
   }
 
-  // Generate from keywords
+  // Fallback keyword extraction
   const words = text
     .replace(/[^\w\s]/g, "")
     .split(/\s+/)

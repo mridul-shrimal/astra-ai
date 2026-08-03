@@ -11,6 +11,7 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  Search,
 } from "lucide-react";
 
 function ChatSidebar({
@@ -180,18 +181,18 @@ function ChatSidebar({
   onCreateFolder={onCreateFolder}
 />
     {/* Search */}
-    <div
-      className={`border-b p-4 ${
-        theme === "light"
-          ? "border-slate-200"
-          : "border-slate-800"
-      }`}
-    >
+ <div
+  className={`border-b p-4 ${
+    theme === "light"
+      ? "border-slate-200"
+      : "border-slate-800"
+  }`}
+>
   <SearchBar
-  searchQuery={searchQuery}
-  onSearchChange={onSearchChange}
-/>
-    </div>
+    searchQuery={searchQuery}
+    onSearchChange={onSearchChange}
+  />
+</div>
 
 <TagsSection
   tags={tags}
@@ -201,45 +202,74 @@ function ChatSidebar({
 
  {/* Chat List */}
 <div className="flex-1 overflow-y-auto p-3">
-  {Object.entries(groupedChats).map(([folder, folderChats]) => (
-    <FolderSection
-      key={folder}
-      folder={folder}
-      collapsed={collapsedFolders[folder]}
-      toggleFolder={() => toggleFolder(folder)}
-      onRenameFolder={onRenameFolder}
-      onDeleteFolder={onDeleteFolder}
-    >
-      {folderChats.map((chat) => (
-        <ChatItem
-          key={chat.id}
-          chat={chat}
-          folders={folders}
-          currentChatId={currentChatId}
-          openMenu={openMenu}
-          setOpenMenu={setOpenMenu}
-          moveFolderMenu={moveFolderMenu}
-          setMoveFolderMenu={setMoveFolderMenu}
-          tagMenu={tagMenu}
-          setTagMenu={setTagMenu}
-          menuRef={menuRef}
-          onSelectChat={onSelectChat}
-          onPinChat={onPinChat}
-          onDuplicateChat={onDuplicateChat}
-          onArchiveChat={onArchiveChat}
-          onToggleLock={onToggleLock}
-          onRenameChat={onRenameChat}
-          onDeleteChat={onDeleteChat}
-          onMoveChatToFolder={onMoveChatToFolder}
-          tags={tags}
-          onToggleTag={onToggleTag}
-          onCreateTag={onCreateTag}
-          onDeleteTag={onDeleteTag}
-          onRenameTag={onRenameTag}
-        />
-      ))}
-    </FolderSection>
-  ))}
+  {visibleChats.length === 0 ? (
+    <div className="mt-12 flex flex-col items-center text-center">
+      <Search
+        size={36}
+        className="mb-3 text-slate-500"
+      />
+
+      <h3 className="font-medium text-slate-300">
+        No chats found
+      </h3>
+
+      <p className="mt-2 text-sm text-slate-500">
+        Try a different search keyword.
+      </p>
+    </div>
+  ) : (
+    Object.entries(groupedChats).map(
+      ([folder, folderChats]) => (
+        <FolderSection
+          key={folder}
+          folder={folder}
+          collapsed={collapsedFolders[folder]}
+          toggleFolder={() =>
+            toggleFolder(folder)
+          }
+          onRenameFolder={onRenameFolder}
+          onDeleteFolder={onDeleteFolder}
+        >
+          {folderChats.map((chat) => (
+            <ChatItem
+              key={chat.id}
+              chat={chat}
+              folders={folders}
+              currentChatId={currentChatId}
+              openMenu={openMenu}
+              setOpenMenu={setOpenMenu}
+              moveFolderMenu={moveFolderMenu}
+              setMoveFolderMenu={
+                setMoveFolderMenu
+              }
+              tagMenu={tagMenu}
+              setTagMenu={setTagMenu}
+              menuRef={menuRef}
+              onSelectChat={onSelectChat}
+              onPinChat={onPinChat}
+              onDuplicateChat={
+                onDuplicateChat
+              }
+              onArchiveChat={
+                onArchiveChat
+              }
+              onToggleLock={onToggleLock}
+              onRenameChat={onRenameChat}
+              onDeleteChat={onDeleteChat}
+              onMoveChatToFolder={
+                onMoveChatToFolder
+              }
+              tags={tags}
+              onToggleTag={onToggleTag}
+              onCreateTag={onCreateTag}
+              onDeleteTag={onDeleteTag}
+              onRenameTag={onRenameTag}
+            />
+          ))}
+        </FolderSection>
+      )
+    )
+  )}
 </div>
     {/* Archived Chats */}
     {chats.filter((chat) => chat.archived).length > 0 && (
