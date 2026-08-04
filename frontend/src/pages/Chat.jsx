@@ -32,15 +32,7 @@ const createNewChat = (selectedModel, firstName) => {
     locked: false,
     lockPin: "",
     model: selectedModel,
-    messages: [
-      {
-        id: crypto.randomUUID(),
-        sender: "ai",
-        message: `Hello ${firstName} 👋 I'm Astra. How can I help you today?`,
-        timestamp: now,
-        favorite: false,
-      },
-    ],
+   messages: [],
   };
 };
 
