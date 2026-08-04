@@ -1,7 +1,7 @@
 import { useTheme } from "../../../context/ThemeContext";
 
 function ModelSelector({
-  selectedModel,
+  currentChat,
   handleModelChange,
 }) {
   const { theme } = useTheme();
@@ -31,7 +31,10 @@ function ModelSelector({
       </div>
 
       <select
-        value={selectedModel}
+        value={
+  currentChat?.model ||
+  "⭐ Mistral Small 3.2 (Recommended)"
+}
         onChange={(e) => {
   handleModelChange(e.target.value);
 }}

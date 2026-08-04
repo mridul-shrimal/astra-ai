@@ -54,9 +54,7 @@ if (
   e.key.toLowerCase() === "k"
 ) {
   e.preventDefault();
-  console.log("Alt + K pressed");
-  console.log(searchRef);
-  console.log(searchRef?.current);
+
   searchRef?.current?.focus();
 
   return;
@@ -102,8 +100,7 @@ if (
 ) {
   e.preventDefault();
 
-  console.log("Alt + B pressed");
-  console.log(onToggleSidebar);
+  
 
   onToggleSidebar?.();
 
@@ -207,6 +204,7 @@ if (
     };
   }, [
     onNewChat,
+    onCloseShortcuts,
     onPreviousChat,
     onNextChat,
     onToggleSidebar,

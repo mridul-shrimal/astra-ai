@@ -4,7 +4,6 @@ import { useTheme } from "../../context/ThemeContext";
 
 function MainLayout({ children }) {
   const { theme } = useTheme();
-  console.log("Current Theme:", theme);
   return (
     <div
   className={`flex min-h-screen transition-colors duration-300 ${

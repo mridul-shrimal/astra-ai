@@ -6,38 +6,37 @@ function useAutoLock() {
   const timerRef = useRef(null);
 
   useEffect(() => {
-    console.log("🚀 Auto Lock Hook Started");
+    
 
     const settings =
       JSON.parse(localStorage.getItem("astra-settings")) || {};
 
-    console.log("Settings:", settings);
+    
 
     const autoLock = settings.autoLock ?? "never";
     const appPin = settings.appPin ?? "";
 
-    console.log("Auto Lock:", autoLock);
-    console.log("PIN:", appPin);
+   
 
     if (autoLock === "never") {
-      console.log("Auto Lock Disabled");
+      
       return;
     }
 
     if (!appPin) {
-      console.log("No PIN Found");
+      
       return;
     }
 
     const timeout = 10000;
 
     const resetTimer = () => {
-      console.log("Activity");
+     
 
       clearTimeout(timerRef.current);
 
       timerRef.current = setTimeout(() => {
-        console.log("LOCKING ASTRA");
+       
         setLocked(true);
       }, timeout);
     };

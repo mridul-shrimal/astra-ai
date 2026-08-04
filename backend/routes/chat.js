@@ -37,7 +37,6 @@ ${extractedText}
 `;
   }
 
-  console.log(documentText);
 
   finalPrompt = `
 You are Astra AI.
@@ -70,7 +69,7 @@ ${message || "Summarize all uploaded documents."}
 
     // Default session if none is provided
     const currentSession = sessionId || "default";
-console.log("Incoming Session:", currentSession);
+
     // Generate AI response
  const aiReply = await generateResponse(
   currentSession,

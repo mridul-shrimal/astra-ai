@@ -47,8 +47,6 @@ onToggleSidebar,
   isGenerating,
 
   // Models
-  selectedModel,
-  setSelectedModel,
   handleModelChange,
 
   // Chat Actions
@@ -181,9 +179,8 @@ const closeMenusRef = useRef(() => {});
 
         <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3 md:gap-4 md:p-6">
 
-          <ModelSelector
-  selectedModel={selectedModel}
-  setSelectedModel={setSelectedModel}
+         <ModelSelector
+  currentChat={currentChat}
   handleModelChange={handleModelChange}
 />
 

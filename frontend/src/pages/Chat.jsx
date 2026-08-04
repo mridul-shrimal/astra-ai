@@ -319,7 +319,6 @@ if (currentChat.title === "New Chat") {
 const settings =
   JSON.parse(localStorage.getItem("astra-settings")) || {};
 
-console.log("Frontend model:", settings.model);
 
 const MODEL_MAP = {
   "Mistral Small 3.2":
@@ -334,10 +333,15 @@ const MODEL_MAP = {
   "GPT OSS 20B":
     "openai/gpt-oss-20b",
 };
-console.log("Selected Model:", selectedModel);
+const activeModel =
+  currentChat?.model ||
+  "⭐ Mistral Small 3.2 (Recommended)";
+
+
+
 formData.append(
   "model",
-  MODEL_MAP[selectedModel] ||
+  MODEL_MAP[activeModel] ||
     "mistralai/mistral-small-3.2-24b-instruct"
 );
 
@@ -583,24 +587,45 @@ setIsGenerating(false);
   // =========================
   // Chat Functions
   // =========================
+const MODEL_LABEL_MAP = {
+  "mistralai/mistral-small-3.2-24b-instruct":
+    "⭐ Mistral Small 3.2 (Recommended)",
 
-  const handleNewChat = () => {
-    setModelModalOpen(true);
-  };
+  "google/gemma-3-27b-it":
+    "Gemma 3 27B",
 
-  const handleCreateChatWithModel = () => {
-    const newChat = createNewChat(
-      selectedModel,
-      firstName
-    );
+  "deepseek/deepseek-chat-v3":
+    "DeepSeek Chat V3",
 
-    setChats((prev) => [newChat, ...prev]);
-    setCurrentChatId(newChat.id);
+  "openai/gpt-oss-20b":
+    "GPT OSS 20B",
+};
 
-    setModelModalOpen(false);
+const handleNewChat = () => {
+  const settings =
+    JSON.parse(localStorage.getItem("astra-settings")) || {};
 
-    toast.success("New chat created!");
-  };
+  setSelectedModel(
+    MODEL_LABEL_MAP[settings.model] ||
+      "⭐ Mistral Small 3.2 (Recommended)"
+  );
+
+  setModelModalOpen(true);
+};
+
+const handleCreateChatWithModel = () => {
+  const newChat = createNewChat(
+    selectedModel,
+    firstName
+  );
+
+  setChats((prev) => [newChat, ...prev]);
+  setCurrentChatId(newChat.id);
+
+  setModelModalOpen(false);
+
+  toast.success("New chat created!");
+};
 
   // =========================
   // Folder Functions
@@ -849,7 +874,6 @@ setIsGenerating(false);
 
   <button
     onClick={() => {
-      console.log("Button clicked");
       speak("Hello from Astra AI");
     }}
     className="rounded-xl bg-cyan-500 px-4 py-2 text-white"
@@ -974,6 +998,7 @@ setExportOpen={setExportOpen}
 
 handleExportChat={handleExportChat}
       />
+
 
       <ModelSelectorModal
         open={modelModalOpen}

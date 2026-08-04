@@ -36,7 +36,7 @@ function useChatManagement({
   };
 
   const handlePinChat = (chatId) => {
-    console.log("PIN CLICKED:", chatId);
+    
 
     setChats((prev) =>
       prev.map((chat) =>

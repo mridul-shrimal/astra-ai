@@ -14,9 +14,7 @@ async function generateResponse(
   ? await getMemoryContext(sessionId)
   : "";
 
-    console.log("Memory for session:");
-    console.log(memory);
-
+  
 const fullPrompt = `
 You are Astra, a modern AI assistant similar to Claude.
 
@@ -72,12 +70,9 @@ ${prompt}
 ANSWER
 `;
 
-    console.log("\n================ PROMPT SENT TO OPENROUTER ================\n");
-    console.log(fullPrompt);
-    console.log("\n===========================================================\n");
+   
 console.time("OpenRouter Response");
-console.log("Using model:", model);
-console.log("Using temperature:", temperature);
+
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
