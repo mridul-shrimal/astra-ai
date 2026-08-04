@@ -73,6 +73,7 @@ const [dateFilter, setDateFilter] =
 
 const [showPinned, setShowPinned] =
   useState(true);
+
   // =========================
   // Close Menu on Outside Click
   // =========================
@@ -185,6 +186,38 @@ const pinnedChats = useMemo(() => {
 const unPinnedChats = useMemo(() => {
   return visibleChats.filter((chat) => !chat.pinned);
 }, [visibleChats]);
+
+// =========================
+// Archived Chats
+// =========================
+const archivedChats = useMemo(() => {
+  return chats.filter((chat) => {
+    if (!chat.archived) return false;
+
+    // Search Filter
+    if (
+      !chat.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    ) {
+      return false;
+    }
+
+    // Tag Filter
+    if (
+      selectedTag !== "All" &&
+      !(chat.tags || []).includes(selectedTag)
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+}, [
+  chats,
+  searchQuery,
+  selectedTag,
+]);
 
   // =========================
   // Group Chats by Folder
@@ -414,70 +447,70 @@ const unPinnedChats = useMemo(() => {
   )}
 </div>
     {/* Archived Chats */}
-    {chats.filter((chat) => chat.archived).length > 0 && (
-      <div
-        className={`border-t p-3 ${
-          theme === "light"
-            ? "border-slate-200"
-            : "border-slate-800"
-        }`}
-      >
-        <button
-          onClick={() => setShowArchived(!showArchived)}
-          className={`mb-2 flex w-full items-center justify-between rounded-lg px-2 py-2 text-xs font-semibold uppercase tracking-wider transition ${
-            theme === "light"
-              ? "text-slate-600 hover:bg-slate-100"
-              : "text-slate-400 hover:bg-slate-800"
-          }`}
-        >
-          <span>
-            📦 Archived (
-            {chats.filter((chat) => chat.archived).length})
-          </span>
+{archivedChats.length > 0 && (
+  <div
+    className={`border-t p-3 ${
+      theme === "light"
+        ? "border-slate-200"
+        : "border-slate-800"
+    }`}
+  >
+    <button
+      onClick={() =>
+        setShowArchived(!showArchived)
+      }
+      className={`mb-2 flex w-full items-center justify-between rounded-xl px-2 py-2 text-xs font-semibold uppercase tracking-wider transition ${
+        theme === "light"
+          ? "text-slate-600 hover:bg-slate-100"
+          : "text-slate-400 hover:bg-slate-800"
+      }`}
+    >
+      <span>
+        📦 Archived ({archivedChats.length})
+      </span>
 
-          {showArchived ? (
-            <ChevronDown size={16} />
-          ) : (
-            <ChevronRight size={16} />
-          )}
-        </button>
+      {showArchived ? (
+        <ChevronDown size={16} />
+      ) : (
+        <ChevronRight size={16} />
+      )}
+    </button>
 
-        {showArchived &&
-          chats
-            .filter((chat) => chat.archived)
-            .map((chat) => (
-              <div
-                key={chat.id}
-                className={`mb-2 flex items-center justify-between rounded-lg p-2 ${
-                  theme === "light"
-                    ? "bg-slate-100"
-                    : "bg-slate-900"
-                }`}
-              >
-                <span
-                  className={`truncate text-sm ${
-                    theme === "light"
-                      ? "text-slate-700"
-                      : "text-slate-300"
-                  }`}
-                >
-                  {chat.title}
-                </span>
+    {showArchived && (
+      <div className="space-y-1">
+        {archivedChats.map((chat) => (
+          <div
+            key={chat.id}
+            className={`flex items-center justify-between rounded-xl px-3 py-2 transition ${
+              theme === "light"
+                ? "bg-slate-100 hover:bg-slate-200"
+                : "bg-slate-900 hover:bg-slate-800"
+            }`}
+          >
+            <span
+              className={`truncate text-sm ${
+                theme === "light"
+                  ? "text-slate-700"
+                  : "text-slate-300"
+              }`}
+            >
+              {chat.title}
+            </span>
 
-                <button
-                  onClick={() => onArchiveChat(chat.id)}
-                  className={`rounded-md px-2 py-1 text-xs font-medium transition ${
-                    theme === "light"
-                      ? "text-slate-900 hover:bg-slate-200"
-                      : "text-green-400 hover:bg-slate-800"
-                  }`}
-                >
-                  ♻ Restore
-                </button>
-              </div>
-            ))}
+            <button
+              onClick={() =>
+                onArchiveChat(chat.id)
+              }
+              className="rounded-lg px-2 py-1 text-xs font-medium text-green-400 transition hover:bg-slate-700"
+            >
+              ♻ Restore
+            </button>
+          </div>
+        ))}
       </div>
     )}
+  </div>
+)}
 
     {/* Settings */}
     <div
