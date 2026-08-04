@@ -180,13 +180,15 @@ const {
       : "text-base"
   }`}
 >
-  <MarkdownRenderer
-    message={message}
-    isLight={isLight}
-    copyCode={copyCode}
-    copiedCode={copiedCode}
-    CodeBlock={CodeBlock}
-  />
+<MarkdownRenderer
+  message={message}
+  isLight={isLight}
+  copyCode={copyCode}
+  copiedCode={copiedCode}
+  CodeBlock={CodeBlock}
+  isGenerating={isGenerating}
+  isLastAI={isLastAI}
+/>
 </div>
               {/* =========================
                   Timestamp

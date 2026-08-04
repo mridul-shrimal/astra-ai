@@ -7,11 +7,12 @@ function MarkdownRenderer({
   copyCode,
   copiedCode,
   CodeBlock,
+
 }) {
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    components={{
         h1: ({ children }) => (
           <h1 className="mb-5 mt-6 text-3xl font-bold">
             {children}
@@ -200,6 +201,7 @@ inlineCode: ({ children }) => (
     >
       {message}
     </ReactMarkdown>
+   
   );
 }
 
