@@ -150,6 +150,7 @@ function ChatContainer({
       >
         <MessageList
   messages={messages}
+  isGenerating={isGenerating}
   onRegenerate={onRegenerate}
   onFeedback={onFeedback}
   onFavorite={onFavorite}

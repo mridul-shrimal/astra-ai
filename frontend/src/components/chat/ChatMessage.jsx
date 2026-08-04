@@ -25,6 +25,8 @@ function ChatMessage({
   message,
   timestamp,
   files,
+    isLastAI,
+  isGenerating,
   liked,
   disliked,
   favorite,

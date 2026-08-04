@@ -31,10 +31,14 @@ function MarkdownRenderer({
         ),
 
         p: ({ children }) => (
-          <p className="mb-4 whitespace-pre-wrap leading-7">
-            {children}
-          </p>
-        ),
+  <p
+    className={`mb-5 whitespace-pre-wrap ${
+      isLight ? "text-slate-800" : "text-slate-200"
+    } leading-8`}
+  >
+    {children}
+  </p>
+),
 
         strong: ({ children }) => (
           <strong
@@ -47,7 +51,24 @@ function MarkdownRenderer({
             {children}
           </strong>
         ),
-
+a: ({ href, children }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-cyan-400 underline decoration-cyan-500 transition hover:text-cyan-300"
+  >
+    {children}
+  </a>
+),
+img: ({ src, alt }) => (
+  <img
+    src={src}
+    alt={alt}
+    className="my-5 max-w-full rounded-xl border border-slate-300 shadow-lg dark:border-slate-700"
+    loading="lazy"
+  />
+),
         blockquote: ({ children }) => (
           <blockquote
             className={`my-5 border-l-4 pl-4 italic ${
@@ -81,7 +102,14 @@ function MarkdownRenderer({
             {children}
           </ol>
         ),
-
+input: ({ checked }) => (
+  <input
+    type="checkbox"
+    checked={checked}
+    readOnly
+    className="mr-2 h-4 w-4 accent-cyan-500"
+  />
+),
         table: ({ children }) => (
           <div
             className={`my-6 overflow-x-auto rounded-lg border ${
@@ -90,7 +118,7 @@ function MarkdownRenderer({
                 : "border-slate-700"
             }`}
           >
-            <table className="min-w-full border-collapse">
+            <table className="min-w-full border-collapse text-sm">
               {children}
             </table>
           </div>
@@ -126,7 +154,7 @@ function MarkdownRenderer({
 
         th: ({ children }) => (
           <th
-            className={`border px-4 py-3 text-left font-semibold ${
+            className={`border px-5 py-3 text-left font-semibold ${
               isLight
                 ? "border-slate-200 text-cyan-700"
                 : "border-slate-700 text-cyan-300"
@@ -138,7 +166,7 @@ function MarkdownRenderer({
 
         td: ({ children }) => (
           <td
-            className={`border px-4 py-3 align-top ${
+            className={`border px-5 py-3 align-top leading-7 ${
               isLight
                 ? "border-slate-200"
                 : "border-slate-700"
@@ -147,7 +175,17 @@ function MarkdownRenderer({
             {children}
           </td>
         ),
-
+inlineCode: ({ children }) => (
+  <code
+    className={`rounded-md px-1.5 py-0.5 font-mono text-sm ${
+      isLight
+        ? "bg-slate-200 text-pink-700"
+        : "bg-slate-700 text-cyan-300"
+    }`}
+  >
+    {children}
+  </code>
+),
         code(props) {
           return (
             <CodeBlock

@@ -2,6 +2,7 @@ import ChatMessage from "../ChatMessage";
 
 function MessageList({
   messages,
+  isGenerating,
   onRegenerate,
   onFeedback,
   onFavorite,
@@ -26,6 +27,7 @@ function MessageList({
               message.sender === "ai" &&
               index === messages.length - 1
             }
+            isGenerating={isGenerating}
             onRegenerate={onRegenerate}
             onFeedback={onFeedback}
             onFavorite={onFavorite}
