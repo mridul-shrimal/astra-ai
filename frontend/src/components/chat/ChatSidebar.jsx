@@ -71,6 +71,8 @@ const [dateFilter, setDateFilter] =
   const [collapsedFolders, setCollapsedFolders] =
     useState({});
 
+const [showPinned, setShowPinned] =
+  useState(true);
   // =========================
   // Close Menu on Outside Click
   // =========================
@@ -172,6 +174,18 @@ if (dateFilter === "month") {
   dateFilter,
 ]);
 
+// =========================
+// Pinned Chats
+// =========================
+
+const pinnedChats = useMemo(() => {
+  return visibleChats.filter((chat) => chat.pinned);
+}, [visibleChats]);
+
+const unPinnedChats = useMemo(() => {
+  return visibleChats.filter((chat) => !chat.pinned);
+}, [visibleChats]);
+
   // =========================
   // Group Chats by Folder
   // =========================
@@ -187,7 +201,7 @@ if (dateFilter === "month") {
       groups["Uncategorized"] = [];
     }
 
-    visibleChats.forEach((chat) => {
+    unPinnedChats.forEach((chat) => {
       const folder =
         chat.folder || "Uncategorized";
 
@@ -199,7 +213,7 @@ if (dateFilter === "month") {
     });
 
     return groups;
-  }, [folders, visibleChats]);
+  }, [folders, unPinnedChats]);
 
   // =========================
   // Toggle Folder
@@ -272,7 +286,7 @@ if (dateFilter === "month") {
   ))}
   </div>
 </div>
- {/* Chat List */}
+{/* Chat List */}
 <div className="flex-1 overflow-y-auto p-3">
   {visibleChats.length === 0 ? (
     <div className="mt-12 flex flex-col items-center text-center">
@@ -290,57 +304,113 @@ if (dateFilter === "month") {
       </p>
     </div>
   ) : (
-    Object.entries(groupedChats).map(
-      ([folder, folderChats]) => (
-        <FolderSection
-          key={folder}
-          folder={folder}
-          collapsed={collapsedFolders[folder]}
-          toggleFolder={() =>
-            toggleFolder(folder)
-          }
-          onRenameFolder={onRenameFolder}
-          onDeleteFolder={onDeleteFolder}
-        >
-          {folderChats.map((chat) => (
-            <ChatItem
-              key={chat.id}
-              chat={chat}
-              folders={folders}
-              currentChatId={currentChatId}
-              openMenu={openMenu}
-              setOpenMenu={setOpenMenu}
-              moveFolderMenu={moveFolderMenu}
-              setMoveFolderMenu={
-                setMoveFolderMenu
-              }
-              tagMenu={tagMenu}
-              setTagMenu={setTagMenu}
-              menuRef={menuRef}
-              onSelectChat={onSelectChat}
-              onPinChat={onPinChat}
-              onDuplicateChat={
-                onDuplicateChat
-              }
-              onArchiveChat={
-                onArchiveChat
-              }
-              onToggleLock={onToggleLock}
-              onRenameChat={onRenameChat}
-              onDeleteChat={onDeleteChat}
-              onMoveChatToFolder={
-                onMoveChatToFolder
-              }
-              tags={tags}
-              onToggleTag={onToggleTag}
-              onCreateTag={onCreateTag}
-              onDeleteTag={onDeleteTag}
-              onRenameTag={onRenameTag}
-            />
-          ))}
-        </FolderSection>
-      )
-    )
+    <>
+      {/* ========================= */}
+      {/* Pinned Chats */}
+      {/* ========================= */}
+
+      {pinnedChats.length > 0 && (
+        <div className="mb-5">
+          <button
+  onClick={() =>
+    setShowPinned(!showPinned)
+  }
+  className="mb-2 flex w-full items-center justify-between rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-400 transition hover:bg-slate-800"
+>
+  <span>
+    📌 Pinned ({pinnedChats.length})
+  </span>
+
+  {showPinned ? (
+    <ChevronDown size={16} />
+  ) : (
+    <ChevronRight size={16} />
+  )}
+</button>
+
+          {showPinned && (
+  <div className="space-y-1">
+            {pinnedChats.map((chat) => (
+              <ChatItem
+                key={chat.id}
+                chat={chat}
+                folders={folders}
+                currentChatId={currentChatId}
+                openMenu={openMenu}
+                setOpenMenu={setOpenMenu}
+                moveFolderMenu={moveFolderMenu}
+                setMoveFolderMenu={setMoveFolderMenu}
+                tagMenu={tagMenu}
+                setTagMenu={setTagMenu}
+                menuRef={menuRef}
+                onSelectChat={onSelectChat}
+                onPinChat={onPinChat}
+                onDuplicateChat={onDuplicateChat}
+                onArchiveChat={onArchiveChat}
+                onToggleLock={onToggleLock}
+                onRenameChat={onRenameChat}
+                onDeleteChat={onDeleteChat}
+                onMoveChatToFolder={onMoveChatToFolder}
+                tags={tags}
+                onToggleTag={onToggleTag}
+                onCreateTag={onCreateTag}
+                onDeleteTag={onDeleteTag}
+                onRenameTag={onRenameTag}
+              />
+            ))}
+          </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================= */}
+      {/* Folder Chats */}
+      {/* ========================= */}
+
+      {Object.entries(groupedChats).map(
+        ([folder, folderChats]) => (
+          <FolderSection
+            key={folder}
+            folder={folder}
+            collapsed={collapsedFolders[folder]}
+            toggleFolder={() =>
+              toggleFolder(folder)
+            }
+            onRenameFolder={onRenameFolder}
+            onDeleteFolder={onDeleteFolder}
+          >
+            {folderChats.map((chat) => (
+              <ChatItem
+                key={chat.id}
+                chat={chat}
+                folders={folders}
+                currentChatId={currentChatId}
+                openMenu={openMenu}
+                setOpenMenu={setOpenMenu}
+                moveFolderMenu={moveFolderMenu}
+                setMoveFolderMenu={setMoveFolderMenu}
+                tagMenu={tagMenu}
+                setTagMenu={setTagMenu}
+                menuRef={menuRef}
+                onSelectChat={onSelectChat}
+                onPinChat={onPinChat}
+                onDuplicateChat={onDuplicateChat}
+                onArchiveChat={onArchiveChat}
+                onToggleLock={onToggleLock}
+                onRenameChat={onRenameChat}
+                onDeleteChat={onDeleteChat}
+                onMoveChatToFolder={onMoveChatToFolder}
+                tags={tags}
+                onToggleTag={onToggleTag}
+                onCreateTag={onCreateTag}
+                onDeleteTag={onDeleteTag}
+                onRenameTag={onRenameTag}
+              />
+            ))}
+          </FolderSection>
+        )
+      )}
+    </>
   )}
 </div>
     {/* Archived Chats */}
