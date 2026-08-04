@@ -43,22 +43,38 @@ function ChatInput({ onSend, inputRef }) {
   };
 
   // =========================
-  // Enter Key
-  // =========================
+// Enter / Ctrl + Enter
+// =========================
 
-  const handleKeyDown = (event) => {
+// =========================
+// Keyboard Handling
+// =========================
+const handleKeyDown = (event) => {
   const settings =
     JSON.parse(localStorage.getItem("astra-settings")) || {};
 
   const enterToSend = settings.enterToSend ?? true;
 
-  if (!enterToSend) {
+  // Ctrl + Enter → Always Send
+  if (event.ctrlKey && event.key === "Enter") {
+    event.preventDefault();
+    handleSend();
     return;
   }
 
+  // Shift + Enter → New Line
+  if (event.shiftKey && event.key === "Enter") {
+    return;
+  }
+
+  // Enter
   if (event.key === "Enter") {
-    event.preventDefault();
-    handleSend();
+    if (enterToSend) {
+      event.preventDefault();
+      handleSend();
+    }
+    // If enterToSend is false,
+    // let the textarea create a new line.
   }
 };
 

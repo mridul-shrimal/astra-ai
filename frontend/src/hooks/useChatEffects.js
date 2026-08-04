@@ -2,11 +2,11 @@ import { useEffect } from "react";
 
 function useChatEffects({
   chats,
-  currentChat,
+  
   currentChatId,
   setSidebarOpen,
   setCurrentChatId,
-  setSelectedModel,
+  
 }) {
 
 // Select first chat
@@ -35,12 +35,6 @@ function useChatEffects({
     };
   }, [setSidebarOpen]);
 
-  // Sync selected model
-  useEffect(() => {
-    if (!currentChat) return;
-
-    setSelectedModel(currentChat.model || "GPT-4o");
-  }, [currentChat, setSelectedModel]);
 
 }
 

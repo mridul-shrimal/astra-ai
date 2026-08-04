@@ -99,7 +99,13 @@ console.log("Using temperature:", temperature);
       }
     );
 console.timeEnd("OpenRouter Response");
-    return response.data.choices[0].message.content;
+
+console.log(
+  "OpenRouter Response Data:",
+  JSON.stringify(response.data, null, 2)
+);
+
+return response.data.choices[0].message.content;
   } catch (error) {
     console.error(
       "OpenRouter Error:",

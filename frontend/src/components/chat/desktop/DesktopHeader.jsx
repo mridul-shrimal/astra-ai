@@ -1,10 +1,12 @@
 import { Menu } from "lucide-react";
 import { useTheme } from "../../../context/ThemeContext";
+import { Keyboard } from "lucide-react";
 
 function DesktopHeader({
   sidebarOpen,
   setSidebarOpen,
   onOpenStats,
+  onOpenShortcuts,
   onOpenFavorites,
   setExportOpen,
 }) {
@@ -78,6 +80,18 @@ function DesktopHeader({
             ⭐
           </button>
 
+<button
+  onClick={onOpenShortcuts}
+  title="Keyboard Shortcuts"
+  className={`rounded-xl p-2 transition ${
+    theme === "light"
+      ? "hover:bg-slate-100"
+      : "hover:bg-slate-800"
+  }`}
+>
+  <Keyboard size={20} />
+
+</button>
           <button
             onClick={() => setExportOpen(true)}
             className="rounded-lg bg-cyan-500 px-3 py-2 text-white transition hover:bg-cyan-600"

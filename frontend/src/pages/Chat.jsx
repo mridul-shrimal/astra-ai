@@ -54,6 +54,10 @@ function Chat() {
   const [sidebarOpen, setSidebarOpen] = useState(
     window.innerWidth >= 768
   );
+  const toggleSidebar = () => {
+  setSidebarOpen((prev) => !prev);
+};
+
   const [modelModalOpen, setModelModalOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
@@ -61,7 +65,7 @@ function Chat() {
   // Chat State
   // =========================
 
-  const [selectedModel, setSelectedModel] = useState("GPT-4o");
+  const [selectedModel, setSelectedModel] = useState("⭐ Mistral Small 3.2 (Recommended)");
   const [selectedFormat, setSelectedFormat] = useState(() => {
   const settings =
     JSON.parse(localStorage.getItem("astra-settings")) || {};
@@ -70,7 +74,7 @@ function Chat() {
 });
   const [selectedTag, setSelectedTag] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-
+const searchRef = useRef(null);
   // =========================
   // Authentication
   // =========================
@@ -224,19 +228,17 @@ useChatPersistence({
   // =========================
 
   const handleModelChange = (model) => {
-    setSelectedModel(model);
-
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === currentChatId
-          ? {
-              ...chat,
-              model,
-            }
-          : chat
-      )
-    );
-  };
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === currentChatId
+        ? {
+            ...chat,
+            model,
+          }
+        : chat
+    )
+  );
+};
 
   // =========================
   // Message Functions
@@ -319,9 +321,24 @@ const settings =
 
 console.log("Frontend model:", settings.model);
 
+const MODEL_MAP = {
+  "Mistral Small 3.2":
+    "mistralai/mistral-small-3.2-24b-instruct",
+
+  "Gemma 3 27B":
+    "google/gemma-3-27b-it",
+
+  "DeepSeek Chat V3":
+    "deepseek/deepseek-chat",
+
+  "GPT OSS 20B":
+    "openai/gpt-oss-20b",
+};
+console.log("Selected Model:", selectedModel);
 formData.append(
   "model",
-  settings.model || "mistralai/mistral-small-3.2-24b-instruct"
+  MODEL_MAP[selectedModel] ||
+    "mistralai/mistral-small-3.2-24b-instruct"
 );
 
 formData.append(
@@ -861,10 +878,10 @@ setIsGenerating(false);
         // =========================
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-
+onToggleSidebar={toggleSidebar}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-
+searchRef={searchRef}
         selectedTag={selectedTag}
         setSelectedTag={setSelectedTag}
 
@@ -952,7 +969,10 @@ setIsGenerating(false);
         // =========================
         // Export
         // =========================
-        handleExportChat={handleExportChat}
+        exportOpen={exportOpen}
+setExportOpen={setExportOpen}
+
+handleExportChat={handleExportChat}
       />
 
       <ModelSelectorModal

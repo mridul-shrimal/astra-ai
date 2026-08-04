@@ -9,7 +9,7 @@ import FavoritesModal from "./FavoritesModal";
 import ModelSelector from "./desktop/ModelSelector";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 import ScrollToBottomButton from "./desktop/ScrollToBottomButton";
-
+import KeyboardShortcutsModal from "../modals/KeyboardShortcutsModal";
 function ChatDesktop({
   // Chat Data
   chats,
@@ -30,7 +30,7 @@ function ChatDesktop({
   // Sidebar
   sidebarOpen,
   setSidebarOpen,
-
+onToggleSidebar,
   // Search
   searchQuery,
   setSearchQuery,
@@ -89,12 +89,21 @@ function ChatDesktop({
 
   const [showScrollButton, setShowScrollButton] =
     useState(false);
-
+    const [shortcutsOpen, setShortcutsOpen] =
+  useState(false);
+const searchRef = useRef(null);
+const closeMenusRef = useRef(() => {});
   useKeyboardShortcuts({
-    onNewChat: handleNewChat,
-    inputRef,
-  });
+  onNewChat: handleNewChat,
+  inputRef,
+  searchRef,
+  onToggleSidebar,
+   onCloseShortcuts: () => setShortcutsOpen(false),
+ onOpenShortcuts: () => setShortcutsOpen(true),
+  onExportChat: () => setExportOpen(true),
 
+  onCloseMenus: () => closeMenusRef.current(),
+});
   return (
     <div
       className={`relative flex h-[calc(100vh-80px)] overflow-hidden transition-colors duration-300 ${
@@ -108,15 +117,16 @@ function ChatDesktop({
       ========================= */}
 
       <div
-        className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 md:static md:translate-x-0 ${
-          sidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }`}
-      >
+  className={`fixed inset-y-0 left-0 z-40 transition-all duration-300 md:relative ${
+    sidebarOpen
+      ? "translate-x-0 w-72"
+      : "-translate-x-full md:translate-x-0 w-0 overflow-hidden"
+  }`}
+>
         <ChatSidebar
           chats={chats}
           folders={folders}
+          searchRef={searchRef}
           currentChatId={currentChatId}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -127,6 +137,9 @@ function ChatDesktop({
           onMoveChatToFolder={handleMoveChatToFolder}
           onCreateTag={handleCreateTag}
           tags={tags}
+           onRegisterCloseMenus={(fn) => {
+    closeMenusRef.current = fn;
+  }}
           selectedTag={selectedTag}
           setSelectedTag={setSelectedTag}
           onToggleTag={onToggleTag}
@@ -159,6 +172,7 @@ function ChatDesktop({
   onOpenStats={onOpenStats}
   onOpenFavorites={onOpenFavorites}
   setExportOpen={setExportOpen}
+  onOpenShortcuts={() => setShortcutsOpen(true)}
 />
 
         {/* =========================
@@ -245,7 +259,10 @@ function ChatDesktop({
         }
         onExport={handleExportChat}
       />
-
+<KeyboardShortcutsModal
+  open={shortcutsOpen}
+  onClose={() => setShortcutsOpen(false)}
+/>
     </div>
   );
 }

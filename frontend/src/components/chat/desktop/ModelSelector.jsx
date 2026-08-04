@@ -2,7 +2,6 @@ import { useTheme } from "../../../context/ThemeContext";
 
 function ModelSelector({
   selectedModel,
-  setSelectedModel,
   handleModelChange,
 }) {
   const { theme } = useTheme();
@@ -34,23 +33,18 @@ function ModelSelector({
       <select
         value={selectedModel}
         onChange={(e) => {
-          const model = e.target.value;
-
-          setSelectedModel(model);
-          handleModelChange(model);
-        }}
+  handleModelChange(e.target.value);
+}}
         className={`rounded-lg border px-3 py-2 text-sm ${
           theme === "light"
             ? "border-slate-300 bg-white"
             : "border-slate-700 bg-slate-800 text-white"
         }`}
       >
-        <option>GPT-4o</option>
-        <option>GPT-4.1</option>
-        <option>Claude 4 Sonnet</option>
-        <option>Gemini 2.5 Pro</option>
-        <option>Llama 3.3</option>
-        <option>DeepSeek V3</option>
+        <option>⭐ Mistral Small 3.2 (Recommended)</option>
+<option>Gemma 3 27B</option>
+<option>DeepSeek Chat V3</option>
+<option>GPT OSS 20B</option>
       </select>
     </div>
   );

@@ -23,7 +23,8 @@ function ChatSidebar({
   // Search
   searchQuery,
   onSearchChange,
-
+searchRef,
+  onRegisterCloseMenus,
   // Chat Actions
   onNewChat,
   onSelectChat,
@@ -54,6 +55,7 @@ function ChatSidebar({
   const navigate = useNavigate();
 
   const menuRef = useRef(null);
+
 
   const [openMenu, setOpenMenu] = useState(null);
   const [moveFolderMenu, setMoveFolderMenu] =
@@ -219,6 +221,18 @@ const archivedChats = useMemo(() => {
   selectedTag,
 ]);
 
+// =========================
+// Close All Menus
+// =========================
+
+const closeAllMenus = () => {
+  setOpenMenu(null);
+  setMoveFolderMenu(null);
+  setTagMenu(null);
+};
+useEffect(() => {
+  onRegisterCloseMenus?.(closeAllMenus);
+}, [onRegisterCloseMenus]);
   // =========================
   // Group Chats by Folder
   // =========================
@@ -280,9 +294,10 @@ const archivedChats = useMemo(() => {
   }`}
 >
   <SearchBar
-    searchQuery={searchQuery}
-    onSearchChange={onSearchChange}
-  />
+  ref={searchRef}
+  searchQuery={searchQuery}
+  onSearchChange={onSearchChange}
+/>
 </div>
 
 <TagsSection
@@ -338,6 +353,7 @@ const archivedChats = useMemo(() => {
     </div>
   ) : (
     <>
+
       {/* ========================= */}
       {/* Pinned Chats */}
       {/* ========================= */}

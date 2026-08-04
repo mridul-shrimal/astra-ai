@@ -1,4 +1,5 @@
 import { Paperclip, Send } from "lucide-react";
+import TextareaAutosize from "react-textarea-autosize";
 
 function InputBar({
   input,
@@ -44,19 +45,20 @@ function InputBar({
 
         {/* Message Input */}
 
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Message Astra..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className={`min-w-0 flex-1 bg-transparent py-4 text-sm outline-none sm:text-base ${
-            isLight
-              ? "text-slate-900 placeholder:text-slate-500"
-              : "text-white placeholder:text-slate-400"
-          }`}
-        />
+        <TextareaAutosize
+  ref={inputRef}
+  minRows={1}
+  maxRows={12}
+  placeholder="Message Astra..."
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  onKeyDown={handleKeyDown}
+  className={`min-w-0 flex-1 resize-none bg-transparent py-4 text-sm outline-none sm:text-base ${
+    isLight
+      ? "text-slate-900 placeholder:text-slate-500"
+      : "text-white placeholder:text-slate-400"
+  }`}
+/>
       </div>
 
       {/* Send Button */}

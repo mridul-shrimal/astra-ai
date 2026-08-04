@@ -12,11 +12,11 @@ function ModelSelectorModal({
   if (!open) return null;
 
   const models = [
-    "GPT-4o",
-    "Claude 4 Sonnet",
-    "Gemini 2.5 Pro",
-    "DeepSeek R1",
-  ];
+  "⭐ Mistral Small 3.2 (Recommended)",
+  "Gemma 3 27B",
+  "DeepSeek Chat V3",
+  "GPT OSS 20B",
+];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
