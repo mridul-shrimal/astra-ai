@@ -58,7 +58,7 @@ function getAllMemories(limit = 500) {
 }
 
 /**
- * Format memories for Gemini
+ * Format memories for Astra
  */
 async function getMemoryContext(sessionId, limit = 5) {
   const memories = await getRecentMemories(sessionId, limit);
@@ -67,13 +67,35 @@ async function getMemoryContext(sessionId, limit = 5) {
     return "";
   }
 
-  return memories
-    .reverse()
-    .map(
-      (memory) =>
-        `User: ${memory.user_message}\nAstra: ${memory.ai_response}`
-    )
-    .join("\n\n");
+  return (
+    "Known facts about the user:\n\n" +
+    memories
+      .reverse()
+      .map((memory) => `- ${memory.user_message}`)
+      .join("\n")
+  );
+}
+
+/**
+ * Check whether a memory already exists
+ */
+function memoryExists(sessionId, memory) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      `
+      SELECT id
+      FROM memories
+      WHERE session_id = ?
+      AND LOWER(user_message) = LOWER(?)
+      LIMIT 1
+      `,
+      [sessionId, memory],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(!!row);
+      }
+    );
+  });
 }
 
 /**
@@ -164,7 +186,11 @@ module.exports = {
   getMemoryContext,
   clearMemories,
   clearAllMemories,
-  deleteMemory,
-  updateMemory,
   getMemoryCount,
+  updateMemory,
+  deleteMemory,
+  memoryExists,
 };
+
+console.log("MemoryService exports:");
+console.log(module.exports);

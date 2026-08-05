@@ -438,11 +438,6 @@ if (
   aiId,
   newMessages
 );
-await streamMessage(
-  data.reply,
-  aiId,
-  newMessages
-);
 
 if (
   data.modelUsed &&

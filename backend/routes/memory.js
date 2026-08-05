@@ -12,6 +12,9 @@ const {
   getMemoryCount,
 } = require("../services/memoryService");
 
+console.log("clearAllMemories:", typeof clearAllMemories);
+console.log("getMemoryCount:", typeof getMemoryCount)
+
 // Get ALL memories
 router.get("/", async (req, res) => {
   try {

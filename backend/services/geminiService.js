@@ -14,7 +14,7 @@ async function generateResponse(
   ? await getMemoryContext(sessionId)
   : "";
 
-  
+
 const fullPrompt = `
 You are Astra, a modern AI assistant similar to Claude.
 
@@ -69,6 +69,9 @@ ${prompt}
 
 ANSWER
 `;
+console.log("\n========== FULL PROMPT ==========\n");
+console.log(fullPrompt);
+console.log("\n=================================\n");
 
 const fallbackModels = [
   model,

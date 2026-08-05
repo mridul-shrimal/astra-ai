@@ -3,7 +3,14 @@ const router = express.Router();
 const upload = require("../middleware/uploadMiddleware");
 const extractText = require("../utils/extractText");
 const { generateResponse } = require("../services/geminiService");
-const { saveMemory } = require("../services/memoryService");
+const {
+  saveMemory,
+  memoryExists,
+} = require("../services/memoryService");
+
+const {
+  extractMemory,
+} = require("../services/memoryExtractor");
 
   router.post("/", upload.array("files", 10), async (req, res) => {
   try {
@@ -86,7 +93,29 @@ if (
   autoSaveMemory === "true" &&
   (!req.files || req.files.length === 0)
 ) {
-  await saveMemory(currentSession, message, aiReply);
+  const extracted = await extractMemory(
+  message,
+  aiReply
+);
+
+if (extracted.shouldSave) {
+  const exists = await memoryExists(
+    currentSession,
+    extracted.memory
+  );
+
+  if (!exists) {
+    await saveMemory(
+      currentSession,
+      extracted.memory,
+      aiReply
+    );
+  } else {
+    console.log(
+      "🧠 Memory already exists. Skipping..."
+    );
+  }
+}
 }
 res.json({
   success: true,
