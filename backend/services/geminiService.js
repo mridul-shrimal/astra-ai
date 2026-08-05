@@ -70,22 +70,30 @@ ${prompt}
 ANSWER
 `;
 
-   
+const fallbackModels = [
+  model,
+  "google/gemma-3-27b-it",
+  "qwen/qwen-2.5-72b-instruct",
+  "deepseek/deepseek-chat-v3-0324",
+];
 console.time("OpenRouter Response");
 
-    const response = await axios.post(
+let response;
+
+for (const currentModel of fallbackModels) {
+  try {
+    response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-          model,
-          temperature,
-          messages: [
+        model: currentModel,
+        temperature,
+        messages: [
           {
             role: "user",
             content: fullPrompt,
           },
         ],
       },
-      
       {
         headers: {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -93,14 +101,34 @@ console.time("OpenRouter Response");
         },
       }
     );
+
+    console.log(`✅ Using model: ${currentModel}`);
+
+    break;
+  } catch (err) {
+  const status = err.response?.status;
+
+  console.warn(
+    `❌ ${currentModel} failed (${status || "Unknown"})`
+  );
+
+  // Only retry for temporary provider issues
+  if (![429, 502, 503].includes(status)) {
+    throw err;
+  }
+
+  if (currentModel === fallbackModels.at(-1)) {
+    throw err;
+  }
+}
+}
+
 console.timeEnd("OpenRouter Response");
 
-console.log(
-  "OpenRouter Response Data:",
-  JSON.stringify(response.data, null, 2)
-);
-
-return response.data.choices[0].message.content;
+return {
+  content: response.data.choices[0].message.content,
+  modelUsed: response.data.model,
+};
   } catch (error) {
     console.error(
       "OpenRouter Error:",

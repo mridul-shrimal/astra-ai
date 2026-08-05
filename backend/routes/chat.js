@@ -71,7 +71,7 @@ ${message || "Summarize all uploaded documents."}
     const currentSession = sessionId || "default";
 
     // Generate AI response
- const aiReply = await generateResponse(
+const aiResult = await generateResponse(
   currentSession,
   finalPrompt,
   useMemory === "true" &&
@@ -79,6 +79,8 @@ ${message || "Summarize all uploaded documents."}
   model,
   Number(temperature)
 );
+
+const aiReply = aiResult.content;
 // Save only normal conversations when Auto Save is enabled
 if (
   autoSaveMemory === "true" &&
@@ -89,14 +91,15 @@ if (
 res.json({
   success: true,
   reply: aiReply,
+  modelUsed: aiResult.modelUsed,
   files: req.files
-  ? req.files.map((file) => ({
-      filename: file.filename,
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-    }))
-  : [],
+    ? req.files.map((file) => ({
+        filename: file.filename,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      }))
+    : [],
 });
 
   } catch (error) {

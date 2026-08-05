@@ -372,7 +372,17 @@ formData.append(
       );
 
       const data = await response.json();
-
+if (
+  data.modelUsed &&
+  data.modelUsed !== settings.model
+) {
+  toast(
+    `⚠️ ${settings.model} was busy. Astra used ${data.modelUsed} instead.`,
+    {
+      icon: "🤖",
+    }
+  );
+}
       // =========================
       // Update Uploaded Files
       // =========================
@@ -428,6 +438,23 @@ formData.append(
   aiId,
   newMessages
 );
+await streamMessage(
+  data.reply,
+  aiId,
+  newMessages
+);
+
+if (
+  data.modelUsed &&
+  data.modelUsed !== settings.model
+) {
+  toast(
+    `⚠️ ${settings.model} was busy. Astra used ${data.modelUsed} instead.`,
+    {
+      icon: "🤖",
+    }
+  );
+}
 
 // Desktop Notification
 if (
@@ -532,6 +559,7 @@ setIsGenerating(false);
 
       const data = await response.json();
 
+    
       setIsTyping(false);
 
       const aiMessage = {
