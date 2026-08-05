@@ -39,6 +39,25 @@ function getRecentMemories(sessionId, limit = 10) {
 }
 
 /**
+ * Get all memories
+ */
+function getAllMemories(limit = 500) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT *
+      FROM memories
+      ORDER BY created_at DESC
+      LIMIT ?
+    `;
+
+    db.all(query, [limit], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
+/**
  * Format memories for Gemini
  */
 async function getMemoryContext(sessionId, limit = 5) {
@@ -87,10 +106,24 @@ function getMemoryCount() {
     );
   });
 }
+
+/**
+ * Clear all memories
+ */
+function clearAllMemories() {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM memories`, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
 module.exports = {
   saveMemory,
   getRecentMemories,
+  getAllMemories,
   getMemoryContext,
   clearMemories,
+  clearAllMemories,
   getMemoryCount,
 };

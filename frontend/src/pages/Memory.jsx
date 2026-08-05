@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
+import { useSettings } from "../context/SettingsContext";
 
 function Memory() {
   const [memories, setMemories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 const { theme } = useTheme();
+const {
+  memoryEnabled,
+  memoryAutoSave,
+} = useSettings();
+
 const isLight = theme === "light";
   const loadMemories = async () => {
     try {
@@ -43,9 +49,10 @@ const isLight = theme === "light";
       const data = await response.json();
 
       if (data.success) {
-        setMemories([]);
-        alert("🧠 Memory cleared successfully.");
-      }
+  setMemories([]);
+  await loadMemories();
+  alert("🧠 All memories cleared successfully.");
+}
     } catch (error) {
       console.error("Failed to clear memory:", error);
     }
@@ -121,8 +128,139 @@ const isLight = theme === "light";
             🗑 Clear
           </button>
         </div>
-      </div>
 
+      </div>
+<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+  <div
+    className={`rounded-2xl border p-5 ${
+      isLight
+        ? "border-slate-200 bg-white"
+        : "border-slate-800 bg-slate-900"
+    }`}
+  >
+    <p className="text-sm text-slate-400">
+      Total Memories
+    </p>
+
+    <h2 className="mt-2 text-3xl font-bold">
+      🧠 {memories.length}
+    </h2>
+  </div>
+
+  <div
+    className={`rounded-2xl border p-5 ${
+      isLight
+        ? "border-slate-200 bg-white"
+        : "border-slate-800 bg-slate-900"
+    }`}
+  >
+    <p className="text-sm text-slate-400">
+      Today's Memories
+    </p>
+
+    <h2 className="mt-2 text-3xl font-bold">
+      📅 {
+        memories.filter(
+          m =>
+            new Date(m.created_at).toDateString() ===
+            new Date().toDateString()
+        ).length
+      }
+    </h2>
+  </div>
+
+  <div
+    className={`rounded-2xl border p-5 ${
+      isLight
+        ? "border-slate-200 bg-white"
+        : "border-slate-800 bg-slate-900"
+    }`}
+  >
+    <p className="text-sm text-slate-400">
+      Memory Status
+    </p>
+
+    <h2
+  className={`mt-2 text-2xl font-bold ${
+    memoryEnabled
+      ? "text-green-500"
+      : "text-red-500"
+  }`}
+>
+  {memoryEnabled ? "✅ Enabled" : "❌ Disabled"}
+</h2>
+  </div>
+
+  <div
+    className={`rounded-2xl border p-5 ${
+      isLight
+        ? "border-slate-200 bg-white"
+        : "border-slate-800 bg-slate-900"
+    }`}
+  >
+    <p className="text-sm text-slate-400">
+      Auto Save
+    </p>
+
+    <h2
+  className={`mt-2 text-2xl font-bold ${
+    memoryAutoSave
+      ? "text-cyan-500"
+      : "text-orange-500"
+  }`}
+>
+  {memoryAutoSave ? "🤖 Active" : "⏸ Disabled"}
+</h2>
+  </div>
+</div>
+<div
+  className={`rounded-2xl border p-6 ${
+    isLight
+      ? "border-slate-200 bg-white"
+      : "border-slate-800 bg-slate-900"
+  }`}
+>
+  <div className="mb-4 flex items-center justify-between">
+    <h2 className="text-xl font-semibold">
+      🕒 Recent Activity
+    </h2>
+
+    <span className="text-sm text-slate-400">
+      Last 5 memories
+    </span>
+  </div>
+
+  {memories.length === 0 ? (
+    <p className="text-slate-400">
+      No recent memories.
+    </p>
+  ) : (
+    <div className="space-y-3">
+      {memories
+        .slice(0, 5)
+        .map((memory) => (
+          <div
+            key={memory.id}
+            className={`rounded-xl border p-3 ${
+              isLight
+                ? "border-slate-200 bg-slate-50"
+                : "border-slate-700 bg-slate-800"
+            }`}
+          >
+            <p className="truncate font-medium">
+              {memory.user_message}
+            </p>
+
+            <p className="mt-1 text-xs text-slate-400">
+              {new Date(
+                memory.created_at
+              ).toLocaleString()}
+            </p>
+          </div>
+        ))}
+    </div>
+  )}
+</div>
       {loading ? (
         <div
   className={`py-20 text-center ${

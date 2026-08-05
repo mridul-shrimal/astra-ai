@@ -17,7 +17,7 @@ import { speak } from "../utils/speech";
 // Helper Functions
 // =========================
 
-const createNewChat = (selectedModel, firstName) => {
+const createNewChat = (selectedModel) => {
   const now = Date.now();
 
   return {

@@ -14,28 +14,52 @@ const {
 const [memoryCount, setMemoryCount] = useState(0);
 
 
-useEffect(() => {
-  const loadMemoryCount = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:5000/api/memory/count/all"
-      );
+const loadMemoryCount = async () => {
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/memory/count/all"
+    );
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (data.success) {
-        setMemoryCount(data.count);
-      }
-    } catch (error) {
-      console.error("Failed to load memory count:", error);
+    if (data.success) {
+      setMemoryCount(data.count);
     }
-  };
+  } catch (error) {
+    console.error("Failed to load memory count:", error);
+  }
+};
 
+useEffect(() => {
   loadMemoryCount();
 }, []);
-  const clearMemory = () => {
-    alert("Memory system will be connected later.");
-  };
+
+  const clearMemory = async () => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to clear all memories?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/memory",
+      {
+        method: "DELETE",
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      await loadMemoryCount();
+
+alert("🧠 All memories cleared successfully.");
+    }
+  } catch (error) {
+    console.error("Failed to clear memory:", error);
+  }
+};
 
   return (
     <SettingsSection

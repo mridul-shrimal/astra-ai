@@ -3,10 +3,31 @@ const router = express.Router();
 
 const {
   getRecentMemories,
+  getAllMemories,
   clearMemories,
+  clearAllMemories,
   getMemoryCount,
 } = require("../services/memoryService");
 
+// Get ALL memories
+router.get("/", async (req, res) => {
+  try {
+    const memories = await getAllMemories();
+
+    res.json({
+      success: true,
+      count: memories.length,
+      memories,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to load memories.",
+    });
+  }
+});
 // Total memory count
 router.get("/count/all", async (req, res) => {
   try {
@@ -44,6 +65,25 @@ router.get("/:sessionId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to load memories.",
+    });
+  }
+});
+
+// Delete ALL memories
+router.delete("/", async (req, res) => {
+  try {
+    await clearAllMemories();
+
+    res.json({
+      success: true,
+      message: "All memories cleared.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to clear memories.",
     });
   }
 });
