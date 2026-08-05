@@ -10,6 +10,9 @@ import { Edit } from "lucide-react";
 function Memory() {
   const [memories, setMemories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] =
+  useState("All");
+
   const [editOpen, setEditOpen] = useState(false);
 const [selectedMemory, setSelectedMemory] = useState(null);
   const [search, setSearch] = useState("");
@@ -65,19 +68,77 @@ const isLight = theme === "light";
     }
   };
 
+const getCategory = (text) => {
+  const value = text.toLowerCase();
+
+  if (
+    value.includes("react") ||
+    value.includes("javascript") ||
+    value.includes("python") ||
+    value.includes("java") ||
+    value.includes("code") ||
+    value.includes("program")
+  )
+    return "Programming";
+
+  if (
+    value.includes("college") ||
+    value.includes("study") ||
+    value.includes("school") ||
+    value.includes("exam")
+  )
+    return "Education";
+
+  if (
+    value.includes("project") ||
+    value.includes("office") ||
+    value.includes("meeting") ||
+    value.includes("client")
+  )
+    return "Work";
+
+  if (
+    value.includes("like") ||
+    value.includes("prefer") ||
+    value.includes("favorite")
+  )
+    return "Preference";
+
+  if (
+    value.includes("goal") ||
+    value.includes("plan") ||
+    value.includes("dream")
+  )
+    return "Goal";
+
+  return "Personal";
+};
+
   const filteredMemories = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+  const keyword = search.trim().toLowerCase();
 
-    if (keyword === "") {
-      return memories;
-    }
+  return memories.filter((memory) => {
+    const userMessage = String(
+      memory.user_message || ""
+    ).toLowerCase();
 
-    return memories.filter((memory) => {
-      const userMessage = String(memory.user_message || "").toLowerCase();
+    const aiResponse = String(
+      memory.ai_response || ""
+    ).toLowerCase();
 
-      return userMessage.includes(keyword);
-    });
-  }, [memories, search]);
+    const matchesSearch =
+      keyword === "" ||
+      userMessage.includes(keyword) ||
+      aiResponse.includes(keyword);
+
+    const matchesCategory =
+      selectedCategory === "All" ||
+      getCategory(memory.user_message) ===
+        selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+}, [memories, search, selectedCategory]);
 
 const copyMemory = async (memory) => {
   const text = `User:\n${memory.user_message}\n\nAstra:\n${memory.ai_response}`;
@@ -163,6 +224,19 @@ const timelineOrder = [
   "Last Month",
   "Older",
 ];
+
+
+
+const categories = [
+  "All",
+  "Personal",
+  "Programming",
+  "Education",
+  "Work",
+  "Preference",
+  "Goal",
+];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -194,7 +268,23 @@ const timelineOrder = [
   : "border-slate-700 bg-slate-800 text-white placeholder-slate-400"
 }`}
           />
-
+<div className="mt-4 mb-6 flex flex-wrap gap-2">
+  {categories.map((category) => (
+    <button
+      key={category}
+      onClick={() => setSelectedCategory(category)}
+      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+        selectedCategory === category
+          ? "bg-cyan-500 text-white"
+          : isLight
+          ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+      }`}
+    >
+      {category}
+    </button>
+  ))}
+</div>
           <p
   className={`mt-3 text-sm ${
     isLight ? "text-slate-600" : "text-slate-500"
@@ -410,8 +500,19 @@ const timelineOrder = [
   isLight
     ? "border-slate-200 bg-white hover:-translate-y-1 hover:shadow-xl"
     : "border-slate-700 bg-slate-800/70"
-}`}
-            >
+}`}>
+            
+                <div className="mb-3">
+  <span
+    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+      isLight
+        ? "bg-cyan-100 text-cyan-700"
+        : "bg-cyan-500/10 text-cyan-300"
+    }`}
+  >
+    🏷️ {getCategory(memory.user_message)}
+  </span>
+</div>
               <p className={`font-semibold ${
   isLight ? "text-cyan-700" : "text-cyan-400"
 }`}>
