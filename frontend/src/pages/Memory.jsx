@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
@@ -121,6 +122,47 @@ const handleSaveMemory = async (updatedMemory) => {
   }
 };
 
+const groupedMemories = filteredMemories.reduce((groups, memory) => {
+  const date = new Date(memory.created_at);
+
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  let label = "Older";
+
+  if (date.toDateString() === today.toDateString()) {
+    label = "Today";
+  } else if (
+    date.toDateString() === yesterday.toDateString()
+  ) {
+    label = "Yesterday";
+  } else {
+    const diffDays = Math.floor(
+      (today - date) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays <= 7) {
+      label = "Last 7 Days";
+    } else if (diffDays <= 30) {
+      label = "Last Month";
+    }
+  }
+
+  if (!groups[label]) groups[label] = [];
+
+  groups[label].push(memory);
+
+  return groups;
+}, {});
+
+const timelineOrder = [
+  "Today",
+  "Yesterday",
+  "Last 7 Days",
+  "Last Month",
+  "Older",
+];
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -327,8 +369,41 @@ const handleSaveMemory = async (updatedMemory) => {
           No memories found.
         </div>
       ) : (
+  <div className="space-y-8">
+  {timelineOrder
+    .filter((group) => groupedMemories[group])
+    .map((group) => (
+      <div key={group}>
+        <div className="mb-4 flex items-center gap-3">
+          <div
+            className={`h-px flex-1 ${
+              isLight
+                ? "bg-slate-300"
+                : "bg-slate-700"
+            }`}
+          />
+
+          <span
+            className={`rounded-full px-3 py-1 text-sm font-semibold ${
+              isLight
+                ? "bg-cyan-100 text-cyan-700"
+                : "bg-cyan-500/10 text-cyan-300"
+            }`}
+          >
+            📅 {group}
+          </span>
+
+          <div
+            className={`h-px flex-1 ${
+              isLight
+                ? "bg-slate-300"
+                : "bg-slate-700"
+            }`}
+          />
+        </div>
+
         <div className="space-y-5">
-          {filteredMemories.map((memory) => (
+          {groupedMemories[group].map((memory) => (
             <div
               key={memory.id}
               className={`rounded-2xl border p-6 shadow-lg transition-all duration-300 ${
@@ -434,8 +509,12 @@ const handleSaveMemory = async (updatedMemory) => {
   </div>
 </div>
             </div>
-          ))}
+                   ))}
         </div>
+      </div>
+    )
+  )}
+</div>
       )}
        <EditMemoryModal
         open={editOpen}
