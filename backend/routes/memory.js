@@ -6,6 +6,8 @@ const {
   getAllMemories,
   clearMemories,
   clearAllMemories,
+  deleteMemory,
+  updateMemory,
   getMemoryCount,
 } = require("../services/memoryService");
 
@@ -65,6 +67,50 @@ router.get("/:sessionId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to load memories.",
+    });
+  }
+});
+  
+// Update ONE memory
+router.put("/item/:id", async (req, res) => {
+  try {
+    const { user_message, ai_response } = req.body;
+
+    await updateMemory(
+      req.params.id,
+      user_message,
+      ai_response
+    );
+
+    res.json({
+      success: true,
+      message: "Memory updated.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update memory.",
+    });
+  }
+});
+
+// Delete ONE memory
+router.delete("/item/:id", async (req, res) => {
+  try {
+    await deleteMemory(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Memory deleted.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete memory.",
     });
   }
 });

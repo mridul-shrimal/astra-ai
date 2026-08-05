@@ -118,6 +118,45 @@ function clearAllMemories() {
     });
   });
 }
+
+/**
+ * Update one memory
+ */
+function updateMemory(id, userMessage, aiResponse) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      UPDATE memories
+      SET
+        user_message = ?,
+        ai_response = ?
+      WHERE id = ?
+      `,
+      [userMessage, aiResponse, id],
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      }
+    );
+  });
+}
+
+/**
+ * Delete one memory
+ */
+function deleteMemory(id) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `DELETE FROM memories WHERE id = ?`,
+      [id],
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      }
+    );
+  });
+}
+
 module.exports = {
   saveMemory,
   getRecentMemories,
@@ -125,5 +164,7 @@ module.exports = {
   getMemoryContext,
   clearMemories,
   clearAllMemories,
+  deleteMemory,
+  updateMemory,
   getMemoryCount,
 };

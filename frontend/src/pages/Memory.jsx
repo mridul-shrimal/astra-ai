@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useSettings } from "../context/SettingsContext";
+import { Copy } from "lucide-react";
+import { toast } from "react-hot-toast";
+import EditMemoryModal from "../components/memory/EditMemoryModal";
+import { Edit } from "lucide-react";
 
 function Memory() {
   const [memories, setMemories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+const [selectedMemory, setSelectedMemory] = useState(null);
   const [search, setSearch] = useState("");
 const { theme } = useTheme();
 const {
@@ -71,6 +77,49 @@ const isLight = theme === "light";
       return userMessage.includes(keyword);
     });
   }, [memories, search]);
+
+const copyMemory = async (memory) => {
+  const text = `User:\n${memory.user_message}\n\nAstra:\n${memory.ai_response}`;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success("Memory copied!");
+  } catch {
+    toast.error("Failed to copy memory.");
+  }
+};
+
+const handleSaveMemory = async (updatedMemory) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/memory/item/${updatedMemory.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: updatedMemory.user_message,
+          ai_response: updatedMemory.ai_response,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      toast.success("Memory updated!");
+
+      setEditOpen(false);
+      setSelectedMemory(null);
+
+      await loadMemories();
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to update memory.");
+  }
+};
 
   return (
     <div className="space-y-6">
@@ -317,24 +366,86 @@ const isLight = theme === "light";
               </p>
 
               <div className="mt-4 flex items-center justify-between">
-                <p className={`text-xs ${
-  isLight ? "text-slate-500" : "text-slate-500"
-}`}>
-                  {new Date(memory.created_at).toLocaleString()}
-                </p>
+  <p
+    className={`text-xs ${
+      isLight ? "text-slate-500" : "text-slate-500"
+    }`}
+  >
+    {new Date(memory.created_at).toLocaleString()}
+  </p>
 
-                <span className={`rounded-full px-3 py-1 text-xs ${
-  isLight
-    ? "bg-cyan-100 text-cyan-700"
-    : "bg-cyan-900/40 text-cyan-300"
-}`}>
-                  #{memory.id}
-                </span>
-              </div>
+  <div className="flex items-center gap-2">
+    <button
+      onClick={async () => {
+        const confirmDelete = window.confirm(
+          "Delete this memory?"
+        );
+
+        if (!confirmDelete) return;
+
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/memory/item/${memory.id}`,
+            {
+              method: "DELETE",
+            }
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            await loadMemories();
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }}
+      className="rounded-lg bg-red-600 px-3 py-1 text-xs text-white transition hover:bg-red-700"
+    >
+      🗑 Delete
+    </button>
+<button
+
+  onClick={() => {
+    setSelectedMemory(memory);
+    setEditOpen(true);
+  }}
+  className="rounded-lg bg-amber-500 p-2 text-white transition hover:bg-amber-600"
+>
+  <Edit size={16} />
+</button>
+
+<button
+  onClick={() => copyMemory(memory)}
+  className="rounded-lg bg-cyan-600 p-2 text-white transition hover:bg-cyan-700"
+>
+  <Copy size={16} />
+</button>
+
+    <span
+      className={`rounded-full px-3 py-1 text-xs ${
+        isLight
+          ? "bg-cyan-100 text-cyan-700"
+          : "bg-cyan-900/40 text-cyan-300"
+      }`}
+    >
+      #{memory.id}
+    </span>
+  </div>
+</div>
             </div>
           ))}
         </div>
       )}
+       <EditMemoryModal
+        open={editOpen}
+        memory={selectedMemory}
+        onClose={() => {
+          setEditOpen(false);
+          setSelectedMemory(null);
+        }}
+        onSave={handleSaveMemory}
+      />
     </div>
   );
 }
