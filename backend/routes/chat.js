@@ -2,10 +2,15 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/uploadMiddleware");
 const extractText = require("../utils/extractText");
+const {
+  findMemoryToUpdate,
+} = require("../services/memoryMatcher");
 const { generateResponse } = require("../services/geminiService");
 const {
   saveMemory,
   memoryExists,
+  updateMemory,
+  getRecentMemories,
 } = require("../services/memoryService");
 
 const {
@@ -88,34 +93,83 @@ const aiResult = await generateResponse(
 );
 
 const aiReply = aiResult.content;
+
 // Save only normal conversations when Auto Save is enabled
 if (
   autoSaveMemory === "true" &&
   (!req.files || req.files.length === 0)
 ) {
   const extracted = await extractMemory(
-  message,
-  aiReply
-);
-
-if (extracted.shouldSave) {
-  const exists = await memoryExists(
-    currentSession,
-    extracted.memory
+    message,
+    aiReply
   );
 
-  if (!exists) {
-    await saveMemory(
+  if (extracted.shouldSave) {
+    // Load existing memories once
+    const existingMemories = await getRecentMemories(
       currentSession,
-      extracted.memory,
-      aiReply
+      100
     );
-  } else {
-    console.log(
-      "🧠 Memory already exists. Skipping..."
-    );
+
+    // Process every extracted memory
+    for (const memory of extracted.memories) {
+      // Skip exact duplicates
+      const exists = await memoryExists(
+        currentSession,
+        memory
+      );
+
+      if (exists) {
+        console.log(
+          `🧠 Memory already exists: ${memory}`
+        );
+        continue;
+      }
+
+      // Check whether this memory should replace an old one
+      const memoryId = await findMemoryToUpdate(
+        existingMemories,
+        memory
+      );
+
+      if (memoryId) {
+        await updateMemory(
+          memoryId,
+          memory,
+          aiReply
+        );
+
+        console.log(
+          `♻️ Updated memory: ${memory}`
+        );
+
+        // Keep local copy in sync
+        const index = existingMemories.findIndex(
+          (m) => m.id === memoryId
+        );
+
+        if (index !== -1) {
+          existingMemories[index].user_message = memory;
+        }
+      } else {
+        await saveMemory(
+          currentSession,
+          memory,
+          aiReply
+        );
+
+        console.log(
+          `🧠 Saved memory: ${memory}`
+        );
+
+        // Keep local list updated
+        existingMemories.push({
+          id: -Date.now(),
+          user_message: memory,
+        });
+      }
+    }
   }
-}
 }
 res.json({
   success: true,

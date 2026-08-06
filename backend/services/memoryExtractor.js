@@ -2,14 +2,16 @@ const axios = require("axios");
 
 async function extractMemory(userMessage, aiResponse) {
   try {
-    const prompt = `
+const prompt = `
 You are an AI memory extractor.
 
-Your task is to determine whether the user's message contains long-term information worth remembering.
+Your job is to extract ONLY explicit long-term memories from the user's message.
 
-Remember ONLY:
+Extract memories about:
+
 - Name
 - Age
+- Gender (if explicitly stated)
 - Location
 - Occupation
 - Education
@@ -17,48 +19,176 @@ Remember ONLY:
 - Programming languages
 - Long-term projects
 - Goals
-- Preferences
 - Hobbies
+- Preferences
+  - Favorite game
+  - Favorite food
+  - Favorite drink
+  - Favorite movie
+  - Favorite music
+  - Favorite book
+  - Favorite sport
+  - Favorite programming language
+  - General likes and dislikes
 - Important personal facts
 
-Do NOT remember:
+Do NOT extract:
+
 - Greetings
 - Small talk
 - Questions
 - Temporary requests
 - One-time tasks
 - Casual conversation
-- Repeated statements
+- Assistant responses
+- Information that is implied but not explicitly stated
+- Duplicate memories
 
-If nothing should be remembered, reply with exactly:
+Return ONLY valid JSON.
 
-NONE
+If memories exist, return:
 
-Otherwise reply with ONE short factual sentence.
+{
+  "memories": [
+    "Memory 1",
+    "Memory 2"
+  ]
+}
+
+If nothing should be remembered, return:
+
+{
+  "memories": []
+}
+
+Rules:
+
+- Output ONLY JSON.
+- Do NOT explain.
+- Do NOT use Markdown.
+- Do NOT wrap the JSON inside \`\`\`.
+- Output must begin with { and end with }.
+- Each memory must be a short factual sentence.
+- Preserve the user's wording whenever possible.
+- Save explicit preferences even if they seem simple.
+- If multiple memories are present, return all of them.
+- Never invent information.
+- Never output "NONE".
 
 Examples:
 
-User: My name is Mridul.
-Output:
-User's name is Mridul.
+User:
+My name is Sarah.
 
-User: I love BGMI.
 Output:
-User enjoys playing BGMI.
-
-User: Hello
-Output:
-NONE
-
-User: What's the weather?
-Output:
-NONE
+{
+  "memories": [
+    "User's name is Sarah."
+  ]
+}
 
 User:
-${userMessage}
+I am 25 years old.
 
-Assistant:
-${aiResponse}
+Output:
+{
+  "memories": [
+    "User is 25 years old."
+  ]
+}
+
+User:
+I now live in New York.
+
+Output:
+{
+  "memories": [
+    "User lives in New York."
+  ]
+}
+
+User:
+I work as a software engineer.
+
+Output:
+{
+  "memories": [
+    "User works as a software engineer."
+  ]
+}
+
+User:
+I studied Computer Science.
+
+Output:
+{
+  "memories": [
+    "User studied Computer Science."
+  ]
+}
+
+User:
+I know Python and Java.
+
+Output:
+{
+  "memories": [
+    "User knows Python.",
+    "User knows Java."
+  ]
+}
+
+User:
+I like coffee.
+
+Output:
+{
+  "memories": [
+    "User likes coffee."
+  ]
+}
+
+User:
+My favorite game is BGMI.
+
+Output:
+{
+  "memories": [
+    "User's favorite game is BGMI."
+  ]
+}
+
+User:
+My favorite game is Valorant.
+
+Output:
+{
+  "memories": [
+    "User's favorite game is Valorant."
+  ]
+}
+
+User:
+I enjoy hiking.
+
+Output:
+{
+  "memories": [
+    "User enjoys hiking."
+  ]
+}
+
+User:
+Hello, how are you?
+
+Output:
+{
+  "memories": []
+}
+
+CURRENT USER MESSAGE
+
+${userMessage}
 `;
 
     const response = await axios.post(
@@ -81,19 +211,39 @@ ${aiResponse}
       }
     );
 
-    const memory =
-      response.data.choices[0].message.content.trim();
+ let responseText =
+  response.data.choices[0].message.content.trim();
 
-    if (memory === "NONE") {
-      return {
-        shouldSave: false,
-      };
-    }
+console.log("\n========== MEMORY EXTRACTOR ==========\n");
+console.log(responseText);
+console.log("\n======================================\n");
 
-    return {
-      shouldSave: true,
-      memory,
-    };
+// Remove Markdown code fences if present
+responseText = responseText
+  .replace(/^```json\s*/i, "")
+  .replace(/^```\s*/i, "")
+  .replace(/\s*```$/, "")
+  .trim();
+
+let data;
+
+try {
+  data = JSON.parse(responseText);
+} catch (err) {
+  console.log("❌ Invalid JSON from Memory Extractor");
+  console.log(responseText);
+
+  return {
+    shouldSave: false,
+    memories: [],
+  };
+}
+
+return {
+  shouldSave: data.memories.length > 0,
+  memories: data.memories,
+};
+
   } catch (error) {
     console.error(
       "Memory Extractor Error:",

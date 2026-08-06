@@ -99,6 +99,34 @@ function memoryExists(sessionId, memory) {
 }
 
 /**
+ * Find a memory with the same topic
+ */
+function findSimilarMemory(sessionId, memory) {
+  return new Promise((resolve, reject) => {
+    const keyword = memory
+      .toLowerCase()
+      .split(" ")
+      .slice(0, 4)
+      .join(" ");
+
+    db.get(
+      `
+      SELECT *
+      FROM memories
+      WHERE session_id = ?
+      AND LOWER(user_message) LIKE ?
+      LIMIT 1
+      `,
+      [sessionId, `%${keyword}%`],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row || null);
+      }
+    );
+  });
+}
+
+/**
  * Clear one session
  */
 function clearMemories(sessionId) {
@@ -190,6 +218,7 @@ module.exports = {
   updateMemory,
   deleteMemory,
   memoryExists,
+  findSimilarMemory,
 };
 
 console.log("MemoryService exports:");
