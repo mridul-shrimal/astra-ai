@@ -74,10 +74,6 @@ Examples:
    let responseText =
   response.data.choices[0].message.content.trim();
 
-console.log("\n========== MEMORY MATCHER ==========\n");
-console.log(responseText);
-console.log("\n====================================\n");
-
 // Remove Markdown code fences if present
 responseText = responseText
   .replace(/^```json\s*/i, "")

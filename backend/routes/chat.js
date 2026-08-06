@@ -14,6 +14,10 @@ const {
 } = require("../services/memoryService");
 
 const {
+  shouldUseWebSearch,
+} = require("../services/searchClassifier");
+
+const {
   extractMemory,
 } = require("../services/memoryExtractor");
 
@@ -83,7 +87,15 @@ ${message || "Summarize all uploaded documents."}
     const currentSession = sessionId || "default";
 const currentUser = "default_user";
 
-console.log("Before generateResponse:", currentSession);
+let useWebSearch = false;
+
+if (!req.files || req.files.length === 0) {
+  
+  useWebSearch = shouldUseWebSearch(message);
+
+  console.log("🌐 Web Search:", useWebSearch);
+}
+
     // Generate AI response
 const aiResult = await generateResponse(
   currentSession,

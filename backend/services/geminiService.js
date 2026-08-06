@@ -71,9 +71,6 @@ ${prompt}
 
 ANSWER
 `;
-console.log("\n========== FULL PROMPT ==========\n");
-console.log(fullPrompt);
-console.log("\n=================================\n");
 
 const fallbackModels = [
   model,

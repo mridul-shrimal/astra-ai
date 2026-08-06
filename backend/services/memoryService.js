@@ -222,5 +222,3 @@ module.exports = {
   findSimilarMemory,
 };
 
-console.log("MemoryService exports:");
-console.log(module.exports);

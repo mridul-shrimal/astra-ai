@@ -214,10 +214,6 @@ ${userMessage}
  let responseText =
   response.data.choices[0].message.content.trim();
 
-console.log("\n========== MEMORY EXTRACTOR ==========\n");
-console.log(responseText);
-console.log("\n======================================\n");
-
 // Remove Markdown code fences if present
 responseText = responseText
   .replace(/^```json\s*/i, "")
