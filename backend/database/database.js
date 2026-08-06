@@ -12,18 +12,18 @@ const db = new sqlite3.Database(dbPath, (err) => {
   } else {
     console.log("✅ Connected to Astra Database");
 
-    // Create Memory table
-    db.run(`
-      CREATE TABLE IF NOT EXISTS memories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        session_id TEXT NOT NULL,
-        user_message TEXT NOT NULL,
-        ai_response TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+   // Create Memory table
+db.run(`
+  CREATE TABLE IF NOT EXISTS memories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    user_message TEXT NOT NULL,
+    ai_response TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
 
-    console.log("🧠 Memory table ready.");
+console.log("🧠 Memory table ready.");
   }
 });
 

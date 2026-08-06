@@ -81,7 +81,9 @@ ${message || "Summarize all uploaded documents."}
 
     // Default session if none is provided
     const currentSession = sessionId || "default";
+const currentUser = "default_user";
 
+console.log("Before generateResponse:", currentSession);
     // Generate AI response
 const aiResult = await generateResponse(
   currentSession,
@@ -107,17 +109,17 @@ if (
   if (extracted.shouldSave) {
     // Load existing memories once
     const existingMemories = await getRecentMemories(
-      currentSession,
-      100
-    );
+  currentUser,
+  100
+);
 
     // Process every extracted memory
     for (const memory of extracted.memories) {
       // Skip exact duplicates
       const exists = await memoryExists(
-        currentSession,
-        memory
-      );
+  currentUser,
+  memory
+);
 
       if (exists) {
         console.log(
@@ -153,10 +155,10 @@ if (
         }
       } else {
         await saveMemory(
-          currentSession,
-          memory,
-          aiReply
-        );
+  currentUser,
+  memory,
+  aiReply
+);
 
         console.log(
           `🧠 Saved memory: ${memory}`

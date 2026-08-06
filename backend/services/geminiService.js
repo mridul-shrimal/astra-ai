@@ -10,8 +10,10 @@ async function generateResponse(
 ){
   try {
     // Get memory only for this session
-    const memory = useMemory
-  ? await getMemoryContext(sessionId)
+  const currentUser = "default_user";
+
+const memory = useMemory
+  ? await getMemoryContext(currentUser)
   : "";
 
 

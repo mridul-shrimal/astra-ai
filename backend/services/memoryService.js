@@ -3,15 +3,15 @@ const db = require("../database/database");
 /**
  * Save memory
  */
-function saveMemory(sessionId, userMessage, aiResponse) {
+function saveMemory(userId, userMessage, aiResponse) {
   return new Promise((resolve, reject) => {
     const query = `
       INSERT INTO memories
-      (session_id, user_message, ai_response)
+      (user_id, user_message, ai_response)
       VALUES (?, ?, ?)
     `;
 
-    db.run(query, [sessionId, userMessage, aiResponse], function (err) {
+    db.run(query, [userId, userMessage, aiResponse], function (err) {
       if (err) reject(err);
       else resolve(this.lastID);
     });
@@ -19,19 +19,19 @@ function saveMemory(sessionId, userMessage, aiResponse) {
 }
 
 /**
- * Get recent memories for ONE session
+ * Get recent memories for ONE user
  */
-function getRecentMemories(sessionId, limit = 10) {
+function getRecentMemories(userId, limit = 10) {
   return new Promise((resolve, reject) => {
     const query = `
       SELECT *
       FROM memories
-      WHERE session_id = ?
+      WHERE user_id = ?
       ORDER BY created_at DESC
       LIMIT ?
     `;
 
-    db.all(query, [sessionId, limit], (err, rows) => {
+    db.all(query, [userId, limit], (err, rows) => {
       if (err) reject(err);
       else resolve(rows);
     });
@@ -60,8 +60,8 @@ function getAllMemories(limit = 500) {
 /**
  * Format memories for Astra
  */
-async function getMemoryContext(sessionId, limit = 5) {
-  const memories = await getRecentMemories(sessionId, limit);
+async function getMemoryContext(userId, limit = 5) {
+  const memories = await getRecentMemories(userId, limit);
 
   if (!memories.length) {
     return "";
@@ -79,17 +79,17 @@ async function getMemoryContext(sessionId, limit = 5) {
 /**
  * Check whether a memory already exists
  */
-function memoryExists(sessionId, memory) {
+function memoryExists(userId, memory) {
   return new Promise((resolve, reject) => {
     db.get(
       `
       SELECT id
       FROM memories
-      WHERE session_id = ?
+      WHERE user_id = ?
       AND LOWER(user_message) = LOWER(?)
       LIMIT 1
       `,
-      [sessionId, memory],
+      [userId, memory],
       (err, row) => {
         if (err) reject(err);
         else resolve(!!row);
@@ -101,7 +101,7 @@ function memoryExists(sessionId, memory) {
 /**
  * Find a memory with the same topic
  */
-function findSimilarMemory(sessionId, memory) {
+function findSimilarMemory(userId, memory) {
   return new Promise((resolve, reject) => {
     const keyword = memory
       .toLowerCase()
@@ -113,11 +113,11 @@ function findSimilarMemory(sessionId, memory) {
       `
       SELECT *
       FROM memories
-      WHERE session_id = ?
+      WHERE user_id = ?
       AND LOWER(user_message) LIKE ?
       LIMIT 1
       `,
-      [sessionId, `%${keyword}%`],
+      [userId, `%${keyword}%`],
       (err, row) => {
         if (err) reject(err);
         else resolve(row || null);
@@ -127,13 +127,13 @@ function findSimilarMemory(sessionId, memory) {
 }
 
 /**
- * Clear one session
+ * Clear one user's memories
  */
-function clearMemories(sessionId) {
+function clearMemories(userId) {
   return new Promise((resolve, reject) => {
     db.run(
-      `DELETE FROM memories WHERE session_id = ?`,
-      [sessionId],
+      `DELETE FROM memories WHERE user_id = ?`,
+      [userId],
       (err) => {
         if (err) reject(err);
         else resolve();
@@ -141,6 +141,7 @@ function clearMemories(sessionId) {
     );
   });
 }
+
 /**
  * Count all stored memories
  */
