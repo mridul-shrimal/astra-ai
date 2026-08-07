@@ -2,6 +2,7 @@ import toast from "react-hot-toast";
 
 function useChatManagement({
   chats,
+  backendConversations,
   setChats,
   currentChatId,
   setCurrentChatId,
@@ -207,12 +208,34 @@ function useChatManagement({
 
   // Select Chat
   const handleSelectChat = (chatId) => {
-    const chat = chats.find((c) => c.id === chatId);
+      console.log("🖱️ Selected Chat ID:", chatId);
 
-    if (!chat) return;
+  console.log(
+    "💻 Frontend chats:",
+    chats.map((chat) => ({
+      id: chat.id,
+      sessionId: chat.sessionId,
+      title: chat.title,
+    }))
+  );
 
+  console.log(
+    "🗄️ Backend conversations:",
+    backendConversations.map((conversation) => ({
+      id: conversation.id,
+      session_id: conversation.session_id,
+      title: conversation.title,
+    }))
+  );
+  const chat = chats.find(
+    (c) =>
+      c.id === chatId ||
+      c.sessionId === chatId
+  );
+
+  if (chat) {
     if (!chat.locked) {
-      setCurrentChatId(chatId);
+      setCurrentChatId(chat.id);
       return;
     }
 
@@ -221,12 +244,27 @@ function useChatManagement({
     if (pin === null) return;
 
     if (pin === chat.lockPin) {
-      setCurrentChatId(chatId);
+      setCurrentChatId(chat.id);
       toast.success("🔓 Chat unlocked");
     } else {
       toast.error("❌ Incorrect PIN");
     }
-  };
+
+    return;
+  }
+
+  // Backend conversation
+  const backendChat = backendConversations.find(
+    (conversation) =>
+      conversation.session_id === chatId
+  );
+
+  if (!backendChat) return;
+
+  setCurrentChatId(
+    backendChat.session_id
+  );
+};
 
   // =========================
   // Chat Functions

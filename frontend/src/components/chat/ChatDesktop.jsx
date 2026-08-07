@@ -31,6 +31,7 @@ function ChatDesktop({
   sidebarOpen,
   setSidebarOpen,
 onToggleSidebar,
+backendConversations,
   // Search
   searchQuery,
   setSearchQuery,
@@ -123,6 +124,7 @@ const closeMenusRef = useRef(() => {});
 >
         <ChatSidebar
           chats={chats}
+          backendConversations={backendConversations}
           folders={folders}
           searchRef={searchRef}
           currentChatId={currentChatId}

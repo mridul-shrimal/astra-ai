@@ -12,6 +12,7 @@ import ModelSelectorModal from "../components/chat/ModelSelectorModal";
 import useMessageActions from "../hooks/useMessageActions";
 import { useAuth } from "../hooks/useAuth";
 import { speak } from "../utils/speech";
+import { useEffect } from "react";
 
 // =========================
 // Helper Functions
@@ -37,6 +38,42 @@ const createNewChat = (selectedModel) => {
 };
 
 function Chat() {
+  // =========================
+  // Backend Conversations
+  // =========================
+
+  const [
+    backendConversations,
+    setBackendConversations,
+  ] = useState([]);
+
+  // =========================
+  // Load Backend Conversations
+  // =========================
+
+  useEffect(() => {
+    const loadConversations = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/conversations"
+        );
+
+        const data = await response.json();
+
+        setBackendConversations(
+          data.success ? data.conversations : []
+        );
+      } catch (error) {
+        console.error(
+          "❌ Failed to load conversations:",
+          error
+        );
+      }
+    };
+
+    loadConversations();
+  }, []);
+
   // =========================
   // UI State
   // =========================
@@ -161,6 +198,7 @@ const {
   handleDeleteChat,
 } = useChatManagement({
   chats,
+  backendConversations,
   setChats,
   currentChatId,
   setCurrentChatId,
@@ -172,6 +210,7 @@ const { handleExportChat } = useExportChat({
   selectedFormat,
   setExportOpen,
 });
+
   // =========================
   // Generation State
   // =========================
@@ -906,6 +945,7 @@ const handleCreateChatWithModel = () => {
         // Chat Data
         // =========================
         chats={chats}
+        backendConversations={backendConversations}
         folders={folders}
         tags={tags}
 

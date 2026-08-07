@@ -12,11 +12,18 @@ const {
   updateMemory,
   getRecentMemories,
 } = require("../services/memoryService");
-
+const {
+  createConversation,
+  getConversation,
+  touchConversation,
+} = require("../services/conversationService");
+const {
+  saveMessage,
+} = require("../services/messageService");
 const {
   shouldUseWebSearch,
 } = require("../services/searchClassifier");
-
+const { webSearch } = require("../services/webSearch");
 const {
   extractMemory,
 } = require("../services/memoryExtractor");
@@ -87,16 +94,73 @@ ${message || "Summarize all uploaded documents."}
     const currentSession = sessionId || "default";
 const currentUser = "default_user";
 
+// Create conversation if it does not exist
+const existingConversation = await getConversation(
+  currentSession
+);
+
+if (!existingConversation) {
+  await createConversation(
+    currentSession,
+    "New Chat"
+  );
+
+  console.log(
+    `💬 Created conversation: ${currentSession}`
+  );
+} else {
+  await touchConversation(currentSession);
+} 
+
 let useWebSearch = false;
+let webSearchResults = [];
 
 if (!req.files || req.files.length === 0) {
-  
-  useWebSearch = shouldUseWebSearch(message);
+  useWebSearch = await shouldUseWebSearch(message);
 
   console.log("🌐 Web Search:", useWebSearch);
+
+  if (useWebSearch) {
+    webSearchResults = await webSearch(message);
+
+    console.log(
+      `🔎 Tavily Results: ${webSearchResults.length}`
+    );
+  }
+}
+if (useWebSearch && webSearchResults.length > 0) {
+  const searchContext = webSearchResults
+    .map(
+      (result, index) =>
+        `Source ${index + 1}:
+Title: ${result.title}
+URL: ${result.url}
+Content: ${result.content}`
+    )
+    .join("\n\n");
+
+  finalPrompt = `
+Use the following live web search results to answer the user's question.
+
+# LIVE WEB SEARCH RESULTS
+
+${searchContext}
+
+=======================
+
+USER QUESTION
+
+${finalPrompt}
+
+Important:
+
+- Use the search results for current information.
+- Do not invent information that is not supported by the results.
+- If the results do not contain enough information, say so.
+`;
 }
 
-    // Generate AI response
+// Generate AI response
 const aiResult = await generateResponse(
   currentSession,
   finalPrompt,
@@ -107,7 +171,18 @@ const aiResult = await generateResponse(
 );
 
 const aiReply = aiResult.content;
-
+console.log("💾 Saving USER message...");
+await saveMessage(
+  currentSession,
+  "user",
+  message
+);
+console.log("💾 Saving AI message...");
+await saveMessage(
+  currentSession,
+  "ai",
+  aiReply
+);
 // Save only normal conversations when Auto Save is enabled
 if (
   autoSaveMemory === "true" &&

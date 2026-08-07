@@ -17,6 +17,7 @@ import {
 function ChatSidebar({
   // Chat Data
   chats,
+  backendConversations,
   folders,
   currentChatId,
 
@@ -50,6 +51,11 @@ searchRef,
   onRenameTag,
   onToggleLock,
 }) {
+  console.log(
+    "💬 Sidebar Backend Conversations:",
+    backendConversations
+  );
+
   const { theme } = useTheme();
   const isLight = theme === "light";
   const navigate = useNavigate();
@@ -233,6 +239,30 @@ const closeAllMenus = () => {
 useEffect(() => {
   onRegisterCloseMenus?.(closeAllMenus);
 }, [onRegisterCloseMenus]);
+// =========================
+// Convert Backend Conversations
+// =========================
+
+const backendChats = backendConversations.map(
+  (conversation) => ({
+    id: conversation.session_id,
+    sessionId: conversation.session_id,
+    timestamp: new Date(
+      conversation.created_at
+    ).getTime(),
+    title: conversation.title,
+    pinned: false,
+    archived: false,
+    folder: "Uncategorized",
+    tags: [],
+    locked: false,
+    lockPin: "",
+    model: null,
+    messages: [],
+    backendId: conversation.id,
+  })
+);
+
   // =========================
   // Group Chats by Folder
   // =========================
@@ -248,7 +278,20 @@ useEffect(() => {
       groups["Uncategorized"] = [];
     }
 
-    unPinnedChats.forEach((chat) => {
+    const allChats = [
+  ...unPinnedChats,
+  ...backendChats.filter(
+    (backendChat) =>
+      !unPinnedChats.some(
+        (chat) =>
+          chat.sessionId ===
+          backendChat.sessionId
+      )
+  ),
+];
+
+allChats.forEach((chat) => {
+  
       const folder =
         chat.folder || "Uncategorized";
 
