@@ -74,6 +74,7 @@ function Chat() {
     loadConversations();
   }, []);
 
+  
   // =========================
   // UI State
   // =========================
@@ -179,6 +180,52 @@ const searchRef = useRef(null);
 
   const currentChat =
     chats.find((chat) => chat.id === currentChatId) || chats[0];
+
+useEffect(() => {
+  if (!currentChatId) return;
+
+  const loadMessages = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/conversations/${currentChatId}/messages`
+      );
+
+      const data = await response.json();
+
+      if (!data.success) return;
+
+      setChats((prev) => {
+        const current = prev.find(
+          (chat) => chat.id === currentChatId
+        );
+
+        // Already loaded? Don't update.
+        if (current?.messages?.length > 0) {
+          return prev;
+        }
+
+        return prev.map((chat) =>
+          chat.id === currentChatId
+            ? {
+                ...chat,
+                messages: data.messages.map((msg) => ({
+                  id: msg.id,
+                  sender: msg.sender,
+                  message: msg.content,
+                  timestamp: new Date(msg.created_at).getTime(),
+                })),
+              }
+            : chat
+        );
+      });
+    } catch (error) {
+      console.error("❌ Failed to load messages:", error);
+    }
+  };
+
+  loadMessages();
+}, [currentChatId]);
+
 const {
   updateCurrentMessages,
   handleFeedback,
@@ -667,18 +714,53 @@ const handleNewChat = () => {
   setModelModalOpen(true);
 };
 
-const handleCreateChatWithModel = () => {
-  const newChat = createNewChat(
-    selectedModel,
-    firstName
-  );
+const handleCreateChatWithModel = async () => {
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/conversations",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-  setChats((prev) => [newChat, ...prev]);
-  setCurrentChatId(newChat.id);
+    const data = await response.json();
 
-  setModelModalOpen(false);
+    if (!data.success) {
+      throw new Error(
+        data.message || "Failed to create conversation"
+      );
+    }
 
-  toast.success("New chat created!");
+    const newChat = createNewChat(
+      selectedModel,
+      firstName
+    );
+
+    // Use the backend session ID
+    newChat.sessionId =
+      data.conversation.session_id;
+
+    newChat.title =
+      data.conversation.title || "New Chat";
+
+    setChats((prev) => [newChat, ...prev]);
+
+    setCurrentChatId(newChat.id);
+
+    setModelModalOpen(false);
+
+    toast.success("New chat created!");
+  } catch (error) {
+    console.error(
+      "❌ Create Conversation Error:",
+      error
+    );
+
+    toast.error("Failed to create new chat.");
+  }
 };
 
   // =========================

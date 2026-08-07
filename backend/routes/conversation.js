@@ -7,6 +7,9 @@ const {
   renameConversation,
   deleteConversation,
 } = require("../services/conversationService");
+const {
+  getMessages,
+} = require("../services/messageService");
 
 /**
  * Get all conversations
@@ -61,6 +64,65 @@ router.get("/:sessionId", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to get conversation.",
+    });
+  }
+});
+
+/**
+ * Create new conversation
+ */
+router.post("/", async (req, res) => {
+  try {
+    const { randomUUID } = require("crypto");
+
+    const { createConversation } = require("../services/conversationService");
+
+    const sessionId = randomUUID();
+
+    await createConversation(sessionId);
+
+    res.status(201).json({
+      success: true,
+      conversation: {
+        session_id: sessionId,
+        title: "New Chat",
+      },
+    });
+  } catch (error) {
+    console.error(
+      "❌ Create Conversation Error:",
+      error.message
+    );
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to create conversation.",
+    });
+  }
+});
+
+/**
+ * Get all messages for a conversation
+ */
+router.get("/:sessionId/messages", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const messages = await getMessages(sessionId);
+
+    res.json({
+      success: true,
+      messages,
+    });
+  } catch (error) {
+    console.error(
+      "❌ Get Messages Error:",
+      error.message
+    );
+
+    res.status(500).json({
+      success: false,
+      messages: [],
     });
   }
 });

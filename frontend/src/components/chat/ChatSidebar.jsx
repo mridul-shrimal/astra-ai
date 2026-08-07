@@ -303,7 +303,7 @@ allChats.forEach((chat) => {
     });
 
     return groups;
-  }, [folders, unPinnedChats]);
+  }, [folders, unPinnedChats,backendChats]);
 
   // =========================
   // Toggle Folder

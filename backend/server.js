@@ -23,12 +23,12 @@ app.use(
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-// Routes
-app.use("/api/chat", chatRoutes);
-app.use("/api/conversations", conversationRoutes);
-app.use("/api/memory", memoryRoutes);
-app.use("/api/upload", uploadRoutes);
-app.use("/api/auth", authRoutes);
+  // Routes
+  app.use("/api/chat", chatRoutes);
+  app.use("/api/conversations", conversationRoutes);
+  app.use("/api/memory", memoryRoutes);
+  app.use("/api/upload", uploadRoutes);
+  app.use("/api/auth", authRoutes);
 
 // Health Check
 app.get("/", (req, res) => {

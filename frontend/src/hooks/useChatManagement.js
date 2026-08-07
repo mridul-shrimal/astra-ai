@@ -12,29 +12,61 @@ function useChatManagement({
   // Chat Functions
   // =========================
 
-  const handleRenameChat = (chatId) => {
-    const chat = chats.find((c) => c.id === chatId);
+const handleRenameChat = async (chatId) => {
+  const chat = chats.find((c) => c.id === chatId);
 
-    const newTitle = prompt(
-      "Rename chat",
-      chat?.title || ""
+  const newTitle = prompt(
+    "Rename chat",
+    chat?.title || ""
+  );
+
+  if (!newTitle || !newTitle.trim()) return;
+
+  const title = newTitle.trim();
+
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/conversations/${chat.sessionId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+        }),
+      }
     );
 
-    if (!newTitle || !newTitle.trim()) return;
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(
+        data.message || "Failed to rename conversation"
+      );
+    }
 
     setChats((prev) =>
       prev.map((chat) =>
         chat.id === chatId
           ? {
               ...chat,
-              title: newTitle.trim(),
+              title,
             }
           : chat
       )
     );
 
     toast.success("Chat renamed!");
-  };
+  } catch (error) {
+    console.error(
+      "❌ Rename Conversation Error:",
+      error
+    );
+
+    toast.error("Failed to rename chat.");
+  }
+};
 
   const handlePinChat = (chatId) => {
     
@@ -206,31 +238,9 @@ function useChatManagement({
     toast.success("🔒 Chat locked");
   };
 
-  // Select Chat
-  const handleSelectChat = (chatId) => {
-      console.log("🖱️ Selected Chat ID:", chatId);
-
-  console.log(
-    "💻 Frontend chats:",
-    chats.map((chat) => ({
-      id: chat.id,
-      sessionId: chat.sessionId,
-      title: chat.title,
-    }))
-  );
-
-  console.log(
-    "🗄️ Backend conversations:",
-    backendConversations.map((conversation) => ({
-      id: conversation.id,
-      session_id: conversation.session_id,
-      title: conversation.title,
-    }))
-  );
+const handleSelectChat = (chatId) => {
   const chat = chats.find(
-    (c) =>
-      c.id === chatId ||
-      c.sessionId === chatId
+    (c) => c.id === chatId || c.sessionId === chatId
   );
 
   if (chat) {
@@ -239,67 +249,136 @@ function useChatManagement({
       return;
     }
 
-    const pin = prompt("🔒 Enter your PIN");
-
-    if (pin === null) return;
-
-    if (pin === chat.lockPin) {
-      setCurrentChatId(chat.id);
-      toast.success("🔓 Chat unlocked");
-    } else {
-      toast.error("❌ Incorrect PIN");
-    }
-
-    return;
+    // PIN logic...
   }
 
-  // Backend conversation
   const backendChat = backendConversations.find(
-    (conversation) =>
-      conversation.session_id === chatId
+    (conversation) => conversation.session_id === chatId
   );
 
   if (!backendChat) return;
 
-  setCurrentChatId(
-    backendChat.session_id
-  );
+  setCurrentChatId(backendChat.session_id);
 };
-
   // =========================
   // Chat Functions
   // =========================
 
-  // Delete Chat
-  const handleDeleteChat = (chatId) => {
-    if (chats.length === 1) {
-      toast.error("At least one chat must remain.");
+const handleDeleteChat = async (chatId) => {
+  console.log("🗑️ Delete clicked:", chatId);
+
+  const chat = chats.find(
+    (chat) => chat.id === chatId
+  );
+
+  const backendChat = backendConversations?.find(
+    (conversation) =>
+      conversation.session_id === chatId
+  );
+
+  console.log("💻 Frontend chat:", chat);
+  console.log("🗄️ Backend chat:", backendChat);
+
+  // At least one chat must remain
+  const totalChats =
+    chats.length +
+    (backendConversations?.filter(
+      (conversation) =>
+        !chats.some(
+          (chat) =>
+            chat.sessionId ===
+            conversation.session_id
+        )
+    ).length || 0);
+
+  if (totalChats <= 1) {
+    toast.error(
+      "At least one chat must remain."
+    );
+    return;
+  }
+
+  const settings =
+    JSON.parse(
+      localStorage.getItem("astra-settings")
+    ) || {};
+
+  if (
+    (settings.deleteConfirmation ?? true) &&
+    !window.confirm(
+      "Are you sure you want to delete this chat?"
+    )
+  ) {
+    return;
+  }
+
+  try {
+    // =========================
+    // Backend Conversation
+    // =========================
+
+    if (backendChat) {
+      console.log(
+        "🗑️ Deleting backend conversation:",
+        backendChat.session_id
+      );
+
+      const response = await fetch(
+        `http://localhost:5000/api/conversations/${backendChat.session_id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      console.log(
+        "🗄️ Delete response:",
+        data
+      );
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message ||
+            "Failed to delete conversation"
+        );
+      }
+
+      toast.success("Chat deleted!");
+
       return;
     }
 
-  const settings =
-    JSON.parse(localStorage.getItem("astra-settings")) || {};
-    if (
-  (settings.deleteConfirmation ?? true) &&
-  !window.confirm(
-    "Are you sure you want to delete this chat?"
-  )
-) {
-  return;
-}
+    // =========================
+    // Frontend-only Chat
+    // =========================
 
-    const updatedChats = chats.filter(
-      (chat) => chat.id !== chatId
+    if (chat) {
+      const updatedChats = chats.filter(
+        (chat) => chat.id !== chatId
+      );
+
+      setChats(updatedChats);
+
+      if (currentChatId === chatId) {
+        setCurrentChatId(
+          updatedChats[0]?.id || null
+        );
+      }
+
+      toast.success("Chat deleted!");
+    }
+  } catch (error) {
+    console.error(
+      "❌ Delete Conversation Error:",
+      error
     );
 
-    setChats(updatedChats);
-
-    if (currentChatId === chatId) {
-      setCurrentChatId(updatedChats[0].id);
-    }
-
-    toast.success("Chat deleted!");
-  };
+    toast.error(
+      "Failed to delete chat."
+    );
+  }
+};
   return {
   handleRenameChat,
   handlePinChat,
