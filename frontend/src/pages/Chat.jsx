@@ -512,6 +512,13 @@ formData.append(
       );
 
       const data = await response.json();
+      if (!response.ok || data.success === false) {
+  const backendError =
+    data.reply ||
+    "❌ Astra could not process your request.";
+
+  throw new Error(backendError);
+}
 // Model fallback toast will be handled
 // from the final streaming event.
 
@@ -611,27 +618,33 @@ setIsGenerating(false);
   speak(data.reply);
 }
     } catch (error) {
-      console.error(error);
+  console.error("❌ Chat Error:", error);
 
-      toast.error("Unable to connect to backend.");
+  setIsTyping(false);
+  setIsGenerating(false);
 
-      setIsTyping(false);
-      setIsGenerating(false);
+  let errorMessage =
+    "❌ Something went wrong. Please try again.";
 
-      updateCurrentMessages([
-        ...currentChat.messages,
-        userMessage,
-        {
-          id: Date.now() + 1,
-          sender: "ai",
-          message:
-            "❌ Unable to connect to the backend.",
-          timestamp: Date.now(),
-          liked: false,
-          disliked: false,
-        },
-      ]);
-    }
+  if (error?.message) {
+    errorMessage = `❌ ${error.message}`;
+  }
+
+  toast.error(errorMessage);
+
+  updateCurrentMessages([
+    ...currentChat.messages,
+    userMessage,
+    {
+      id: Date.now() + 1,
+      sender: "ai",
+      message: errorMessage,
+      timestamp: Date.now(),
+      liked: false,
+      disliked: false,
+    },
+  ]);
+}
   };
 
   // =========================

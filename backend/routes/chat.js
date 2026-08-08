@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/uploadMiddleware");
+const multer = require("multer");
 const extractText = require("../utils/extractText");
 const {
   findMemoryToUpdate,
@@ -197,8 +198,47 @@ ${message || "Summarize all uploaded documents."}
   }
 );
 
-  router.post("/", upload.array("files", 10), async (req, res) => {
-  try {
+  router.post("/", (req, res) => {
+  upload.array("files", 10)(req, res, async (uploadError) => {
+    if (uploadError) {
+      console.error("❌ Upload Error:", uploadError);
+
+      if (uploadError instanceof multer.MulterError) {
+        if (uploadError.code === "LIMIT_FILE_SIZE") {
+          return res.status(413).json({
+            success: false,
+            reply:
+              "⚠️ File is too large. Maximum file size is 20 MB.",
+            errorCode: "FILE_TOO_LARGE",
+          });
+        }
+
+        return res.status(400).json({
+          success: false,
+          reply:
+            "⚠️ File upload failed. Please check the selected file.",
+          errorCode: "FILE_UPLOAD_ERROR",
+        });
+      }
+
+      if (uploadError.message === "Unsupported file type") {
+        return res.status(400).json({
+          success: false,
+          reply:
+            "⚠️ Unsupported file type. Please upload PDF, DOCX, TXT, CSV, JPG, PNG, WEBP, GIF, BMP, or SVG.",
+          errorCode: "UNSUPPORTED_FILE",
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        reply:
+          "⚠️ Unable to upload the selected file.",
+        errorCode: "FILE_UPLOAD_ERROR",
+      });
+    }
+
+    try {
     const {
   message,
   sessionId,
@@ -444,12 +484,52 @@ res.json({
 });
 
   } catch (error) {
-    console.error(error);
+  console.error("❌ Chat Error:", error);
 
-    res.status(500).json({
-      success: false,
-      reply: "Sorry, something went wrong.",
-    });
+  let statusCode = 500;
+  let message = "Sorry, something went wrong.";
+
+  switch (error.code) {
+    case "AI_AUTH_ERROR":
+      statusCode = 500;
+      message =
+        "⚠️ Astra could not connect to the AI service because the API configuration is invalid.";
+      break;
+
+    case "AI_RATE_LIMIT":
+      statusCode = 429;
+      message =
+        "⚠️ The AI models are currently busy. Please try again in a moment.";
+      break;
+
+    case "AI_UNAVAILABLE":
+      statusCode = 503;
+      message =
+        "⚠️ The AI service is temporarily unavailable. Please try again later.";
+      break;
+
+    case "AI_NETWORK_ERROR":
+      statusCode = 503;
+      message =
+        "⚠️ Astra could not reach the AI service. Please check your internet connection.";
+      break;
+
+    case "AI_REQUEST_ERROR":
+      statusCode = 502;
+      message =
+        "⚠️ The AI service returned an unexpected error. Please try again.";
+      break;
+
+    default:
+      message = "❌ Astra encountered an unexpected error.";
   }
+
+  res.status(statusCode).json({
+    success: false,
+    reply: message,
+    errorCode: error.code || "UNKNOWN_ERROR",
+  });
+}
+});
 });
 module.exports = router;

@@ -96,12 +96,13 @@ for (const currentModel of fallbackModels) {
           },
         ],
       },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
+     {
+  headers: {
+    Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  timeout: 60000,
+}
     );
 
     console.log(`✅ Using model: ${currentModel}`);
@@ -114,14 +115,75 @@ for (const currentModel of fallbackModels) {
     `❌ ${currentModel} failed (${status || "Unknown"})`
   );
 
-  // Only retry for temporary provider issues
-  if (![429, 502, 503].includes(status)) {
-    throw err;
+  // API authentication/configuration error
+  if (status === 401) {
+    const error = new Error(
+      "AI service authentication failed. Please check the OpenRouter API key."
+    );
+    error.code = "AI_AUTH_ERROR";
+    error.status = 401;
+    throw error;
   }
 
-  if (currentModel === fallbackModels.at(-1)) {
-    throw err;
+  // Rate limit — try the next model
+  if (status === 429) {
+    console.warn(
+      `⚠️ ${currentModel} is rate limited. Trying fallback model...`
+    );
+
+    if (currentModel === fallbackModels.at(-1)) {
+      const error = new Error(
+        "All available AI models are currently rate limited."
+      );
+      error.code = "AI_RATE_LIMIT";
+      error.status = 429;
+      throw error;
+    }
+
+    continue;
   }
+
+  // Provider/model temporarily unavailable
+  if (status === 502 || status === 503) {
+    console.warn(
+      `⚠️ ${currentModel} is temporarily unavailable. Trying fallback model...`
+    );
+
+    if (currentModel === fallbackModels.at(-1)) {
+      const error = new Error(
+        "AI service is temporarily unavailable. Please try again later."
+      );
+      error.code = "AI_UNAVAILABLE";
+      error.status = status;
+      throw error;
+    }
+
+    continue;
+  }
+
+  // Network / timeout / unknown errors
+  if (
+    err.code === "ECONNABORTED" ||
+    err.code === "ETIMEDOUT" ||
+    !err.response
+  ) {
+    const error = new Error(
+      "Unable to connect to the AI service. Please check your network connection."
+    );
+    error.code = "AI_NETWORK_ERROR";
+    throw error;
+  }
+
+  // Other API errors
+  const error = new Error(
+    err.response?.data?.error?.message ||
+      "The AI service returned an unexpected error."
+  );
+
+  error.code = "AI_REQUEST_ERROR";
+  error.status = status;
+
+  throw error;
 }
 }
 
