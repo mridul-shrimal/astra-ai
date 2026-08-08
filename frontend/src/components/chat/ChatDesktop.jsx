@@ -190,8 +190,8 @@ const closeMenusRef = useRef(() => {});
               Chat Messages
           ========================= */}
 
-          <ChatContainer
-            messages={currentChat.messages}
+         <ChatContainer
+  messages={currentChat?.messages || []}
             isTyping={isTyping}
             isGenerating={isGenerating}
             onStopGenerating={handleStopGenerating}
@@ -226,10 +226,10 @@ const closeMenusRef = useRef(() => {});
           Favorites Modal
       ========================= */}
 
-      <FavoritesModal
-        open={favoritesOpen}
-        onClose={onCloseFavorites}
-        messages={currentChat.messages}
+     <FavoritesModal
+  open={favoritesOpen}
+  onClose={onCloseFavorites}
+  messages={currentChat?.messages || []}
         onSelectMessage={(messageId) => {
           const element =
             document.getElementById(

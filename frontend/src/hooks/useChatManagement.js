@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 function useChatManagement({
   chats,
   backendConversations,
+  setBackendConversations,
   setChats,
   currentChatId,
   setCurrentChatId,
@@ -317,37 +318,67 @@ const handleDeleteChat = async (chatId) => {
     // Backend Conversation
     // =========================
 
-    if (backendChat) {
-      console.log(
-        "🗑️ Deleting backend conversation:",
-        backendChat.session_id
-      );
+if (backendChat) {
+  console.log(
+    "🗑️ Deleting backend conversation:",
+    backendChat.session_id
+  );
 
-      const response = await fetch(
-        `http://localhost:5000/api/conversations/${backendChat.session_id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      const data = await response.json();
-
-      console.log(
-        "🗄️ Delete response:",
-        data
-      );
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message ||
-            "Failed to delete conversation"
-        );
-      }
-
-      toast.success("Chat deleted!");
-
-      return;
+  const response = await fetch(
+    `http://localhost:5000/api/conversations/${backendChat.session_id}`,
+    {
+      method: "DELETE",
     }
+  );
+
+  const data = await response.json();
+
+  console.log(
+    "🗄️ Delete response:",
+    data
+  );
+
+  if (!response.ok || !data.success) {
+    throw new Error(
+      data.message ||
+        "Failed to delete conversation"
+    );
+  }
+
+  // Remove deleted conversation from frontend state
+  const remainingBackendChats =
+    backendConversations.filter(
+      (conversation) =>
+        conversation.session_id !== chatId
+    );
+
+  setBackendConversations(
+    remainingBackendChats
+  );
+
+  // Find another available chat
+  const remainingFrontendChats =
+    chats.filter(
+      (chat) => chat.id !== chatId
+    );
+
+  const nextChat =
+    remainingFrontendChats[0] ||
+    remainingBackendChats[0];
+
+  if (nextChat) {
+    setCurrentChatId(
+      nextChat.id ||
+        nextChat.session_id
+    );
+  } else {
+    setCurrentChatId(null);
+  }
+
+  toast.success("Chat deleted!");
+
+  return;
+}
 
     // =========================
     // Frontend-only Chat

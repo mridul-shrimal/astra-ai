@@ -74,7 +74,7 @@ function Chat() {
     loadConversations();
   }, []);
 
-  
+
   // =========================
   // UI State
   // =========================
@@ -105,6 +105,8 @@ function Chat() {
   const [selectedTag, setSelectedTag] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 const searchRef = useRef(null);
+const [backendMessages] = useState([]);
+
   // =========================
   // Authentication
   // =========================
@@ -142,44 +144,42 @@ const searchRef = useRef(null);
   // Chat Data
   // =========================
 
-  const [chats, setChats] = useState(() => {
-  const settings =
-    JSON.parse(localStorage.getItem("astra-settings")) || {};
+  const [chats, setChats] = useState([]);
 
-  if (!(settings.saveHistory ?? true)) {
-    return [createNewChat()];
-  }
+const [currentChatId, setCurrentChatId] = useState(null);
 
-  const saved = localStorage.getItem("astra-chats");
-
-  if (saved) {
-    return JSON.parse(saved).map((chat) => ({
+const currentChat =
+  chats.find(
+    (chat) =>
+      chat.id === currentChatId ||
+      chat.sessionId === currentChatId
+  ) ||
+  backendConversations
+    ?.map((conversation) => ({
+      id: conversation.session_id,
+      sessionId: conversation.session_id,
+      title: conversation.title,
+      timestamp: new Date(
+        conversation.created_at
+      ).getTime(),
       pinned: false,
       archived: false,
       folder: "Uncategorized",
       tags: [],
       locked: false,
       lockPin: "",
-      ...chat,
-    }));
-  }
+      model: null,
+      messages:
+        backendMessages[conversation.session_id] || [],
+      backendId: conversation.id,
+    }))
+    .find(
+      (chat) =>
+        chat.id === currentChatId ||
+        chat.sessionId === currentChatId
+    ) ||
+  null;
 
-  return [createNewChat()];
-});
-
-  const [currentChatId, setCurrentChatId] = useState(() => {
-  const settings =
-    JSON.parse(localStorage.getItem("astra-settings")) || {};
-
-  if (!(settings.saveHistory ?? true)) {
-    return null;
-  }
-
-  return localStorage.getItem("astra-current-chat") || null;
-});
-
-  const currentChat =
-    chats.find((chat) => chat.id === currentChatId) || chats[0];
 
 useEffect(() => {
   if (!currentChatId) return;
@@ -194,37 +194,92 @@ useEffect(() => {
 
       if (!data.success) return;
 
+      const messages = data.messages.map((msg) => ({
+        id: msg.id,
+        sender: msg.sender,
+        message: msg.content,
+        timestamp: new Date(
+          msg.created_at
+        ).getTime(),
+      }));
+
       setChats((prev) => {
-        const current = prev.find(
-          (chat) => chat.id === currentChatId
+        const existingChat = prev.find(
+          (chat) =>
+            chat.id === currentChatId ||
+            chat.sessionId === currentChatId
         );
 
-        // Already loaded? Don't update.
-        if (current?.messages?.length > 0) {
+        // Backend chat is already inside chats
+        if (existingChat) {
+          return prev.map((chat) =>
+            chat.id === currentChatId ||
+            chat.sessionId === currentChatId
+              ? {
+                  ...chat,
+                  messages,
+                }
+              : chat
+          );
+        }
+
+        // Backend chat isn't inside chats yet
+        const backendConversation =
+          backendConversations.find(
+            (conversation) =>
+              conversation.session_id ===
+              currentChatId
+          );
+
+        if (!backendConversation) {
           return prev;
         }
 
-        return prev.map((chat) =>
-          chat.id === currentChatId
-            ? {
-                ...chat,
-                messages: data.messages.map((msg) => ({
-                  id: msg.id,
-                  sender: msg.sender,
-                  message: msg.content,
-                  timestamp: new Date(msg.created_at).getTime(),
-                })),
-              }
-            : chat
-        );
+        const backendChat = {
+          id: backendConversation.session_id,
+          sessionId:
+            backendConversation.session_id,
+          timestamp: new Date(
+            backendConversation.created_at
+          ).getTime(),
+          title: backendConversation.title,
+          pinned: false,
+          archived: false,
+          folder: "Uncategorized",
+          tags: [],
+          locked: false,
+          lockPin: "",
+          model: null,
+          messages,
+          backendId: backendConversation.id,
+        };
+
+        return [...prev, backendChat];
       });
     } catch (error) {
-      console.error("❌ Failed to load messages:", error);
+      console.error(
+        "❌ Failed to load messages:",
+        error
+      );
     }
   };
 
   loadMessages();
-}, [currentChatId]);
+}, [
+  currentChatId,
+  backendConversations,
+]);
+
+useEffect(() => {
+  if (
+    !currentChatId &&
+    backendConversations.length > 0
+  ) {
+    setCurrentChatId(
+      backendConversations[0].session_id
+    );
+  }
+}, [backendConversations, currentChatId]);
 
 const {
   updateCurrentMessages,
@@ -246,6 +301,7 @@ const {
 } = useChatManagement({
   chats,
   backendConversations,
+  setBackendConversations,
   setChats,
   currentChatId,
   setCurrentChatId,
@@ -294,8 +350,6 @@ useChatEffects({
 });
 
 useChatPersistence({
-  chats,
-  currentChatId,
   folders,
   tags,
 });
@@ -748,7 +802,9 @@ const handleCreateChatWithModel = async () => {
 
     setChats((prev) => [newChat, ...prev]);
 
-    setCurrentChatId(newChat.id);
+    setCurrentChatId(
+  data.conversation.session_id
+);
 
     setModelModalOpen(false);
 

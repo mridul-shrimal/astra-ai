@@ -113,7 +113,39 @@ const [showPinned, setShowPinned] =
   // =========================
 
   const visibleChats = useMemo(() => {
-    return chats
+  const backendChats = backendConversations.map(
+    (conversation) => ({
+      id: conversation.session_id,
+      sessionId: conversation.session_id,
+      timestamp: new Date(
+        conversation.created_at
+      ).getTime(),
+      title: conversation.title,
+      pinned: false,
+      archived: false,
+      folder: "Uncategorized",
+      tags: [],
+      locked: false,
+      lockPin: "",
+      model: null,
+      messages: [],
+      backendId: conversation.id,
+    })
+  );
+
+  const allChats = [
+  ...chats.filter(
+    (chat) =>
+      !backendChats.some(
+        (backendChat) =>
+          backendChat.sessionId ===
+          chat.sessionId
+      )
+  ),
+  ...backendChats,
+];
+
+  return allChats
       .filter((chat) => !chat.archived)
 
       // Search
@@ -176,8 +208,9 @@ if (dateFilter === "month") {
           Number(b.pinned) -
           Number(a.pinned)
       );
-  }, [
+ }, [
   chats,
+  backendConversations,
   searchQuery,
   selectedTag,
   dateFilter,
@@ -191,9 +224,34 @@ const pinnedChats = useMemo(() => {
   return visibleChats.filter((chat) => chat.pinned);
 }, [visibleChats]);
 
-const unPinnedChats = useMemo(() => {
-  return visibleChats.filter((chat) => !chat.pinned);
-}, [visibleChats]);
+  // =========================
+  // Group Chats by Folder
+  // =========================
+
+const groupedChats = useMemo(() => {
+  const groups = {};
+
+  folders.forEach((folder) => {
+    groups[folder] = [];
+  });
+
+  if (!groups["Uncategorized"]) {
+    groups["Uncategorized"] = [];
+  }
+
+  visibleChats.forEach((chat) => {
+    const folder =
+      chat.folder || "Uncategorized";
+
+    if (!groups[folder]) {
+      groups[folder] = [];
+    }
+
+    groups[folder].push(chat);
+  });
+
+  return groups;
+}, [folders, visibleChats]);
 
 // =========================
 // Archived Chats
@@ -239,71 +297,8 @@ const closeAllMenus = () => {
 useEffect(() => {
   onRegisterCloseMenus?.(closeAllMenus);
 }, [onRegisterCloseMenus]);
-// =========================
-// Convert Backend Conversations
-// =========================
 
-const backendChats = backendConversations.map(
-  (conversation) => ({
-    id: conversation.session_id,
-    sessionId: conversation.session_id,
-    timestamp: new Date(
-      conversation.created_at
-    ).getTime(),
-    title: conversation.title,
-    pinned: false,
-    archived: false,
-    folder: "Uncategorized",
-    tags: [],
-    locked: false,
-    lockPin: "",
-    model: null,
-    messages: [],
-    backendId: conversation.id,
-  })
-);
 
-  // =========================
-  // Group Chats by Folder
-  // =========================
-
-  const groupedChats = useMemo(() => {
-    const groups = {};
-
-    folders.forEach((folder) => {
-      groups[folder] = [];
-    });
-
-    if (!groups["Uncategorized"]) {
-      groups["Uncategorized"] = [];
-    }
-
-    const allChats = [
-  ...unPinnedChats,
-  ...backendChats.filter(
-    (backendChat) =>
-      !unPinnedChats.some(
-        (chat) =>
-          chat.sessionId ===
-          backendChat.sessionId
-      )
-  ),
-];
-
-allChats.forEach((chat) => {
-  
-      const folder =
-        chat.folder || "Uncategorized";
-
-      if (!groups[folder]) {
-        groups[folder] = [];
-      }
-
-      groups[folder].push(chat);
-    });
-
-    return groups;
-  }, [folders, unPinnedChats,backendChats]);
 
   // =========================
   // Toggle Folder
