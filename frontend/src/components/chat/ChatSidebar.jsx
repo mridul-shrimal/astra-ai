@@ -113,35 +113,74 @@ const [showPinned, setShowPinned] =
   // =========================
 
   const visibleChats = useMemo(() => {
-  const backendChats = backendConversations.map(
-    (conversation) => ({
-      id: conversation.session_id,
-      sessionId: conversation.session_id,
-      timestamp: new Date(
-        conversation.created_at
-      ).getTime(),
-      title: conversation.title,
-      pinned: false,
-      archived: false,
-      folder: "Uncategorized",
-      tags: [],
-      locked: false,
-      lockPin: "",
-      model: null,
-      messages: [],
-      backendId: conversation.id,
-    })
-  );
+const backendChats = backendConversations.map(
+  (conversation) => {
+    const existingChat = chats.find(
+      (chat) =>
+        chat.sessionId ===
+        conversation.session_id
+    );
 
-  const allChats = [
-  ...chats.filter(
-    (chat) =>
-      !backendChats.some(
-        (backendChat) =>
-          backendChat.sessionId ===
-          chat.sessionId
-      )
-  ),
+    return {
+      id:
+        existingChat?.id ||
+        conversation.session_id,
+
+      sessionId:
+        conversation.session_id,
+
+      timestamp:
+        existingChat?.timestamp ||
+        new Date(
+          conversation.created_at
+        ).getTime(),
+
+      title:
+        existingChat?.title ||
+        conversation.title,
+
+      pinned:
+        existingChat?.pinned ?? false,
+
+      archived:
+        existingChat?.archived ?? false,
+
+      folder:
+        existingChat?.folder ||
+        "Uncategorized",
+
+      tags:
+        existingChat?.tags || [],
+
+      locked:
+        existingChat?.locked ?? false,
+
+      lockPin:
+        existingChat?.lockPin || "",
+
+      model:
+        existingChat?.model || null,
+
+      messages:
+        existingChat?.messages || [],
+
+      backendId:
+        conversation.id,
+    };
+  }
+);
+
+const localOnlyChats = chats.filter(
+  (chat) =>
+    !backendChats.some(
+      (backendChat) =>
+        backendChat.sessionId ===
+        chat.sessionId
+    )
+);
+
+const allChats = [
+  ...localOnlyChats,
   ...backendChats,
 ];
 

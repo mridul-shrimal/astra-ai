@@ -345,23 +345,29 @@ if (backendChat) {
     );
   }
 
-  // Remove deleted conversation from frontend state
+  // Remove deleted conversation from backend state
   const remainingBackendChats =
     backendConversations.filter(
       (conversation) =>
-        conversation.session_id !== chatId
+        conversation.session_id !==
+        backendChat.session_id
     );
 
   setBackendConversations(
     remainingBackendChats
   );
 
-  // Find another available chat
+  // Remove deleted chat from frontend state
   const remainingFrontendChats =
     chats.filter(
-      (chat) => chat.id !== chatId
+      (chat) =>
+        chat.sessionId !==
+        backendChat.session_id
     );
 
+  setChats(remainingFrontendChats);
+
+  // Select another available chat
   const nextChat =
     remainingFrontendChats[0] ||
     remainingBackendChats[0];
@@ -369,7 +375,8 @@ if (backendChat) {
   if (nextChat) {
     setCurrentChatId(
       nextChat.id ||
-        nextChat.session_id
+        nextChat.session_id ||
+        nextChat.sessionId
     );
   } else {
     setCurrentChatId(null);
