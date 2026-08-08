@@ -5,7 +5,10 @@ const extractText = require("../utils/extractText");
 const {
   findMemoryToUpdate,
 } = require("../services/memoryMatcher");
-const { generateResponse } = require("../services/geminiService");
+const {
+  generateResponse,
+  generateResponseStream,
+} = require("../services/geminiService");
 const {
   saveMemory,
   memoryExists,
@@ -27,6 +30,172 @@ const { webSearch } = require("../services/webSearch");
 const {
   extractMemory,
 } = require("../services/memoryExtractor");
+
+router.post(
+  "/stream",
+  upload.array("files", 10),
+  async (req, res) => {
+    try {
+      const {
+        message,
+        sessionId,
+        model,
+        temperature,
+        useMemory,
+      } = req.body;
+
+      let currentSession = sessionId;
+
+// Create conversation if needed
+if (!currentSession) {
+  currentSession = require("crypto")
+    .randomUUID();
+
+  await createConversation(
+    currentSession
+  );
+
+  console.log(
+    `💬 Created streaming conversation: ${currentSession}`
+  );
+} else {
+  await touchConversation(
+    currentSession
+  );
+}
+
+      // Extract uploaded files
+      let documentText = "";
+
+      if (req.files && req.files.length > 0) {
+        const extractedTexts = await Promise.all(
+          req.files.map(async (file) => {
+            const text = await extractText(file);
+
+            return `
+DOCUMENT: ${file.originalname}
+
+${text}
+`;
+          })
+        );
+
+        documentText =
+          extractedTexts.join("\n\n");
+      }
+
+      // Build final prompt
+      const finalPrompt =
+        documentText.trim()
+          ? `
+Use the uploaded documents as your source.
+
+${documentText}
+
+USER REQUEST:
+
+${message || "Summarize all uploaded documents."}
+`
+          : message;
+
+      // Tell browser this is an SSE stream
+      res.setHeader(
+        "Content-Type",
+        "text/event-stream"
+      );
+      res.setHeader(
+        "Cache-Control",
+        "no-cache, no-transform"
+      );
+      res.setHeader(
+        "Connection",
+        "keep-alive"
+      );
+
+      if (res.flushHeaders) {
+        res.flushHeaders();
+      }
+
+      let fullResponse = "";
+
+      const aiResult =
+        await generateResponseStream(
+          currentSession,
+          finalPrompt,
+          (chunk) => {
+            fullResponse += chunk;
+
+            res.write(
+              `data: ${JSON.stringify({
+                type: "chunk",
+                content: chunk,
+              })}\n\n`
+            );
+          },
+          useMemory === "true" &&
+            !(req.files && req.files.length),
+          model,
+          Number(temperature)
+        );
+
+      // Save messages AFTER streaming completes
+      await saveMessage(
+        currentSession,
+        "user",
+        message
+      );
+
+      await saveMessage(
+        currentSession,
+        "ai",
+        fullResponse
+      );
+
+      // Tell frontend streaming is complete
+      res.write(
+        `data: ${JSON.stringify({
+          type: "done",
+          sessionId: currentSession,
+          modelUsed: aiResult.modelUsed,
+          files: req.files
+            ? req.files.map((file) => ({
+                filename: file.filename,
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size,
+              }))
+            : [],
+        })}\n\n`
+      );
+
+      res.write("data: [DONE]\n\n");
+      res.end();
+    } catch (error) {
+      console.error(
+        "Streaming Chat Error:",
+        error
+      );
+
+      if (!res.headersSent) {
+        return res.status(500).json({
+          success: false,
+          message:
+            "Streaming response failed.",
+        });
+      }
+
+      res.write(
+        `data: ${JSON.stringify({
+          type: "error",
+          message:
+            "Streaming response failed.",
+        })}\n\n`
+      );
+
+      res.end();
+    }
+  }
+);
 
   router.post("/", upload.array("files", 10), async (req, res) => {
   try {

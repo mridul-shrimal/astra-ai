@@ -1,0 +1,82 @@
+PDF Parse Error: TypeError: pdfParse is not a function
+    at extractText (D:\Projects\astra-ai\backend\utils\extractText.js:16:24)
+    at D:\Projects\astra-ai\backend\routes\chat.js:50:33
+    at Layer.handleRequest (D:\Projects\astra-ai\backend\node_modules\router\lib\layer.js:152:17)
+    at next (D:\Projects\astra-ai\backend\node_modules\router\lib\route.js:157:13)
+    at done (D:\Projects\astra-ai\backend\node_modules\multer\lib\make-middleware.js:70:7)
+    at indicateDone (D:\Projects\astra-ai\backend\node_modules\multer\lib\make-middleware.js:74:68)
+    at Multipart.<anonymous> (D:\Projects\astra-ai\backend\node_modules\multer\lib\make-middleware.js:258:7)
+    at Multipart.emit (node:events:519:28)
+    at emitCloseNT (node:internal/streams/destroy:148:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:88:21)
+PDF Parse Error: TypeError: pdfParse is not a function
+    at extractText (D:\Projects\astra-ai\backend\utils\extractText.js:16:24)
+    at D:\Projects\astra-ai\backend\routes\chat.js:50:33
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+✅ Using model: mistralai/mistral-small-3.2-24b-instruct
+OpenRouter Response: 6.070s
+💾 Saving USER message...
+💾 Saving AI message...
+Terminate batch job (Y/N)?
+🚀 Astra AI Roadmap (Updated)
+
+Phase 5 — Polish & Productivity
+
+Export Chats — PDF / Markdown / TXT
+Better File Handling — PDF / DOCX / TXT / CSV + multi-document comparison/summarization
+Response Streaming
+Better Error Handling
+Performance Improvements
+
+Phase 6 — Authentication & Cloud
+
+Authentication
+Login / Signup / OAuth
+Protected Routes
+Supabase
+User conversations/memories
+Multi-device sync
+
+Phase 7 — AI Enhancements
+
+Memory management
+Forget memories
+Memory importance
+AI chat titles
+Conversation summaries
+Search conversations
+Better context retrieval
+Semantic search
+RAG foundation
+
+Phase 8 — Production Release
+
+Security
+Rate limiting
+Input validation
+Logging
+Docker
+Environment management
+Production configuration
+Testing
+Bug fixes
+Documentation
+Astra AI v1.1 🚀
+
+Phase 9 — Premium UI & Animations
+
+Glassmorphism
+Page transitions
+Framer Motion
+Loading/skeleton states
+Hover animations
+Premium cards
+Modern sidebar
+Better modals
+Mobile responsiveness
+
+Goal: Make Astra feel like a premium desktop application
+
+
+
+

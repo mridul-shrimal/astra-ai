@@ -1,0 +1,20 @@
+Project,Feature,Status,Priority,Estimated Hours,Notes
+Astra AI,Persistent Chat History,Completed,High,8,SQLite is the source of truth
+Astra AI,Chat Export,Completed,Medium,2,"PDF, Markdown, TXT, JSON, HTML"
+Astra AI,Multiple File Upload,Completed,High,3,Up to 10 files per request
+Astra AI,PDF Extraction,Completed,High,1,Text extraction tested
+Astra AI,DOCX Extraction,Testing,High,1,Use DOCX test document
+Astra AI,TXT Extraction,Completed,Medium,1,Plain text extraction
+Astra AI,CSV Extraction,Testing,High,1,CSV content extraction
+Astra AI,Multi-document Summary,Testing,High,2,Summarize multiple files together
+Astra AI,Document Comparison,Testing,High,2,Compare content across files
+Astra AI,Response Streaming,Planned,High,3,Real-time token streaming
+Astra AI,Error Handling,Planned,High,2,"API, timeout, file and network errors"
+Astra AI,Performance,Planned,Medium,2,"Queries, memory, prompts and files"
+Astra AI,Authentication,Planned,High,6,"Login, signup and protected routes"
+Astra AI,Cloud Sync,Planned,High,8,Supabase and multi-device sync
+Astra AI,Semantic Search,Planned,Medium,6,Search conversations semantically
+Astra AI,RAG Foundation,Planned,High,8,Context retrieval from documents
+Astra AI,Production Security,Planned,Critical,6,Rate limiting and input validation
+Astra AI,Testing,Planned,High,6,Regression and integration testing
+Astra AI,Premium UI,Planned,Medium,8,Animations and responsive polish

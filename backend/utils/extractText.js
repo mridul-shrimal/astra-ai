@@ -1,5 +1,5 @@
 const fs = require("fs");
-const pdfParse = require("pdf-parse");
+const { PDFParse } = require("pdf-parse");
 const mammoth = require("mammoth");
 
 async function extractText(file) {
@@ -10,28 +10,41 @@ async function extractText(file) {
 
   switch (extension) {
     case "pdf": {
-  try {
-    const buffer = fs.readFileSync(file.path);
+      try {
+        const buffer = fs.readFileSync(file.path);
 
-    const data = await pdfParse(buffer);
+        const parser = new PDFParse({
+          data: new Uint8Array(buffer),
+        });
 
-    return data.text;
-  } catch (err) {
-    console.error("PDF Parse Error:", err);
+        const result = await parser.getText();
 
-    return "[Unable to read PDF]";
-  }
-}
+        await parser.destroy();
+
+        return result.text;
+      } catch (err) {
+        console.error("PDF Parse Error:", err);
+
+        return "[Unable to read PDF]";
+      }
+    }
+
     case "txt": {
       return fs.readFileSync(file.path, "utf8");
     }
 
     case "docx": {
-      const result = await mammoth.extractRawText({
-        path: file.path,
-      });
+      try {
+        const result = await mammoth.extractRawText({
+          path: file.path,
+        });
 
-      return result.value;
+        return result.value;
+      } catch (err) {
+        console.error("DOCX Parse Error:", err);
+
+        return "[Unable to read DOCX]";
+      }
     }
 
     case "csv": {

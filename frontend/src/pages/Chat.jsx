@@ -512,17 +512,9 @@ formData.append(
       );
 
       const data = await response.json();
-if (
-  data.modelUsed &&
-  data.modelUsed !== settings.model
-) {
-  toast(
-    `⚠️ ${settings.model} was busy. Astra used ${data.modelUsed} instead.`,
-    {
-      icon: "🤖",
-    }
-  );
-}
+// Model fallback toast will be handled
+// from the final streaming event.
+
       // =========================
       // Update Uploaded Files
       // =========================
@@ -573,10 +565,11 @@ if (
       // Stream Response
       // =========================
 
-      await streamMessage(
-  data.reply,
+    await streamMessage(
+  currentChat.sessionId,
   aiId,
-  newMessages
+  newMessages,
+  formData
 );
 
 if (
