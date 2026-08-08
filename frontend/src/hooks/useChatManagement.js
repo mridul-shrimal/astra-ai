@@ -266,7 +266,7 @@ const handleSelectChat = (chatId) => {
   // =========================
 
 const handleDeleteChat = async (chatId) => {
-  console.log("🗑️ Delete clicked:", chatId);
+ 
 
   const chat = chats.find(
     (chat) => chat.id === chatId
@@ -277,8 +277,7 @@ const handleDeleteChat = async (chatId) => {
       conversation.session_id === chatId
   );
 
-  console.log("💻 Frontend chat:", chat);
-  console.log("🗄️ Backend chat:", backendChat);
+
 
   // At least one chat must remain
   const totalChats =
@@ -319,10 +318,7 @@ const handleDeleteChat = async (chatId) => {
     // =========================
 
 if (backendChat) {
-  console.log(
-    "🗑️ Deleting backend conversation:",
-    backendChat.session_id
-  );
+  
 
   const response = await fetch(
     `http://localhost:5000/api/conversations/${backendChat.session_id}`,
@@ -333,10 +329,7 @@ if (backendChat) {
 
   const data = await response.json();
 
-  console.log(
-    "🗄️ Delete response:",
-    data
-  );
+  
 
   if (!response.ok || !data.success) {
     throw new Error(

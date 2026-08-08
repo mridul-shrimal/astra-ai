@@ -51,10 +51,6 @@ searchRef,
   onRenameTag,
   onToggleLock,
 }) {
-  console.log(
-    "💬 Sidebar Backend Conversations:",
-    backendConversations
-  );
 
   const { theme } = useTheme();
   const isLight = theme === "light";

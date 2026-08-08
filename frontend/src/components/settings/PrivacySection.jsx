@@ -89,25 +89,21 @@ const handleRemovePin = () => {
 alert("App PIN removed.");
 };
 const handleExportData = () => {
-  const exportData = {
-    exportedAt: new Date().toISOString(),
+const exportData = {
+  exportedAt: new Date().toISOString(),
 
-    settings: JSON.parse(
-      localStorage.getItem("astra-settings") || "{}"
-    ),
+  settings: JSON.parse(
+    localStorage.getItem("astra-settings") || "{}"
+  ),
 
-    chats: JSON.parse(
-      localStorage.getItem("astra-chats") || "[]"
-    ),
+  folders: JSON.parse(
+    localStorage.getItem("astra-folders") || "[]"
+  ),
 
-    folders: JSON.parse(
-      localStorage.getItem("astra-folders") || "[]"
-    ),
-
-    tags: JSON.parse(
-      localStorage.getItem("astra-tags") || "[]"
-    ),
-  };
+  tags: JSON.parse(
+    localStorage.getItem("astra-tags") || "[]"
+  ),
+};
 
   const blob = new Blob(
     [JSON.stringify(exportData, null, 2)],
