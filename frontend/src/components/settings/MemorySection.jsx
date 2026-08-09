@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSettings } from "../../context/SettingsContext";
 import { Brain, Trash2, Database } from "lucide-react";
 import SettingsSection from "./SettingsSection";
-
+import api from "../../services/api";
 function MemorySection() {
 const {
   memoryEnabled,
@@ -17,17 +17,18 @@ const [memoryCount, setMemoryCount] = useState(0);
 
 const loadMemoryCount = async () => {
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/memory/count/all"
-    );
+    const response = await api.get("/memory/count/all");
 
-    const data = await response.json();
+    const data = response.data;
 
     if (data.success) {
       setMemoryCount(data.count);
     }
   } catch (error) {
-    console.error("Failed to load memory count:", error);
+    console.error(
+      "Failed to load memory count:",
+      error
+    );
   }
 };
 
@@ -35,7 +36,7 @@ useEffect(() => {
   loadMemoryCount();
 }, []);
 
-  const clearMemory = async () => {
+const clearMemory = async () => {
   const confirmDelete = window.confirm(
     "Are you sure you want to clear all memories?"
   );
@@ -43,25 +44,24 @@ useEffect(() => {
   if (!confirmDelete) return;
 
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/memory",
-      {
-        method: "DELETE",
-      }
-    );
+    const response = await api.delete("/memory");
 
-    const data = await response.json();
+    const data = response.data;
 
     if (data.success) {
       await loadMemoryCount();
 
-alert("🧠 All memories cleared successfully.");
+      alert(
+        "🧠 All memories cleared successfully."
+      );
     }
   } catch (error) {
-    console.error("Failed to clear memory:", error);
+    console.error(
+      "Failed to clear memory:",
+      error
+    );
   }
 };
-
   return (
     <SettingsSection
       icon={Brain}

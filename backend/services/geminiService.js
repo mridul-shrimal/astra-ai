@@ -6,12 +6,11 @@ async function generateResponse(
   prompt,
   useMemory = true,
   model = process.env.OPENROUTER_MODEL,
-  temperature = 0.7
-){
-  try {
-    // Get memory only for this session
-  const currentUser = "default_user";
+  temperature = 0.7,
+  currentUser = "default_user"
+) {
 
+  try {
 const memory = useMemory
   ? await getMemoryContext(currentUser)
   : "";
@@ -209,11 +208,10 @@ async function generateResponseStream(
   onChunk,
   useMemory = true,
   model = process.env.OPENROUTER_MODEL,
-  temperature = 0.7
+  temperature = 0.7,
+  currentUser = "default_user"
 ) {
   try {
-    const currentUser = "default_user";
-
     const memory = useMemory
       ? await getMemoryContext(currentUser)
       : "";

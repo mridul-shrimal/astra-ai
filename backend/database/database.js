@@ -4,6 +4,7 @@ const path = require("path");
 
 // Path to database file
 const dbPath = path.join(__dirname, "astra.db");
+console.log("📁 SQLite database path:", dbPath);
 
 // Create/Open database
 const db = new sqlite3.Database(dbPath, (err) => {

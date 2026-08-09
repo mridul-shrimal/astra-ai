@@ -1,5 +1,5 @@
 import toast from "react-hot-toast";
-
+import api from "../services/api";
 function useChatManagement({
   chats,
   backendConversations,
@@ -14,47 +14,104 @@ function useChatManagement({
   // =========================
 
 const handleRenameChat = async (chatId) => {
-  const chat = chats.find((c) => c.id === chatId);
-
-  const newTitle = prompt(
-    "Rename chat",
-    chat?.title || ""
+  // Find chat in frontend state first
+  let chat = chats.find(
+    (c) =>
+      c.id === chatId ||
+      c.sessionId === chatId
   );
 
-  if (!newTitle || !newTitle.trim()) return;
+  // If not found, look in backend conversations
+  const backendChat =
+    backendConversations?.find(
+      (conversation) =>
+        conversation.session_id === chatId
+    );
+
+  // Build a usable chat object
+  if (!chat && backendChat) {
+    chat = {
+      id: backendChat.session_id,
+      sessionId: backendChat.session_id,
+      title: backendChat.title,
+    };
+  }
+
+  if (!chat) {
+    console.error(
+      "❌ Rename failed: Chat not found",
+      {
+        chatId,
+        chats,
+        backendConversations,
+      }
+    );
+
+    toast.error("Chat not found.");
+    return;
+  }
+
+  const sessionId =
+    chat.sessionId || chat.id;
+
+  if (!sessionId) {
+    toast.error(
+      "Unable to rename this chat."
+    );
+    return;
+  }
+
+  const newTitle = window.prompt(
+    "Rename chat",
+    chat.title || ""
+  );
+
+  if (!newTitle || !newTitle.trim()) {
+    return;
+  }
 
   const title = newTitle.trim();
 
   try {
-    const response = await fetch(
-      `http://localhost:5000/api/conversations/${chat.sessionId}`,
+    const response = await api.put(
+      `/conversations/${sessionId}`,
       {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-        }),
+        title,
       }
     );
 
-    const data = await response.json();
+    const data = response.data;
 
     if (!data.success) {
       throw new Error(
-        data.message || "Failed to rename conversation"
+        data.message ||
+          "Failed to rename conversation"
       );
     }
 
+    // Update frontend chats
     setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
+      prev.map((item) =>
+        item.id === chatId ||
+        item.sessionId === chatId ||
+        item.sessionId === sessionId
           ? {
-              ...chat,
+              ...item,
               title,
             }
-          : chat
+          : item
+      )
+    );
+
+    // Update backend conversation state
+    setBackendConversations((prev) =>
+      prev.map((conversation) =>
+        conversation.session_id === sessionId
+          ? {
+              ...conversation,
+              title,
+            }
+          : conversation
       )
     );
 
@@ -65,7 +122,11 @@ const handleRenameChat = async (chatId) => {
       error
     );
 
-    toast.error("Failed to rename chat.");
+    toast.error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to rename chat."
+    );
   }
 };
 
@@ -320,18 +381,15 @@ const handleDeleteChat = async (chatId) => {
 if (backendChat) {
   
 
-  const response = await fetch(
-    `http://localhost:5000/api/conversations/${backendChat.session_id}`,
-    {
-      method: "DELETE",
-    }
-  );
+  const response = await api.delete(
+  `/conversations/${backendChat.session_id}`
+);
 
-  const data = await response.json();
+const data = response.data;
 
   
 
-  if (!response.ok || !data.success) {
+  if (!data.success) {
     throw new Error(
       data.message ||
         "Failed to delete conversation"

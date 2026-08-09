@@ -1,4 +1,4 @@
-
+import supabase from "../config/supabase";
 function useChatStream({
   updateCurrentMessages,
   stopGenerationRef,
@@ -23,13 +23,20 @@ const streamMessage = async (
 
     stopGenerationRef.current = false;
 
-    const response = await fetch(
-      "http://localhost:5000/api/chat/stream",
-      {
-        method: "POST",
-        body: requestData,
-      }
-    );
+    const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const response = await fetch(
+  "http://localhost:5000/api/chat/stream",
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session?.access_token}`,
+    },
+    body: requestData,
+  }
+);
 
     if (!response.ok) {
       throw new Error(

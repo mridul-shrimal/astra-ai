@@ -5,6 +5,7 @@ import { useSettings } from "../context/SettingsContext";
 import { Copy } from "lucide-react";
 import { toast } from "react-hot-toast";
 import EditMemoryModal from "../components/memory/EditMemoryModal";
+import api from "../services/api";
 import { Edit } from "lucide-react";
 
 function Memory() {
@@ -23,23 +24,26 @@ const {
 } = useSettings();
 
 const isLight = theme === "light";
-  const loadMemories = async () => {
-    try {
-      setLoading(true);
 
-      const response = await fetch("http://localhost:5000/api/memory");
-      const data = await response.json();
+const loadMemories = async () => {
+  try {
+    setLoading(true);
 
-      if (data.success) {
-        setMemories(data.memories || []);
-      }
-    } catch (error) {
-      console.error("Failed to load memories:", error);
-    } finally {
-      setLoading(false);
+    const response = await api.get("/memory");
+    const data = response.data;
+
+    if (data.success) {
+      setMemories(data.memories || []);
     }
-  };
-
+  } catch (error) {
+    console.error(
+      "Failed to load memories:",
+      error
+    );
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
     loadMemories();
   }, []);
@@ -52,11 +56,9 @@ const isLight = theme === "light";
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch("http://localhost:5000/api/memory", {
-        method: "DELETE",
-      });
+     const response = await api.delete("/memory");
 
-      const data = await response.json();
+const data = response.data;
 
       if (data.success) {
   setMemories([]);
@@ -153,21 +155,15 @@ const copyMemory = async (memory) => {
 
 const handleSaveMemory = async (updatedMemory) => {
   try {
-    const response = await fetch(
-      `http://localhost:5000/api/memory/item/${updatedMemory.id}`,
+    const response = await api.put(
+      `/memory/item/${updatedMemory.id}`,
       {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_message: updatedMemory.user_message,
-          ai_response: updatedMemory.ai_response,
-        }),
+        user_message: updatedMemory.user_message,
+        ai_response: updatedMemory.ai_response,
       }
     );
 
-    const data = await response.json();
+    const data = response.data;
 
     if (data.success) {
       toast.success("Memory updated!");
@@ -560,18 +556,15 @@ const categories = [
         if (!confirmDelete) return;
 
         try {
-          const response = await fetch(
-            `http://localhost:5000/api/memory/item/${memory.id}`,
-            {
-              method: "DELETE",
-            }
-          );
+          const response = await api.delete(
+  `/memory/item/${memory.id}`
+);
 
-          const data = await response.json();
+const data = response.data;
 
-          if (data.success) {
-            await loadMemories();
-          }
+if (data.success) {
+  await loadMemories();
+}
         } catch (error) {
           console.error(error);
         }

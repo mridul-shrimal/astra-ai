@@ -1,5 +1,8 @@
+const requireAuth = require("../middleware/authMiddleware");
 const express = require("express");
 const router = express.Router();
+
+router.use(requireAuth);
 
 const {
   getAllConversations,

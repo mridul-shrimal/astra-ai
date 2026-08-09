@@ -38,7 +38,10 @@ function Login() {
     try {
       const res = await api.post("/auth/login", form);
 
-      login(res.data.data.user, res.data.data.session);
+      await login(
+  res.data.data.user,
+  res.data.data.session
+);
 
       toast.success("Login Successful!");
 

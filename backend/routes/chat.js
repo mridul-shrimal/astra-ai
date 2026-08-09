@@ -1,5 +1,10 @@
 const express = require("express");
 const router = express.Router();
+
+const requireAuth = require("../middleware/authMiddleware");
+
+router.use(requireAuth);
+
 const upload = require("../middleware/uploadMiddleware");
 const multer = require("multer");
 const extractText = require("../utils/extractText");
@@ -301,7 +306,7 @@ ${message || "Summarize all uploaded documents."}
 
     // Default session if none is provided
     const currentSession = sessionId || "default";
-const currentUser = "default_user";
+const currentUser = req.user.id;
 
 // Create conversation if it does not exist
 const existingConversation = await getConversation(
@@ -376,7 +381,8 @@ const aiResult = await generateResponse(
   useMemory === "true" &&
     !(req.files && req.files.length),
   model,
-  Number(temperature)
+  Number(temperature),
+  currentUser
 );
 
 const aiReply = aiResult.content;

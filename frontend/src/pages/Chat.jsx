@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
+import api from "../services/api";
 import notificationSound from "../assets/sounds/notification.mp3";
 import useExportChat from "../hooks/useChatExport";
 import useChatStream from "../hooks/useChatStream";
@@ -54,11 +55,9 @@ function Chat() {
   useEffect(() => {
     const loadConversations = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/conversations"
-        );
+       const response = await api.get("/conversations");
 
-        const data = await response.json();
+      const data = response.data;
 
         setBackendConversations(
           data.success ? data.conversations : []
@@ -186,11 +185,11 @@ useEffect(() => {
 
   const loadMessages = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/conversations/${currentChatId}/messages`
+        const response = await api.get(
+        `/conversations/${currentChatId}/messages`
       );
 
-      const data = await response.json();
+      const data = response.data;
 
       if (!data.success) return;
 
@@ -503,16 +502,14 @@ formData.append(
         userMessage,
       ]);
 
-      const response = await fetch(
-        "http://localhost:5000/api/chat",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await api.post(
+  "/chat",
+  formData
+);
 
-      const data = await response.json();
-      if (!response.ok || data.success === false) {
+const data = response.data;
+
+if (data.success === false) {
   const backendError =
     data.reply ||
     "❌ Astra could not process your request.";
@@ -683,22 +680,15 @@ setIsGenerating(false);
 
     try {
       // Request regenerated response
-      const response = await fetch(
-        "http://localhost:5000/api/chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            message: userMessage.message,
-            sessionId: currentChat.sessionId,
-          }),
-        }
-      );
+     const response = await api.post(
+  "/chat",
+  {
+    message: userMessage.message,
+    sessionId: currentChat.sessionId,
+  }
+);
 
-      const data = await response.json();
+const data = response.data;
 
     
       setIsTyping(false);
@@ -776,17 +766,9 @@ const handleNewChat = () => {
 
 const handleCreateChatWithModel = async () => {
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/conversations",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await api.post("/conversations");
 
-    const data = await response.json();
+    const data = response.data;
 
     if (!data.success) {
       throw new Error(
@@ -809,8 +791,8 @@ const handleCreateChatWithModel = async () => {
     setChats((prev) => [newChat, ...prev]);
 
     setCurrentChatId(
-  data.conversation.session_id
-);
+      data.conversation.session_id
+    );
 
     setModelModalOpen(false);
 
@@ -821,7 +803,11 @@ const handleCreateChatWithModel = async () => {
       error
     );
 
-    toast.error("Failed to create new chat.");
+    toast.error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to create new chat."
+    );
   }
 };
 
