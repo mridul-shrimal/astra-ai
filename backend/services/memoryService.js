@@ -41,19 +41,24 @@ function getRecentMemories(userId, limit = 10) {
 /**
  * Get all memories
  */
-function getAllMemories(limit = 500) {
+function getAllMemories(userId, limit = 500) {
   return new Promise((resolve, reject) => {
     const query = `
       SELECT *
       FROM memories
+      WHERE user_id = ?
       ORDER BY created_at DESC
       LIMIT ?
     `;
 
-    db.all(query, [limit], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
+    db.all(
+      query,
+      [userId, limit],
+      (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      }
+    );
   });
 }
 
@@ -145,11 +150,15 @@ function clearMemories(userId) {
 /**
  * Count all stored memories
  */
-function getMemoryCount() {
+function getMemoryCount(userId) {
   return new Promise((resolve, reject) => {
     db.get(
-      `SELECT COUNT(*) AS count FROM memories`,
-      [],
+      `
+        SELECT COUNT(*) AS count
+        FROM memories
+        WHERE user_id = ?
+      `,
+      [userId],
       (err, row) => {
         if (err) reject(err);
         else resolve(row.count);
@@ -161,32 +170,64 @@ function getMemoryCount() {
 /**
  * Clear all memories
  */
-function clearAllMemories() {
+function clearAllMemories(userId) {
   return new Promise((resolve, reject) => {
-    db.run(`DELETE FROM memories`, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
+    db.run(
+      `DELETE FROM memories WHERE user_id = ?`,
+      [userId],
+      function (err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve();
+      }
+    );
   });
 }
 
 /**
  * Update one memory
  */
-function updateMemory(id, userMessage, aiResponse) {
+function updateMemory(
+  id,
+  userId,
+  userMessage,
+  aiResponse
+) {
   return new Promise((resolve, reject) => {
     db.run(
       `
-      UPDATE memories
-      SET
-        user_message = ?,
-        ai_response = ?
-      WHERE id = ?
+        UPDATE memories
+        SET
+          user_message = ?,
+          ai_response = ?
+        WHERE id = ?
+          AND user_id = ?
       `,
-      [userMessage, aiResponse, id],
-      (err) => {
-        if (err) reject(err);
-        else resolve();
+      [
+        userMessage,
+        aiResponse,
+        id,
+        userId,
+      ],
+      function (err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        if (this.changes === 0) {
+          reject(
+            new Error(
+              "Memory not found or access denied."
+            )
+          );
+          return;
+        }
+
+        resolve();
       }
     );
   });
@@ -195,14 +236,31 @@ function updateMemory(id, userMessage, aiResponse) {
 /**
  * Delete one memory
  */
-function deleteMemory(id) {
+function deleteMemory(id, userId) {
   return new Promise((resolve, reject) => {
     db.run(
-      `DELETE FROM memories WHERE id = ?`,
-      [id],
-      (err) => {
-        if (err) reject(err);
-        else resolve();
+      `
+        DELETE FROM memories
+        WHERE id = ?
+          AND user_id = ?
+      `,
+      [id, userId],
+      function (err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        if (this.changes === 0) {
+          reject(
+            new Error(
+              "Memory not found or access denied."
+            )
+          );
+          return;
+        }
+
+        resolve();
       }
     );
   });

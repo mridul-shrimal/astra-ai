@@ -50,26 +50,43 @@ router.post(
         useMemory,
       } = req.body;
 
-      let currentSession = sessionId;
       const currentUser = req.user.id;
 
-// Create conversation if needed
-if (!currentSession) {
-  currentSession = require("crypto")
-    .randomUUID();
+      let currentSession = sessionId;
 
-  await createConversation(
-    currentSession
-  );
+      // Create conversation if needed
+      if (!currentSession) {
+        currentSession = require("crypto").randomUUID();
 
-  console.log(
-    `💬 Created streaming conversation: ${currentSession}`
-  );
-} else {
-  await touchConversation(
-    currentSession
-  );
-}
+        await createConversation(
+          currentSession,
+          "New Chat",
+          currentUser
+        );
+
+        console.log(
+          `💬 Created streaming conversation: ${currentSession} for user: ${currentUser}`
+        );
+      } else {
+        // Verify this conversation belongs to the authenticated user
+        const existingConversation =
+          await getConversation(
+            currentSession,
+            currentUser
+          );
+
+        if (!existingConversation) {
+          return res.status(404).json({
+            success: false,
+            message: "Conversation not found.",
+          });
+        }
+
+        await touchConversation(
+          currentSession,
+          currentUser
+        );
+      }
 
       // Extract uploaded files
       let documentText = "";
@@ -110,10 +127,12 @@ ${message || "Summarize all uploaded documents."}
         "Content-Type",
         "text/event-stream"
       );
+
       res.setHeader(
         "Cache-Control",
         "no-cache, no-transform"
       );
+
       res.setHeader(
         "Connection",
         "keep-alive"
@@ -126,25 +145,25 @@ ${message || "Summarize all uploaded documents."}
       let fullResponse = "";
 
       const aiResult =
-  await generateResponseStream(
-    currentSession,
-    finalPrompt,
-    (chunk) => {
-      fullResponse += chunk;
+        await generateResponseStream(
+          currentSession,
+          finalPrompt,
+          (chunk) => {
+            fullResponse += chunk;
 
-      res.write(
-        `data: ${JSON.stringify({
-          type: "chunk",
-          content: chunk,
-        })}\n\n`
-      );
-    },
-    useMemory === "true" &&
-      !(req.files && req.files.length),
-    model,
-    Number(temperature),
-    currentUser
-  );
+            res.write(
+              `data: ${JSON.stringify({
+                type: "chunk",
+                content: chunk,
+              })}\n\n`
+            );
+          },
+          useMemory === "true" &&
+            !(req.files && req.files.length),
+          model,
+          Number(temperature),
+          currentUser
+        );
 
       // Save messages AFTER streaming completes
       await saveMessage(
@@ -306,27 +325,41 @@ ${message || "Summarize all uploaded documents."}
   });
 }
 
-    // Default session if none is provided
-    const currentSession = sessionId || "default";
 const currentUser = req.user.id;
 
-// Create conversation if it does not exist
-const existingConversation = await getConversation(
-  currentSession
-);
+let currentSession = sessionId;
 
-if (!existingConversation) {
+if (!currentSession) {
+  currentSession = require("crypto").randomUUID();
+
   await createConversation(
     currentSession,
-    "New Chat"
+    "New Chat",
+    currentUser
   );
 
   console.log(
-    `💬 Created conversation: ${currentSession}`
+    `💬 Created conversation: ${currentSession} for user: ${currentUser}`
   );
 } else {
-  await touchConversation(currentSession);
-} 
+  const existingConversation =
+    await getConversation(
+      currentSession,
+      currentUser
+    );
+
+  if (!existingConversation) {
+    return res.status(404).json({
+      success: false,
+      message: "Conversation not found.",
+    });
+  }
+
+  await touchConversation(
+    currentSession,
+    currentUser
+  );
+}
 
 let useWebSearch = false;
 let webSearchResults = [];

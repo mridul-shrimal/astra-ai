@@ -8,16 +8,28 @@ const api = axios.create({
   },
 });
 
-api.interceptors.request.use(async (config) => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+api.interceptors.request.use(
+  async (config) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`;
+    if (session?.access_token) {
+      config.headers.Authorization =
+        `Bearer ${session.access_token}`;
+    }
+
+console.log(
+  "🌐 API REQUEST:",
+  config.method?.toUpperCase(),
+  config.baseURL + config.url
+);
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-
-  return config;
-});
+);
 
 export default api;

@@ -19,7 +19,17 @@ const {
  */
 router.get("/", async (req, res) => {
   try {
-    const conversations = await getAllConversations();
+    console.log("📥 GET /api/conversations reached");
+    console.log("🔐 Authenticated user:", req.user?.id);
+
+    const conversations = await getAllConversations(
+      req.user.id
+    );
+
+    console.log(
+      "💬 Conversations found:",
+      conversations.length
+    );
 
     res.json({
       success: true,
@@ -28,7 +38,7 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error(
       "❌ Get Conversations Error:",
-      error.message
+      error
     );
 
     res.status(500).json({
@@ -39,50 +49,23 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * Get one conversation
- */
-router.get("/:sessionId", async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-
-    const conversation = await getConversation(sessionId);
-
-    if (!conversation) {
-      return res.status(404).json({
-        success: false,
-        message: "Conversation not found.",
-      });
-    }
-
-    res.json({
-      success: true,
-      conversation,
-    });
-  } catch (error) {
-    console.error(
-      "❌ Get Conversation Error:",
-      error.message
-    );
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to get conversation.",
-    });
-  }
-});
-
-/**
  * Create new conversation
  */
 router.post("/", async (req, res) => {
   try {
     const { randomUUID } = require("crypto");
-
-    const { createConversation } = require("../services/conversationService");
+    const {
+      createConversation,
+    } = require("../services/conversationService");
 
     const sessionId = randomUUID();
+    const userId = req.user.id;
 
-    await createConversation(sessionId);
+    await createConversation(
+      sessionId,
+      "New Chat",
+      userId
+    );
 
     res.status(201).json({
       success: true,
@@ -103,13 +86,27 @@ router.post("/", async (req, res) => {
     });
   }
 });
-
 /**
  * Get all messages for a conversation
  */
 router.get("/:sessionId/messages", async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const userId = req.user.id;
+
+    // First verify that this conversation belongs to the user
+    const conversation = await getConversation(
+      sessionId,
+      userId
+    );
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found.",
+        messages: [],
+      });
+    }
 
     const messages = await getMessages(sessionId);
 
@@ -137,6 +134,7 @@ router.put("/:sessionId", async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { title } = req.body;
+    const userId = req.user.id;
 
     if (!title || !title.trim()) {
       return res.status(400).json({
@@ -147,7 +145,8 @@ router.put("/:sessionId", async (req, res) => {
 
     await renameConversation(
       sessionId,
-      title.trim()
+      title.trim(),
+      userId
     );
 
     res.json({
@@ -159,6 +158,16 @@ router.put("/:sessionId", async (req, res) => {
       "❌ Rename Conversation Error:",
       error.message
     );
+
+    if (
+      error.message ===
+      "Conversation not found or access denied."
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found.",
+      });
+    }
 
     res.status(500).json({
       success: false,
@@ -173,8 +182,12 @@ router.put("/:sessionId", async (req, res) => {
 router.delete("/:sessionId", async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const userId = req.user.id;
 
-    await deleteConversation(sessionId);
+    await deleteConversation(
+      sessionId,
+      userId
+    );
 
     res.json({
       success: true,
@@ -185,6 +198,16 @@ router.delete("/:sessionId", async (req, res) => {
       "❌ Delete Conversation Error:",
       error.message
     );
+
+    if (
+      error.message ===
+      "Conversation not found or access denied."
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found.",
+      });
+    }
 
     res.status(500).json({
       success: false,

@@ -3,33 +3,42 @@ const db = require("../database/database");
 /**
  * Create a conversation
  */
-function createConversation(sessionId, title = "New Chat") {
+function createConversation(
+  sessionId,
+  title = "New Chat",
+  userId = null
+) {
   return new Promise((resolve, reject) => {
     const query = `
       INSERT INTO conversations
-      (session_id, title)
-      VALUES (?, ?)
+      (session_id, title, user_id)
+      VALUES (?, ?, ?)
     `;
 
-    db.run(query, [sessionId, title], function (err) {
-      if (err) reject(err);
-      else resolve(this.lastID);
-    });
+    db.run(
+      query,
+      [sessionId, title, userId],
+      function (err) {
+        if (err) reject(err);
+        else resolve(this.lastID);
+      }
+    );
   });
 }
 
 /**
  * Get all conversations
  */
-function getAllConversations() {
+function getAllConversations(userId) {
   return new Promise((resolve, reject) => {
     const query = `
       SELECT *
       FROM conversations
+      WHERE user_id = ?
       ORDER BY updated_at DESC
     `;
 
-    db.all(query, [], (err, rows) => {
+    db.all(query, [userId], (err, rows) => {
       if (err) reject(err);
       else resolve(rows);
     });
@@ -39,16 +48,17 @@ function getAllConversations() {
 /**
  * Get one conversation
  */
-function getConversation(sessionId) {
+function getConversation(sessionId, userId) {
   return new Promise((resolve, reject) => {
     db.get(
       `
-      SELECT *
-      FROM conversations
-      WHERE session_id = ?
-      LIMIT 1
+        SELECT *
+        FROM conversations
+        WHERE session_id = ?
+          AND user_id = ?
+        LIMIT 1
       `,
-      [sessionId],
+      [sessionId, userId],
       (err, row) => {
         if (err) reject(err);
         else resolve(row || null);
@@ -60,18 +70,32 @@ function getConversation(sessionId) {
 /**
  * Rename conversation
  */
-function renameConversation(sessionId, title) {
+function renameConversation(sessionId, title, userId) {
   return new Promise((resolve, reject) => {
     db.run(
       `
-      UPDATE conversations
-      SET title = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE session_id = ?
+        UPDATE conversations
+        SET title = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE session_id = ?
+          AND user_id = ?
       `,
-      [title, sessionId],
-      (err) => {
-        if (err) reject(err);
-        else resolve();
+      [title, sessionId, userId],
+      function (err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        if (this.changes === 0) {
+          reject(
+            new Error(
+              "Conversation not found or access denied."
+            )
+          );
+          return;
+        }
+
+        resolve();
       }
     );
   });
@@ -80,18 +104,32 @@ function renameConversation(sessionId, title) {
 /**
  * Update conversation timestamp
  */
-function touchConversation(sessionId) {
+function touchConversation(sessionId, userId) {
   return new Promise((resolve, reject) => {
     db.run(
       `
-      UPDATE conversations
-      SET updated_at = CURRENT_TIMESTAMP
-      WHERE session_id = ?
+        UPDATE conversations
+        SET updated_at = CURRENT_TIMESTAMP
+        WHERE session_id = ?
+          AND user_id = ?
       `,
-      [sessionId],
-      (err) => {
-        if (err) reject(err);
-        else resolve();
+      [sessionId, userId],
+      function (err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        if (this.changes === 0) {
+          reject(
+            new Error(
+              "Conversation not found or access denied."
+            )
+          );
+          return;
+        }
+
+        resolve();
       }
     );
   });
@@ -100,11 +138,15 @@ function touchConversation(sessionId) {
 /**
  * Delete conversation
  */
-function deleteConversation(sessionId) {
+function deleteConversation(sessionId, userId) {
   return new Promise((resolve, reject) => {
     db.run(
-      `DELETE FROM conversations WHERE session_id = ?`,
-      [sessionId],
+      `
+        DELETE FROM conversations
+        WHERE session_id = ?
+          AND user_id = ?
+      `,
+      [sessionId, userId],
       function (err) {
         if (err) {
           console.error(
@@ -113,6 +155,15 @@ function deleteConversation(sessionId) {
           );
 
           reject(err);
+          return;
+        }
+
+        if (this.changes === 0) {
+          reject(
+            new Error(
+              "Conversation not found or access denied."
+            )
+          );
           return;
         }
 

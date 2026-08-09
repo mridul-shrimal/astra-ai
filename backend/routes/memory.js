@@ -21,7 +21,11 @@ const {
 // Get ALL memories
 router.get("/", async (req, res) => {
   try {
-    const memories = await getAllMemories();
+    const userId = req.user.id;
+
+    const memories = await getAllMemories(
+      userId
+    );
 
     res.json({
       success: true,
@@ -29,7 +33,10 @@ router.get("/", async (req, res) => {
       memories,
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "❌ Get Memories Error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -37,17 +44,25 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
 // Total memory count
 router.get("/count/all", async (req, res) => {
   try {
-    const count = await getMemoryCount();
+    const userId = req.user.id;
+
+    const count = await getMemoryCount(
+      userId
+    );
 
     res.json({
       success: true,
       count,
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "❌ Get Memory Count Error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -60,8 +75,12 @@ router.get("/count/all", async (req, res) => {
 router.get("/:sessionId", async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const userId = req.user.id;
 
-    const memories = await getRecentMemories(sessionId, 50);
+    const memories = await getRecentMemories(
+      userId,
+      50
+    );
 
     res.json({
       success: true,
@@ -69,7 +88,10 @@ router.get("/:sessionId", async (req, res) => {
       memories,
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "❌ Get Chat Memories Error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -82,9 +104,11 @@ router.get("/:sessionId", async (req, res) => {
 router.put("/item/:id", async (req, res) => {
   try {
     const { user_message, ai_response } = req.body;
+    const userId = req.user.id;
 
     await updateMemory(
       req.params.id,
+      userId,
       user_message,
       ai_response
     );
@@ -94,7 +118,10 @@ router.put("/item/:id", async (req, res) => {
       message: "Memory updated.",
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "❌ Update Memory Error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -106,14 +133,22 @@ router.put("/item/:id", async (req, res) => {
 // Delete ONE memory
 router.delete("/item/:id", async (req, res) => {
   try {
-    await deleteMemory(req.params.id);
+    const userId = req.user.id;
+
+    await deleteMemory(
+      req.params.id,
+      userId
+    );
 
     res.json({
       success: true,
       message: "Memory deleted.",
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "❌ Delete Memory Error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -125,14 +160,19 @@ router.delete("/item/:id", async (req, res) => {
 // Delete ALL memories
 router.delete("/", async (req, res) => {
   try {
-    await clearAllMemories();
+    const userId = req.user.id;
+
+    await clearAllMemories(userId);
 
     res.json({
       success: true,
       message: "All memories cleared.",
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "❌ Clear All Memories Error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -145,15 +185,19 @@ router.delete("/", async (req, res) => {
 router.delete("/:sessionId", async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const userId = req.user.id;
 
-    await clearMemories(sessionId);
+    await clearMemories(userId);
 
     res.json({
       success: true,
       message: "Chat memory cleared.",
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "❌ Clear Chat Memory Error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
