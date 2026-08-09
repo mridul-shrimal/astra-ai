@@ -7,16 +7,15 @@ async function generateResponse(
   useMemory = true,
   model = process.env.OPENROUTER_MODEL,
   temperature = 0.7,
-  currentUser = "default_user"
+  currentUser = null
 ) {
-
   try {
-const memory = useMemory
-  ? await getMemoryContext(currentUser)
-  : "";
+    const memory =
+      useMemory && currentUser
+        ? await getMemoryContext(currentUser)
+        : "";
 
-
-const fullPrompt = `
+    const fullPrompt = `
 You are Astra, a modern AI assistant similar to Claude.
 
 GENERAL RULES
@@ -209,12 +208,13 @@ async function generateResponseStream(
   useMemory = true,
   model = process.env.OPENROUTER_MODEL,
   temperature = 0.7,
-  currentUser = "default_user"
+  currentUser = null
 ) {
   try {
-    const memory = useMemory
-      ? await getMemoryContext(currentUser)
-      : "";
+    const memory =
+      useMemory && currentUser
+        ? await getMemoryContext(currentUser)
+        : "";
 
     const fullPrompt = `
 You are Astra, a modern AI assistant similar to Claude.

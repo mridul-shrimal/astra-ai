@@ -51,6 +51,7 @@ router.post(
       } = req.body;
 
       let currentSession = sessionId;
+      const currentUser = req.user.id;
 
 // Create conversation if needed
 if (!currentSession) {
@@ -125,24 +126,25 @@ ${message || "Summarize all uploaded documents."}
       let fullResponse = "";
 
       const aiResult =
-        await generateResponseStream(
-          currentSession,
-          finalPrompt,
-          (chunk) => {
-            fullResponse += chunk;
+  await generateResponseStream(
+    currentSession,
+    finalPrompt,
+    (chunk) => {
+      fullResponse += chunk;
 
-            res.write(
-              `data: ${JSON.stringify({
-                type: "chunk",
-                content: chunk,
-              })}\n\n`
-            );
-          },
-          useMemory === "true" &&
-            !(req.files && req.files.length),
-          model,
-          Number(temperature)
-        );
+      res.write(
+        `data: ${JSON.stringify({
+          type: "chunk",
+          content: chunk,
+        })}\n\n`
+      );
+    },
+    useMemory === "true" &&
+      !(req.files && req.files.length),
+    model,
+    Number(temperature),
+    currentUser
+  );
 
       // Save messages AFTER streaming completes
       await saveMessage(
