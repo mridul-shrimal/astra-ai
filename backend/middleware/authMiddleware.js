@@ -1,5 +1,3 @@
-const supabase = require("../config/supabase");
-
 const requireAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -11,14 +9,30 @@ const requireAuth = async (req, res, next) => {
       });
     }
 
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.substring(7);
 
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
+    console.log("🔐 AUTH HEADER RECEIVED");
+    console.log("🔑 TOKEN LENGTH:", token.length);
 
-    if (error || !user) {
+    const response = await fetch(
+      `${process.env.SUPABASE_URL}/auth/v1/user`,
+      {
+        method: "GET",
+        headers: {
+          apikey: process.env.SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const user = await response.json();
+
+    console.log("👤 SUPABASE RESPONSE STATUS:", response.status);
+    console.log("👤 SUPABASE USER:", user?.id || null);
+
+    if (!response.ok || !user?.id) {
+      console.log("❌ SUPABASE USER ERROR:", user);
+
       return res.status(401).json({
         success: false,
         message: "Invalid or expired session.",
@@ -29,7 +43,7 @@ const requireAuth = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("Auth middleware error:", error);
+    console.error("❌ Auth middleware error:", error);
 
     return res.status(401).json({
       success: false,

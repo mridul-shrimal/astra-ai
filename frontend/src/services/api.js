@@ -14,16 +14,22 @@ api.interceptors.request.use(
       data: { session },
     } = await supabase.auth.getSession();
 
+    console.log("🔐 PC SESSION:", !!session);
+    console.log(
+      "🔑 HAS ACCESS TOKEN:",
+      !!session?.access_token
+    );
+
     if (session?.access_token) {
       config.headers.Authorization =
         `Bearer ${session.access_token}`;
     }
 
-console.log(
-  "🌐 API REQUEST:",
-  config.method?.toUpperCase(),
-  config.baseURL + config.url
-);
+    console.log(
+      "🌐 API REQUEST:",
+      config.method?.toUpperCase(),
+      config.baseURL + config.url
+    );
 
     return config;
   },
