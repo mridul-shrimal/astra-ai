@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -7,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,283 +18,179 @@ import {
 import { supabase } from "./supabase";
 import api from "./api";
 
+import useAuth from "./hooks/useAuth";
+import useAuthActions from "./hooks/useAuthActions";
+import useConversations from "./hooks/useConversations";
+import useMessages from "./hooks/useMessages";
+import useChat from "./hooks/useChat";
+
 export default function App() {
+  // =========================================================
+  // AUTH INPUT
+  // =========================================================
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [session, setSession] = useState(null);
-const [messageText, setMessageText] = useState("");
-  const [conversations, setConversations] = useState([]);
-  const [loadingConversations, setLoadingConversations] = useState(false);
 
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const sendMessage = async () => {
-  const text = messageText.trim();
+  // =========================================================
+  // AUTH SESSION
+  // =========================================================
 
-  if (!text || !selectedConversation) {
-    return;
-  }
+  const {
+    session,
+    loading: authSessionLoading,
+  } = useAuth();
 
-  const assistantId = `assistant-${Date.now()}`;
+  // =========================================================
+  // AUTH ACTIONS
+  // =========================================================
 
-  try {
-    setMessageText("");
+  const {
+    login,
+    register,
+    authLoading,
+  } = useAuthActions();
 
-    const userMessage = {
-      id: `user-${Date.now()}`,
-      content: text,
-      role: "user",
-    };
+  // =========================================================
+  // CONVERSATIONS
+  // =========================================================
 
-    const assistantMessage = {
-      id: assistantId,
-      content: "",
-      role: "assistant",
-    };
+  const {
+    conversations,
+    setConversations,
+    selectedConversation,
+    setSelectedConversation,
+    loadingConversations,
+    loadConversations,
+  } = useConversations(session);
 
-    setMessages((current) => [
-      ...current,
-      userMessage,
-      assistantMessage,
-    ]);
+  // =========================================================
+  // MESSAGES
+  // =========================================================
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+  const {
+    messages,
+    setMessages,
+    loadingMessages,
+  } = useMessages(
+    session,
+    selectedConversation
+  );
 
-    if (!session?.access_token) {
-      throw new Error("No active Supabase session.");
-    }
+  // =========================================================
+  // CHAT
+  // =========================================================
 
-    const formData = new FormData();
+  const {
+    messageText,
+    setMessageText,
+    sendMessage,
+    isSending,
+  } = useChat({
+    session,
+    selectedConversation,
+    setMessages,
+  });
 
-    formData.append("message", text);
-    formData.append(
-      "sessionId",
-      selectedConversation.session_id
-    );
-    formData.append(
-      "model",
-      "mistralai/mistral-small-3.2-24b-instruct"
-    );
-    formData.append("temperature", "0.7");
-    formData.append("useMemory", "false");
-    formData.append("autoSaveMemory", "false");
-
-    console.log("🚀 Sending message to Astra...");
-
-    const response = await fetch(
-      `${api.defaults.baseURL}/chat/stream`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          Accept: "text/event-stream",
-        },
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-
-      console.log(
-        "❌ STREAM ERROR:",
-        response.status,
-        errorText
-      );
-
-      throw new Error(
-        `Streaming request failed: ${response.status}`
-      );
-    }
-    const responseText = await response.text();
-
-let currentResponse = "";
-
-const events = responseText.split("\n\n");
-
-for (const event of events) {
-  const line = event
-    .split("\n")
-    .find((line) =>
-      line.startsWith("data:")
-    );
-
-  if (!line) {
-    continue;
-  }
-
-  const data = line
-    .replace(/^data:\s*/, "")
-    .trim();
-
-  if (!data || data === "[DONE]") {
-    continue;
-  }
-
-  try {
-    const parsed = JSON.parse(data);
-
-    if (
-      parsed.type === "chunk" &&
-      parsed.content
-    ) {
-      currentResponse += parsed.content;
-    }
-
-    if (parsed.type === "error") {
-      throw new Error(
-        parsed.message ||
-          "AI response failed."
-      );
-    }
-  } catch (parseError) {
-    console.log(
-      "⚠️ SSE parse warning:",
-      parseError.message
-    );
-  }
-}
-
-setMessages((current) =>
-  current.map((msg) =>
-    msg.id === assistantId
-      ? {
-          ...msg,
-          content:
-            currentResponse ||
-            "Astra returned an empty response.",
-        }
-      : msg
-  )
-);
-
-console.log(
-  "✅ ASTRA RESPONSE:",
-  currentResponse
-);
-
-  } catch (error) {
-    console.log(
-      "❌ SEND MESSAGE ERROR:",
-      error.message
-    );
-
-    Alert.alert(
-      "Message failed",
-      error.message || "Could not send message."
-    );
-
-    setMessages((current) =>
-      current.filter(
-        (msg) => msg.id !== assistantId
-      )
-    );
-  }
-};
-  const [loadingMessages, setLoadingMessages] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) {
-        setSession(data.session);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (session) {
-      loadConversations();
-    } else {
-      setConversations([]);
-      setSelectedConversation(null);
-    }
-  }, [session]);
+  // =========================================================
+  // LOGIN
+  // =========================================================
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password.");
+    const result = await login(
+      email.trim(),
+      password
+    );
+
+    if (!result.success) {
+      Alert.alert(
+        "Login failed",
+        result.message || "Login failed."
+      );
+
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    console.log("✅ LOGIN SUCCESS");
 
-    if (error) {
-      Alert.alert("Login failed", error.message);
-    }
+    setPassword("");
   };
+
+  // =========================================================
+  // SIGNUP
+  // =========================================================
 
   const handleSignup = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password.");
+    const result = await register(
+      email.trim(),
+      password
+    );
+
+    if (!result.success) {
+      Alert.alert(
+        "Signup failed",
+        result.message || "Signup failed."
+      );
+
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      Alert.alert("Signup failed", error.message);
-    } else {
-      Alert.alert(
-        "Signup successful",
-        "Check your email if confirmation is enabled."
-      );
-    }
+    Alert.alert(
+      "Signup successful",
+      "Your account has been created. Please check your email if confirmation is required."
+    );
   };
+
+  // =========================================================
+  // LOGOUT
+  // =========================================================
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const loadConversations = async () => {
     try {
-      setLoadingConversations(true);
+      const { error } =
+        await supabase.auth.signOut();
 
-      const response = await api.get("/conversations");
+      if (error) {
+        throw error;
+      }
 
-      setConversations(response.data.conversations || []);
+      setSelectedConversation(null);
+      setMessages([]);
+      setEmail("");
+      setPassword("");
+
+      console.log("✅ LOGOUT SUCCESS");
     } catch (error) {
       console.log(
-        "LOAD CONVERSATIONS ERROR:",
-        error.response?.status,
-        error.response?.data || error.message
+        "❌ LOGOUT ERROR:",
+        error.message
       );
 
       Alert.alert(
-        "Error",
-        error.response?.data?.message ||
-          "Could not load conversations."
+        "Logout failed",
+        error.message || "Could not logout."
       );
-    } finally {
-      setLoadingConversations(false);
     }
   };
+
+  // =========================================================
+  // CREATE CONVERSATION
+  // =========================================================
 
   const createConversation = async () => {
     try {
-      const response = await api.post("/conversations");
+      const response = await api.post(
+        "/conversations"
+      );
 
-      const newConversation = response.data.conversation;
+      const newConversation =
+        response.data?.conversation;
+
+      if (!newConversation) {
+        throw new Error(
+          "Conversation was not returned by the server."
+        );
+      }
 
       setConversations((current) => [
         newConversation,
@@ -306,7 +202,8 @@ console.log(
       console.log(
         "CREATE CONVERSATION ERROR:",
         error.response?.status,
-        error.response?.data || error.message
+        error.response?.data ||
+          error.message
       );
 
       Alert.alert(
@@ -317,50 +214,47 @@ console.log(
     }
   };
 
-  const openConversation = async (conversation) => {
-    try {
-      setSelectedConversation(conversation);
-      setMessages([]);
-      setLoadingMessages(true);
+  // =========================================================
+  // OPEN CONVERSATION
+  // =========================================================
 
-      const response = await api.get(
-        `/conversations/${conversation.session_id}/messages`
-      );
-
-      setMessages(response.data.messages || []);
-    } catch (error) {
-      console.log(
-        "LOAD MESSAGES ERROR:",
-        error.response?.status,
-        error.response?.data || error.message
-      );
-
-      Alert.alert(
-        "Error",
-        error.response?.data?.message ||
-          "Could not load messages."
-      );
-    } finally {
-      setLoadingMessages(false);
-    }
+  const openConversation = (
+    conversation
+  ) => {
+    setSelectedConversation(conversation);
   };
 
-  const renderConversation = ({ item }) => {
+  // =========================================================
+  // RENDER CONVERSATION
+  // =========================================================
+
+  const renderConversation = ({
+    item,
+  }) => {
     return (
       <TouchableOpacity
         style={styles.conversation}
-        onPress={() => openConversation(item)}
+        onPress={() =>
+          openConversation(item)
+        }
       >
         <Text style={styles.conversationTitle}>
-          {item.title || "Untitled conversation"}
+          {item.title ||
+            "Untitled conversation"}
         </Text>
 
         <Text style={styles.conversationDate}>
-          {item.updated_at || item.created_at || ""}
+          {item.updated_at ||
+            item.created_at ||
+            ""}
         </Text>
       </TouchableOpacity>
     );
   };
+
+  // =========================================================
+  // RENDER MESSAGE
+  // =========================================================
 
   const renderMessage = ({ item }) => {
     const text =
@@ -371,110 +265,228 @@ console.log(
 
     return (
       <View style={styles.message}>
-        <Text style={styles.messageText}>{text}</Text>
+        <Text style={styles.messageText}>
+          {text}
+        </Text>
       </View>
     );
   };
 
-  if (session && selectedConversation) {
+  // =========================================================
+  // AUTH SESSION LOADING
+  // =========================================================
+
+  if (authSessionLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView
+      <SafeAreaView
+        style={styles.loadingContainer}
+      >
+        <ActivityIndicator size="large" />
+
+        <Text style={styles.loadingText}>
+          Loading Astra...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  // =========================================================
+  // CHAT SCREEN
+  // =========================================================
+
+  if (
+    session &&
+    selectedConversation
+  ) {
+    return (
+      <KeyboardAvoidingView
+        style={styles.chatContainer}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
+      >
+        <SafeAreaView
           style={styles.chatContainer}
-          behavior={
-            Platform.OS === "ios" ? "padding" : undefined
-          }
         >
+          {/* HEADER */}
+
           <View style={styles.chatHeader}>
             <Button
               title="← Back"
               onPress={() => {
-                setSelectedConversation(null);
+                setSelectedConversation(
+                  null
+                );
                 setMessages([]);
               }}
             />
 
-            <Text style={styles.chatTitle}>
-              {selectedConversation.title || "New Chat"}
+            <Text
+              style={styles.chatTitle}
+            >
+              {selectedConversation.title ||
+                "New Chat"}
             </Text>
 
-            <View style={{ width: 60 }} />
+            <View style={styles.headerSpacer} />
           </View>
+
+          {/* MESSAGES */}
 
           {loadingMessages ? (
             <View style={styles.loading}>
-              <ActivityIndicator size="large" />
+              <ActivityIndicator
+                size="large"
+              />
+
+              <Text
+                style={styles.loadingText}
+              >
+                Loading messages...
+              </Text>
             </View>
           ) : (
             <FlatList
               style={styles.messagesList}
               data={messages}
-              keyExtractor={(item, index) =>
-                String(item.id || index)
+              keyExtractor={(
+                item,
+                index
+              ) =>
+                String(
+                  item.id || index
+                )
               }
-              renderItem={renderMessage}
+              renderItem={
+                renderMessage
+              }
+              contentContainerStyle={
+                styles.messagesContent
+              }
               ListEmptyComponent={
-                <Text style={styles.empty}>
+                <Text
+                  style={styles.empty}
+                >
                   No messages yet.
                 </Text>
               }
             />
           )}
-          <View style={styles.inputRow}>
-  <TextInput
-    style={styles.messageInput}
-    placeholder="Message Astra..."
-    value={messageText}
-    onChangeText={setMessageText}
-    multiline
-  />
 
-  <TouchableOpacity
-    style={styles.sendButton}
-    onPress={sendMessage}
-  >
-    <Text style={styles.sendButtonText}>
-      Send
-    </Text>
-  </TouchableOpacity>
-</View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+          {/* INPUT */}
+
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.messageInput}
+              placeholder="Message Astra..."
+              value={messageText}
+              onChangeText={
+                setMessageText
+              }
+              multiline
+              editable={!isSending}
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                isSending &&
+                  styles.sendButtonDisabled,
+              ]}
+              onPress={sendMessage}
+              disabled={isSending}
+            >
+              {isSending ? (
+                <ActivityIndicator
+                  size="small"
+                />
+              ) : (
+                <Text
+                  style={
+                    styles.sendButtonText
+                  }
+                >
+                  Send
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     );
   }
 
+  // =========================================================
+  // LOGGED-IN HOME SCREEN
+  // =========================================================
+
   if (session) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView
+        style={styles.container}
+      >
+        {/* HEADER */}
+
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Astra AI</Text>
-            <Text style={styles.subtitle}>
+            <Text
+              style={styles.appTitle}
+            >
+              Astra AI
+            </Text>
+
+            <Text
+              style={styles.userEmail}
+            >
               {session.user.email}
             </Text>
           </View>
 
-          <Button title="Logout" onPress={handleLogout} />
+          <Button
+            title="Logout"
+            onPress={handleLogout}
+          />
         </View>
 
+        {/* CONVERSATIONS */}
+
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>
+          <Text
+            style={styles.sectionTitle}
+          >
             Your Conversations
           </Text>
 
           {loadingConversations ? (
-            <ActivityIndicator size="large" />
+            <View style={styles.loading}>
+              <ActivityIndicator
+                size="large"
+              />
+            </View>
           ) : (
             <FlatList
               data={conversations}
               keyExtractor={(item) =>
-                String(item.id || item.session_id)
+                String(
+                  item.id ||
+                    item.session_id
+                )
               }
-              renderItem={renderConversation}
-              refreshing={loadingConversations}
-              onRefresh={loadConversations}
+              renderItem={
+                renderConversation
+              }
+              refreshing={
+                loadingConversations
+              }
+              onRefresh={
+                loadConversations
+              }
               ListEmptyComponent={
-                <Text style={styles.empty}>
+                <Text
+                  style={styles.empty}
+                >
                   No conversations yet.
                 </Text>
               }
@@ -482,20 +494,34 @@ console.log(
           )}
         </View>
 
+        {/* NEW CHAT */}
+
         <View style={styles.newChat}>
           <Button
             title="+ New Chat"
-            onPress={createConversation}
+            onPress={
+              createConversation
+            }
           />
         </View>
       </SafeAreaView>
     );
   }
 
+  // =========================================================
+  // LOGIN / REGISTER SCREEN
+  // =========================================================
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.loginCard}>
-        <Text style={styles.title}>Astra AI</Text>
+    <SafeAreaView
+      style={styles.container}
+    >
+      <View style={styles.authContainer}>
+        <Text
+          style={styles.appTitle}
+        >
+          Astra AI
+        </Text>
 
         <TextInput
           style={styles.input}
@@ -504,6 +530,7 @@ console.log(
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
+          editable={!authLoading}
         />
 
         <TextInput
@@ -512,16 +539,30 @@ console.log(
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          editable={!authLoading}
         />
 
         <View style={styles.button}>
-          <Button title="Login" onPress={handleLogin} />
+          <Button
+            title={
+              authLoading
+                ? "Logging in..."
+                : "Login"
+            }
+            onPress={handleLogin}
+            disabled={authLoading}
+          />
         </View>
 
         <View style={styles.button}>
           <Button
-            title="Create Account"
+            title={
+              authLoading
+                ? "Creating..."
+                : "Create Account"
+            }
             onPress={handleSignup}
+            disabled={authLoading}
           />
         </View>
       </View>
@@ -529,102 +570,20 @@ console.log(
   );
 }
 
+// =========================================================
+// STYLES
+// =========================================================
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: "#fff",
   },
 
-  loginCard: {
+  loadingContainer: {
     flex: 1,
     justifyContent: "center",
-  },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingBottom: 20,
-  },
-
-  content: {
-    flex: 1,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-  },
-
-  subtitle: {
-    marginTop: 4,
-    color: "#666",
-  },
-
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
-
-  conversation: {
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-
-  conversationTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-
-  conversationDate: {
-    marginTop: 6,
-    color: "#777",
-    fontSize: 12,
-  },
-
-  newChat: {
-    marginTop: 15,
-    marginBottom: 10,
-  },
-
-  chatContainer: {
-    flex: 1,
-  },
-
-  chatHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-
-  chatTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    flex: 1,
-    textAlign: "center",
-  },
-
-  messagesList: {
-    flex: 1,
-    marginTop: 15,
-  },
-
-  message: {
-    padding: 12,
-    marginBottom: 10,
-    borderRadius: 10,
-    backgroundColor: "#f0f0f0",
-  },
-
-  messageText: {
-    fontSize: 16,
   },
 
   loading: {
@@ -633,54 +592,173 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  empty: {
-    textAlign: "center",
-    marginTop: 40,
-    color: "#777",
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
   },
 
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+
+  appTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+  },
+
+  userEmail: {
+    marginTop: 4,
+    fontSize: 13,
+    color: "#666",
+  },
+
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
     marginBottom: 12,
   },
 
-  button: {
-    marginTop: 10,
+  conversation: {
+    padding: 15,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
   },
+
+  conversationTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  conversationDate: {
+    marginTop: 5,
+    fontSize: 12,
+    color: "#777",
+  },
+
+  newChat: {
+    padding: 16,
+  },
+
+  chatContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+
+  chatHeader: {
+    minHeight: 60,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+
+  chatTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+
+  headerSpacer: {
+    width: 60,
+  },
+
+  messagesList: {
+    flex: 1,
+  },
+
+  messagesContent: {
+    padding: 16,
+    flexGrow: 1,
+  },
+
+  message: {
+    padding: 12,
+    marginBottom: 10,
+    borderRadius: 10,
+    backgroundColor: "#f1f1f1",
+  },
+
+  messageText: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
+
+  empty: {
+    textAlign: "center",
+    marginTop: 30,
+    color: "#777",
+  },
+
   inputRow: {
-  flexDirection: "row",
-  alignItems: "flex-end",
-  marginTop: 10,
-  paddingTop: 10,
-  borderTopWidth: 1,
-  borderTopColor: "#ddd",
-},
+    flexDirection: "row",
+    alignItems: "flex-end",
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+  },
 
-messageInput: {
-  flex: 1,
-  minHeight: 45,
-  maxHeight: 120,
-  borderWidth: 1,
-  borderColor: "#ccc",
-  borderRadius: 10,
-  paddingHorizontal: 12,
-  paddingVertical: 10,
-  marginRight: 8,
-},
+  messageInput: {
+    flex: 1,
+    minHeight: 45,
+    maxHeight: 120,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginRight: 8,
+  },
 
-sendButton: {
-  paddingHorizontal: 16,
-  paddingVertical: 13,
-  borderRadius: 10,
-  backgroundColor: "#333",
-},
+  sendButton: {
+    minHeight: 45,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#222",
+  },
 
-sendButtonText: {
-  color: "#fff",
-  fontWeight: "bold",
-},
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
 
+  sendButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+
+  authContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+  },
+
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginTop: 12,
+  },
+
+  button: {
+    marginTop: 15,
+  },
 });
