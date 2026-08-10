@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,18 +16,183 @@ import {
 } from "react-native";
 
 import { supabase } from "./supabase";
-import { api } from "./api";
+import api from "./api";
 
 export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [session, setSession] = useState(null);
-
+const [messageText, setMessageText] = useState("");
   const [conversations, setConversations] = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(false);
 
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
+  const sendMessage = async () => {
+  const text = messageText.trim();
+
+  if (!text || !selectedConversation) {
+    return;
+  }
+
+  const assistantId = `assistant-${Date.now()}`;
+
+  try {
+    setMessageText("");
+
+    const userMessage = {
+      id: `user-${Date.now()}`,
+      content: text,
+      role: "user",
+    };
+
+    const assistantMessage = {
+      id: assistantId,
+      content: "",
+      role: "assistant",
+    };
+
+    setMessages((current) => [
+      ...current,
+      userMessage,
+      assistantMessage,
+    ]);
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("No active Supabase session.");
+    }
+
+    const formData = new FormData();
+
+    formData.append("message", text);
+    formData.append(
+      "sessionId",
+      selectedConversation.session_id
+    );
+    formData.append(
+      "model",
+      "mistralai/mistral-small-3.2-24b-instruct"
+    );
+    formData.append("temperature", "0.7");
+    formData.append("useMemory", "false");
+    formData.append("autoSaveMemory", "false");
+
+    console.log("🚀 Sending message to Astra...");
+
+    const response = await fetch(
+      `${api.defaults.baseURL}/chat/stream`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          Accept: "text/event-stream",
+        },
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      console.log(
+        "❌ STREAM ERROR:",
+        response.status,
+        errorText
+      );
+
+      throw new Error(
+        `Streaming request failed: ${response.status}`
+      );
+    }
+    const responseText = await response.text();
+
+let currentResponse = "";
+
+const events = responseText.split("\n\n");
+
+for (const event of events) {
+  const line = event
+    .split("\n")
+    .find((line) =>
+      line.startsWith("data:")
+    );
+
+  if (!line) {
+    continue;
+  }
+
+  const data = line
+    .replace(/^data:\s*/, "")
+    .trim();
+
+  if (!data || data === "[DONE]") {
+    continue;
+  }
+
+  try {
+    const parsed = JSON.parse(data);
+
+    if (
+      parsed.type === "chunk" &&
+      parsed.content
+    ) {
+      currentResponse += parsed.content;
+    }
+
+    if (parsed.type === "error") {
+      throw new Error(
+        parsed.message ||
+          "AI response failed."
+      );
+    }
+  } catch (parseError) {
+    console.log(
+      "⚠️ SSE parse warning:",
+      parseError.message
+    );
+  }
+}
+
+setMessages((current) =>
+  current.map((msg) =>
+    msg.id === assistantId
+      ? {
+          ...msg,
+          content:
+            currentResponse ||
+            "Astra returned an empty response.",
+        }
+      : msg
+  )
+);
+
+console.log(
+  "✅ ASTRA RESPONSE:",
+  currentResponse
+);
+
+  } catch (error) {
+    console.log(
+      "❌ SEND MESSAGE ERROR:",
+      error.message
+    );
+
+    Alert.alert(
+      "Message failed",
+      error.message || "Could not send message."
+    );
+
+    setMessages((current) =>
+      current.filter(
+        (msg) => msg.id !== assistantId
+      )
+    );
+  }
+};
   const [loadingMessages, setLoadingMessages] = useState(false);
 
   useEffect(() => {
@@ -254,6 +420,24 @@ export default function App() {
               }
             />
           )}
+          <View style={styles.inputRow}>
+  <TextInput
+    style={styles.messageInput}
+    placeholder="Message Astra..."
+    value={messageText}
+    onChangeText={setMessageText}
+    multiline
+  />
+
+  <TouchableOpacity
+    style={styles.sendButton}
+    onPress={sendMessage}
+  >
+    <Text style={styles.sendButtonText}>
+      Send
+    </Text>
+  </TouchableOpacity>
+</View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     );
@@ -466,4 +650,37 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 10,
   },
+  inputRow: {
+  flexDirection: "row",
+  alignItems: "flex-end",
+  marginTop: 10,
+  paddingTop: 10,
+  borderTopWidth: 1,
+  borderTopColor: "#ddd",
+},
+
+messageInput: {
+  flex: 1,
+  minHeight: 45,
+  maxHeight: 120,
+  borderWidth: 1,
+  borderColor: "#ccc",
+  borderRadius: 10,
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+  marginRight: 8,
+},
+
+sendButton: {
+  paddingHorizontal: 16,
+  paddingVertical: 13,
+  borderRadius: 10,
+  backgroundColor: "#333",
+},
+
+sendButtonText: {
+  color: "#fff",
+  fontWeight: "bold",
+},
+
 });
