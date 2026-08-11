@@ -94,11 +94,6 @@ const useChat = ({
 
       const responseText = await response.text();
 
-      console.log(
-        "📨 RAW BACKEND RESPONSE:",
-        responseText
-      );
-
       let currentResponse = "";
 
       const events = responseText.split("\n\n");

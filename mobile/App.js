@@ -21,9 +21,10 @@ import api from "./api";
 
 import useAuth from "./hooks/useAuth";
 import useAuthActions from "./hooks/useAuthActions";
-import useConversations from "./hooks/useConversations";
+import useConversations from "./hooks/useConversations/useConversations";
 import useMessages from "./hooks/useMessages";
 import useChat from "./hooks/useChat";
+import ConversationManagement from "./src/components/ConversationManagement";
 
 export default function App() {
   // =========================================================
@@ -52,18 +53,29 @@ export default function App() {
     authLoading,
   } = useAuthActions();
 
-  // =========================================================
-  // CONVERSATIONS
-  // =========================================================
+ // =========================================================
+// CONVERSATION MANAGEMENT
+// =========================================================
 
-  const {
-    conversations,
-    setConversations,
-    selectedConversation,
-    setSelectedConversation,
-    loadingConversations,
-    loadConversations,
-  } = useConversations(session);
+const {
+  conversations,
+  setConversations,
+
+  selectedConversation,
+  setSelectedConversation,
+
+  loadingConversations,
+  actionLoading,
+
+  loadConversations,
+
+  createConversation,
+  openConversation,
+
+  renameConversation,
+  deleteConversation,
+  confirmDeleteConversation,
+} = useConversations(session);
 
   // =========================================================
   // MESSAGES
@@ -197,56 +209,6 @@ const handleLogout = async () => {
     );
   }
 };
-
-    // =========================================================
-// CREATE CONVERSATION
-// =========================================================
-
-const createConversation = async () => {
-  try {
-    const response = await api.post("/conversations");
-
-    const newConversation =
-      response.data?.conversation;
-
-    if (!newConversation) {
-      throw new Error(
-        "Conversation was not returned by the server."
-      );
-    }
-
-    setConversations((current) => [
-      newConversation,
-      ...current,
-    ]);
-
-    openConversation(newConversation);
-  } catch (error) {
-    console.log(
-      "CREATE CONVERSATION ERROR:",
-      error.response?.status,
-      error.response?.data ||
-        error.message
-    );
-
-    Alert.alert(
-      "Couldn't Create Chat",
-      error.response?.data?.message ||
-        "We couldn't create a new conversation right now. Please check your connection and try again."
-    );
-  }
-};
-
-  // =========================================================
-// OPEN CONVERSATION
-// =========================================================
-
-const openConversation = (conversation) => {
-  if (!conversation) return;
-
-  setSelectedConversation(conversation);
-};
-
 
 // =========================================================
 // RENDER CONVERSATION
@@ -596,107 +558,20 @@ if (session) {
 
 
       {/* =================================================
-          CONVERSATIONS
-      ================================================= */}
+    CONVERSATION MANAGEMENT
+================================================= */}
 
-      <View style={styles.content}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionHeaderText}>
-            <Text style={styles.sectionTitle}>
-              Your Conversations
-            </Text>
-
-            <Text style={styles.sectionSubtitle}>
-              Continue where you left off
-            </Text>
-          </View>
-
-          {!loadingConversations &&
-            conversations.length > 0 && (
-              <Text
-                style={styles.conversationCount}
-                accessibilityLabel={`${conversations.length} conversations`}
-              >
-                {conversations.length}
-              </Text>
-            )}
-        </View>
-
-
-        {loadingConversations ? (
-          <View style={styles.loading}>
-            <ActivityIndicator
-              size="large"
-              color="#22d3ee"
-            />
-
-            <Text style={styles.loadingText}>
-              Loading conversations...
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={conversations}
-            keyExtractor={(item, index) =>
-              String(
-                item.id ||
-                  item.session_id ||
-                  `conversation-${index}`
-              )
-            }
-            renderItem={renderConversation}
-            refreshing={loadingConversations}
-            onRefresh={loadConversations}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={[
-              styles.conversationsList,
-              conversations.length === 0 &&
-                styles.conversationsEmpty,
-            ]}
-            ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <Text
-                  style={styles.emptyStateIcon}
-                >
-                  💬
-                </Text>
-
-                <Text style={styles.emptyTitle}>
-                  No conversations yet
-                </Text>
-
-                <Text style={styles.empty}>
-                  Start a new chat with Astra AI.
-                </Text>
-              </View>
-            }
-          />
-        )}
-      </View>
-
-      // =========================================================
-// NEW CHAT
-// =========================================================
-
-<View style={styles.newChat}>
-  <TouchableOpacity
-    activeOpacity={0.8}
-    style={styles.newChatButton}
-    onPress={createConversation}
-    accessibilityRole="button"
-    accessibilityLabel="Create a new chat"
-  >
-    <Text style={styles.newChatIcon}>
-      +
-    </Text>
-
-    <Text style={styles.newChatButtonText}>
-      New Chat
-    </Text>
-  </TouchableOpacity>
+<View style={styles.content}>
+  <ConversationManagement
+  conversations={conversations}
+  selectedConversation={selectedConversation}
+  loadingConversations={loadingConversations}
+  actionLoading={actionLoading}
+  onOpenConversation={openConversation}
+  onRefresh={loadConversations}
+  onNewChat={createConversation}
+/>
 </View>
-
 </SafeAreaView>
   );
 }

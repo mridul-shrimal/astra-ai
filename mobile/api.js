@@ -10,14 +10,31 @@ export const api = axios.create({
   },
 });
 
-// Attach the current Supabase access token to every request
-api.interceptors.request.use(async (config) => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+// =========================================================
+// ATTACH SUPABASE ACCESS TOKEN
+// =========================================================
 
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`;
+api.interceptors.request.use(async (config) => {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.access_token) {
+      config.headers = config.headers || {};
+
+      config.headers.Authorization =
+        `Bearer ${session.access_token}`;
+    } else {
+      console.log(
+        "⚠️ API REQUEST: No Supabase session token"
+      );
+    }
+  } catch (error) {
+    console.log(
+      "❌ API AUTH INTERCEPTOR ERROR:",
+      error.message
+    );
   }
 
   return config;
