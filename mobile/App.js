@@ -3,13 +3,13 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Button,
   FlatList,
   KeyboardAvoidingView,
+  Modal,
+  StyleSheet,
   Platform,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -52,6 +52,16 @@ export default function App() {
     register,
     authLoading,
   } = useAuthActions();
+
+// =========================================================
+// RENAME CONVERSATION STATE
+// =========================================================
+
+const [renameConversationTarget, setRenameConversationTarget] =
+  useState(null);
+
+const [renameText, setRenameText] =
+  useState("");
 
  // =========================================================
 // CONVERSATION MANAGEMENT
@@ -504,6 +514,32 @@ if (session && selectedConversation) {
 );
 }
 
+// =========================================================
+// RENAME CONVERSATION HANDLER
+// =========================================================
+
+const handleRenameConversation = (
+  conversation
+) => {
+  if (!conversation?.session_id) {
+    return;
+  }
+
+  console.log(
+    "✏️ RENAME CLICKED:",
+    conversation.session_id
+  );
+
+  setRenameConversationTarget(
+    conversation
+  );
+
+  setRenameText(
+    conversation.title?.trim() ||
+      "New Chat"
+  );
+};
+
   // =========================================================
 // LOGGED-IN HOME SCREEN
 // =========================================================
@@ -562,7 +598,7 @@ if (session) {
 ================================================= */}
 
 <View style={styles.content}>
-  <ConversationManagement
+<ConversationManagement
   conversations={conversations}
   selectedConversation={selectedConversation}
   loadingConversations={loadingConversations}
@@ -570,12 +606,92 @@ if (session) {
   onOpenConversation={openConversation}
   onRefresh={loadConversations}
   onNewChat={createConversation}
+  onRenameConversation={handleRenameConversation}
 />
+{/* =================================================
+    RENAME CONVERSATION MODAL
+================================================= */}
+
+<Modal
+  visible={!!renameConversationTarget}
+  transparent
+  animationType="fade"
+  onRequestClose={() => {
+    setRenameConversationTarget(null);
+    setRenameText("");
+  }}
+>
+  <View style={styles.renameModalOverlay}>
+    <View style={styles.renameModal}>
+      <Text style={styles.renameModalTitle}>
+        Rename Chat
+      </Text>
+
+      <Text style={styles.renameModalDescription}>
+        Enter a new name for this conversation.
+      </Text>
+
+      <TextInput
+        style={styles.renameInput}
+        value={renameText}
+        onChangeText={setRenameText}
+        placeholder="Conversation name"
+        placeholderTextColor="#64748b"
+        autoFocus
+        maxLength={100}
+      />
+
+      <View style={styles.renameModalActions}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            setRenameConversationTarget(null);
+            setRenameText("");
+          }}
+        >
+          <Text style={styles.renameCancelText}>
+            Cancel
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+      onPress={async () => {
+  const trimmedTitle =
+    renameText.trim();
+
+  if (!trimmedTitle) {
+    Alert.alert(
+      "Invalid Name",
+      "Please enter a conversation name."
+    );
+    return;
+  }
+
+  const success =
+    await renameConversation(
+      renameConversationTarget.session_id,
+      trimmedTitle
+    );
+
+  if (success) {
+    setRenameConversationTarget(null);
+    setRenameText("");
+  }
+}}
+        >
+          <Text style={styles.renameSaveText}>
+            Save
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
 </View>
 </SafeAreaView>
   );
 }
-
 
 // =========================================================
 // LOGIN / REGISTER SCREEN
@@ -1449,4 +1565,72 @@ inputHint: {
     fontWeight: "500",
     textAlign: "center",
   },
+
+  // =========================================================
+// RENAME MODAL STYLES
+// =========================================================
+
+renameModalOverlay: {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  paddingHorizontal: 24,
+  backgroundColor: "rgba(0, 0, 0, 0.65)",
+},
+
+renameModal: {
+  width: "100%",
+  maxWidth: 420,
+  padding: 22,
+  borderRadius: 18,
+  backgroundColor: "#0f172a",
+  borderWidth: 1,
+  borderColor: "#1e293b",
+},
+
+renameModalTitle: {
+  fontSize: 20,
+  fontWeight: "700",
+  color: "#f8fafc",
+},
+
+renameModalDescription: {
+  marginTop: 6,
+  fontSize: 14,
+  lineHeight: 20,
+  color: "#64748b",
+},
+
+renameInput: {
+  marginTop: 18,
+  minHeight: 50,
+  paddingHorizontal: 14,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "#334155",
+  backgroundColor: "#020617",
+  color: "#f8fafc",
+  fontSize: 15,
+},
+
+renameModalActions: {
+  flexDirection: "row",
+  justifyContent: "flex-end",
+  alignItems: "center",
+  marginTop: 18,
+},
+
+renameCancelText: {
+  marginRight: 22,
+  color: "#94a3b8",
+  fontSize: 15,
+  fontWeight: "600",
+},
+
+renameSaveText: {
+  color: "#22d3ee",
+  fontSize: 15,
+  fontWeight: "700",
+},
+
 });

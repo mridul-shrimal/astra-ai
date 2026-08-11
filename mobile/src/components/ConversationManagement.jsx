@@ -16,38 +16,42 @@ function ConversationManagement({
   onOpenConversation,
   onRefresh,
   onNewChat,
+  onRenameConversation,
 }) {
-  const renderConversation = ({ item }) => {
-    const title =
-      item.title?.trim() ||
-      "New Conversation";
+const renderConversation = ({ item }) => {
+  const title =
+    item.title?.trim() ||
+    "New Conversation";
 
-    const date =
-      item.updated_at ||
-      item.created_at ||
-      "";
+  const date =
+    item.updated_at ||
+    item.created_at ||
+    "";
 
-    const itemId =
-      item.id || item.session_id;
+  const itemId =
+    item.id || item.session_id;
 
-    const selectedId =
-      selectedConversation?.id ||
-      selectedConversation?.session_id;
+  const selectedId =
+    selectedConversation?.id ||
+    selectedConversation?.session_id;
 
-    const isSelected =
-      selectedId === itemId;
+  const isSelected =
+    selectedId === itemId;
 
-    return (
+  return (
+    <View
+      style={[
+        styles.conversation,
+        isSelected &&
+          styles.conversationSelected,
+      ]}
+    >
       <TouchableOpacity
         activeOpacity={0.75}
         onPress={() =>
           onOpenConversation(item)
         }
-        style={[
-          styles.conversation,
-          isSelected &&
-            styles.conversationSelected,
-        ]}
+        style={styles.conversationMain}
       >
         <View style={styles.conversationContent}>
           <Text
@@ -71,8 +75,50 @@ function ConversationManagement({
           )}
         </View>
       </TouchableOpacity>
-    );
-  };
+
+      {/* =================================================
+          CONVERSATION ACTIONS
+      ================================================= */}
+
+      <View style={styles.conversationActions}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.actionButton}
+          onPress={() =>
+            onRenameConversation(item)
+          }
+          disabled={actionLoading}
+          accessibilityRole="button"
+          accessibilityLabel={`Rename ${title}`}
+        >
+          <Text style={styles.actionText}>
+            ✎
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.actionButton}
+          onPress={() =>
+            onDeleteConversation(item)
+          }
+          disabled={actionLoading}
+          accessibilityRole="button"
+          accessibilityLabel={`Delete ${title}`}
+        >
+          <Text
+            style={[
+              styles.actionText,
+              styles.deleteActionText,
+            ]}
+          >
+            ⋮
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
 
   return (
     <View style={styles.container}>
@@ -223,6 +269,33 @@ const styles = {
     alignItems: "center",
     backgroundColor: "#164e63",
   },
+conversationMain: {
+  flex: 1,
+},
+
+conversationActions: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginLeft: 8,
+},
+
+actionButton: {
+  width: 38,
+  height: 38,
+  borderRadius: 10,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+actionText: {
+  fontSize: 20,
+  color: "#94a3b8",
+},
+
+deleteActionText: {
+  fontSize: 22,
+  color: "#94a3b8",
+},
 
   countText: {
     color: "#67e8f9",
@@ -239,13 +312,15 @@ const styles = {
   },
 
   conversation: {
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#1e293b",
-    borderRadius: 14,
-    backgroundColor: "#0f172a",
-  },
+  padding: 12,
+  marginBottom: 10,
+  borderWidth: 1,
+  borderColor: "#1e293b",
+  borderRadius: 14,
+  backgroundColor: "#0f172a",
+  flexDirection: "row",
+  alignItems: "center",
+},
 
   conversationSelected: {
     borderColor: "#06b6d4",

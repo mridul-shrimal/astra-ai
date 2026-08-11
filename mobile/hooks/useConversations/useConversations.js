@@ -17,78 +17,77 @@ const useConversations = (session) => {
   const [actionLoading, setActionLoading] =
     useState(false);
 
-  // =========================================================
-  // LOAD CONVERSATIONS
-  // =========================================================
+// =========================================================
+// LOAD CONVERSATIONS
+// =========================================================
 
-  const loadConversations = useCallback(
-    async () => {
-      if (!session?.access_token) {
-        setConversations([]);
-        setSelectedConversation(null);
-        return;
-      }
+const loadConversations = useCallback(
+  async () => {
+    if (!session?.access_token) {
+      setConversations([]);
+      setSelectedConversation(null);
+      return;
+    }
 
-      try {
-        setLoadingConversations(true);
+    try {
+      setLoadingConversations(true);
 
-        const response =
-          await api.get("/conversations");
+      const response =
+        await api.get("/conversations");
 
-        console.log(
-          "CONVERSATIONS RESPONSE:",
-          response.data
-        );
+      console.log(
+        "CONVERSATIONS RESPONSE:",
+        response.data
+      );
 
-        const list =
-          response.data?.conversations || [];
+      const list =
+        response.data?.conversations || [];
 
-        setConversations(list);
+      setConversations(list);
 
-        setSelectedConversation(
-          (currentSelected) => {
-            if (!list.length) {
-              return null;
-            }
-
-            if (!currentSelected) {
-              return list[0];
-            }
-
-            const currentId =
-              currentSelected.id ||
-              currentSelected.session_id;
-
-            const stillExists =
-              list.some(
-                (conversation) =>
-                  (conversation.id ||
-                    conversation.session_id) ===
-                  currentId
-              );
-
-            return stillExists
-              ? currentSelected
-              : list[0];
+      setSelectedConversation(
+        (currentSelected) => {
+          if (!list.length) {
+            return null;
           }
-        );
-      } catch (error) {
-        console.log(
-          "❌ Failed to load conversations:",
-          error.response?.status,
-          error.response?.data ||
-            error.message
-        );
 
-        setConversations([]);
-        setSelectedConversation(null);
-      } finally {
-        setLoadingConversations(false);
-      }
-    },
-    [session?.access_token]
-  );
+          if (!currentSelected) {
+            return list[0];
+          }
 
+          const currentId =
+            currentSelected.id ||
+            currentSelected.session_id;
+
+          const stillExists =
+            list.some(
+              (conversation) =>
+                (conversation.id ||
+                  conversation.session_id) ===
+                currentId
+            );
+
+          return stillExists
+            ? currentSelected
+            : list[0];
+        }
+      );
+    } catch (error) {
+      console.log(
+        "❌ Failed to load conversations:",
+        error.response?.status,
+        error.response?.data ||
+          error.message
+      );
+
+      setConversations([]);
+      setSelectedConversation(null);
+    } finally {
+      setLoadingConversations(false);
+    }
+  },
+  [session?.access_token]
+);
   // =========================================================
   // CREATE CONVERSATION
   // =========================================================
@@ -162,96 +161,92 @@ const useConversations = (session) => {
   );
 
   // =========================================================
-  // RENAME CONVERSATION
-  // =========================================================
+// RENAME CONVERSATION
+// =========================================================
 
-  const renameConversation = useCallback(
-    async (conversationId, title) => {
-      const trimmedTitle =
-        title?.trim();
+const renameConversation = useCallback(
+  async (conversationId, title) => {
+    const trimmedTitle = title?.trim();
 
-      if (!conversationId || !trimmedTitle) {
-        return false;
-      }
+    if (!conversationId || !trimmedTitle) {
+      return false;
+    }
 
-      try {
-        setActionLoading(true);
+    try {
+      setActionLoading(true);
 
-        const response =
-          await api.patch(
-            `/conversations/${conversationId}`,
-            {
+      const response = await api.put(
+        `/conversations/${conversationId}`,
+        {
+          title: trimmedTitle,
+        }
+      );
+
+      const updatedConversation =
+        response.data?.conversation;
+
+      setConversations((current) =>
+        current.map((conversation) => {
+          if (
+            conversation.session_id !==
+            conversationId
+          ) {
+            return conversation;
+          }
+
+          return (
+            updatedConversation || {
+              ...conversation,
               title: trimmedTitle,
             }
           );
+        })
+      );
 
-        const updatedConversation =
-          response.data?.conversation;
-
-        setConversations((current) =>
-          current.map((conversation) => {
-            const id =
-              conversation.id ||
-              conversation.session_id;
-
-            if (id !== conversationId) {
-              return conversation;
-            }
-
-            return (
-              updatedConversation || {
-                ...conversation,
-                title: trimmedTitle,
-              }
-            );
-          })
-        );
-
-        setSelectedConversation(
-          (currentSelected) => {
-            if (!currentSelected) {
-              return currentSelected;
-            }
-
-            const id =
-              currentSelected.id ||
-              currentSelected.session_id;
-
-            if (id !== conversationId) {
-              return currentSelected;
-            }
-
-            return (
-              updatedConversation || {
-                ...currentSelected,
-                title: trimmedTitle,
-              }
-            );
+      setSelectedConversation(
+        (currentSelected) => {
+          if (!currentSelected) {
+            return currentSelected;
           }
-        );
 
-        return true;
-      } catch (error) {
-        console.log(
-          "❌ RENAME CONVERSATION ERROR:",
-          error.response?.status,
-          error.response?.data ||
-            error.message
-        );
+          if (
+            currentSelected.session_id !==
+            conversationId
+          ) {
+            return currentSelected;
+          }
 
-        Alert.alert(
-          "Couldn't Rename Chat",
-          error.response?.data?.message ||
-            "Could not rename this conversation."
-        );
+          return (
+            updatedConversation || {
+              ...currentSelected,
+              title: trimmedTitle,
+            }
+          );
+        }
+      );
 
-        return false;
-      } finally {
-        setActionLoading(false);
-      }
-    },
-    []
-  );
+      return true;
+    } catch (error) {
+      console.log(
+        "❌ RENAME CONVERSATION ERROR:",
+        error.response?.status,
+        error.response?.data ||
+          error.message
+      );
+
+      Alert.alert(
+        "Couldn't Rename Chat",
+        error.response?.data?.message ||
+          "Could not rename this conversation."
+      );
+
+      return false;
+    } finally {
+      setActionLoading(false);
+    }
+  },
+  []
+);
 
   // =========================================================
   // DELETE CONVERSATION
@@ -271,14 +266,11 @@ const useConversations = (session) => {
         );
 
         setConversations((current) =>
-          current.filter((conversation) => {
-            const id =
-              conversation.id ||
-              conversation.session_id;
-
-            return id !== conversationId;
-          })
-        );
+  current.filter(
+    (conversation) =>
+      conversation.session_id !== conversationId
+  )
+);
 
         setSelectedConversation(
           (currentSelected) => {
@@ -330,9 +322,8 @@ const useConversations = (session) => {
           return;
         }
 
-        const conversationId =
-          conversation.id ||
-          conversation.session_id;
+      const conversationId =
+  conversation.session_id;
 
         const title =
           conversation.title?.trim() ||
