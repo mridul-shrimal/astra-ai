@@ -15,11 +15,15 @@ function ConversationManagement({
   actionLoading,
   onOpenConversation,
   onDeleteConversation,
+  onArchiveConversation,
+  onToggleLockConversation,
+  onRequestUnlock,
   onPinConversation,
   onRefresh,
   onNewChat,
   onRenameConversation,
 }) {
+
 const renderConversation = ({ item }) => {
   const title =
     item.title?.trim() ||
@@ -50,9 +54,14 @@ const renderConversation = ({ item }) => {
     >
       <TouchableOpacity
         activeOpacity={0.75}
-        onPress={() =>
-          onOpenConversation(item)
-        }
+        onPress={() => {
+  if (item.locked) {
+     onRequestUnlock(item);
+    return;
+  }
+
+  onOpenConversation(item);
+}}
         style={styles.conversationMain}
       >
         <View style={styles.conversationContent}>
@@ -96,6 +105,38 @@ const renderConversation = ({ item }) => {
 >
   <Text style={styles.actionText}>
     {item.pinned ? "📌" : "📍"}
+  </Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+  activeOpacity={0.7}
+  style={styles.actionButton}
+  onPress={() =>
+    onArchiveConversation(item)
+  }
+  disabled={actionLoading}
+  accessibilityRole="button"
+  accessibilityLabel={`${item.archived ? "Restore" : "Archive"} ${title}`}
+>
+  <Text style={styles.actionText}>
+    {item.archived ? "🔄" : "📦"}
+  </Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+  activeOpacity={0.7}
+  style={styles.actionButton}
+  onPress={() =>
+    onToggleLockConversation(item)
+  }
+  disabled={actionLoading}
+  accessibilityRole="button"
+  accessibilityLabel={`${
+    item.locked ? "Unlock" : "Lock"
+  } ${title}`}
+>
+  <Text style={styles.actionText}>
+    {item.locked ? "🔓" : "🔒"}
   </Text>
 </TouchableOpacity>
 
@@ -177,11 +218,14 @@ const renderConversation = ({ item }) => {
         </View>
       ) : (
         <FlatList
-         data={[...conversations].sort(
-  (a, b) =>
-    Number(b.pinned) -
-    Number(a.pinned)
-)}
+       data={[...conversations]
+  .filter((conversation) => !conversation.archived)
+  .sort(
+    (a, b) =>
+      Number(b.pinned) -
+      Number(a.pinned)
+  )}
+  
           keyExtractor={(item, index) =>
             String(
               item.id ||
@@ -215,7 +259,74 @@ const renderConversation = ({ item }) => {
           }
         />
       )}
+{/* =================================================
+    ARCHIVED CONVERSATIONS
+================================================= */}
 
+{conversations.some(
+  (conversation) => conversation.archived
+) && (
+  <View style={styles.archivedSection}>
+    <Text style={styles.archivedTitle}>
+      📦 Archived (
+      {
+        conversations.filter(
+          (conversation) =>
+            conversation.archived
+        ).length
+      }
+      )
+    </Text>
+
+    {conversations
+      .filter(
+        (conversation) =>
+          conversation.archived
+      )
+      .map((item) => (
+        <View
+          key={
+            item.id ||
+            item.session_id
+          }
+          style={styles.conversation}
+        >
+          <View style={styles.conversationContent}>
+          <TouchableOpacity
+  activeOpacity={0.7}
+onPress={() => {
+  if (item.locked) {
+    onRequestUnlock(item);
+    return;
+  }
+
+  onOpenConversation(item);
+}}
+>
+  <Text
+    style={styles.conversationTitle}
+    numberOfLines={1}
+  >
+    {item.title?.trim() ||
+      "New Conversation"}
+  </Text>
+</TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() =>
+                onArchiveConversation(item)
+              }
+            >
+              <Text style={styles.actionText}>
+                🔄 Restore
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ))}
+  </View>
+)}
       {/* =================================================
           NEW CHAT
       ================================================= */}

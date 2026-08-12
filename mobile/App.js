@@ -60,6 +60,11 @@ export default function App() {
 const [renameConversationTarget, setRenameConversationTarget] =
   useState(null);
 
+const [lockConversationTarget, setLockConversationTarget] =
+  useState(null);
+
+const [lockPinText, setLockPinText] = useState("");
+
 const [renameText, setRenameText] =
   useState("");
 
@@ -543,6 +548,95 @@ const handlePinConversation = (conversation) => {
 };
 
 // =========================================================
+// ARCHIVE / RESTORE CONVERSATION
+// =========================================================
+
+const handleArchiveConversation = (conversation) => {
+  if (!conversation) {
+    return;
+  }
+
+  const conversationId =
+    conversation.id || conversation.session_id;
+
+  if (!conversationId) {
+    return;
+  }
+
+  const isCurrentlySelected =
+    (selectedConversation?.id ||
+      selectedConversation?.session_id) ===
+    conversationId;
+
+  setConversations((prev) =>
+    prev.map((item) =>
+      (item.id || item.session_id) === conversationId
+        ? {
+            ...item,
+            archived: !item.archived,
+          }
+        : item
+    )
+  );
+
+  // If the currently open conversation was archived,
+  // switch to another active conversation.
+  if (
+    isCurrentlySelected &&
+    !conversation.archived
+  ) {
+    const nextConversation =
+      conversations.find(
+        (item) =>
+          (item.id || item.session_id) !==
+            conversationId &&
+          !item.archived
+      );
+
+    if (nextConversation) {
+      setSelectedConversation(
+        nextConversation
+      );
+    } else {
+      setSelectedConversation(null);
+    }
+  }
+};
+
+// =========================================================
+// LOCK / UNLOCK CONVERSATION
+// =========================================================
+
+const handleToggleLockConversation = (conversation) => {
+  if (!conversation) {
+    return;
+  }
+
+  const conversationId =
+    conversation.id || conversation.session_id;
+
+  if (!conversationId) {
+    return;
+  }
+
+  setLockConversationTarget(conversation);
+  setLockPinText("");
+};
+
+// =========================================================
+// REQUEST UNLOCK FOR LOCKED CONVERSATION
+// =========================================================
+
+const handleRequestUnlock = (conversation) => {
+  if (!conversation) {
+    return;
+  }
+
+  setLockConversationTarget(conversation);
+  setLockPinText("");
+};
+
+// =========================================================
 // RENAME CONVERSATION HANDLER
 // =========================================================
 
@@ -638,6 +732,14 @@ if (session) {
     handleRenameConversation
   }
   onPinConversation={handlePinConversation}
+  onArchiveConversation={handleArchiveConversation}
+  
+  onToggleLockConversation={
+  handleToggleLockConversation
+}
+onRequestUnlock={
+  handleRequestUnlock
+}
   onDeleteConversation={
     confirmDeleteConversation
   }
@@ -722,10 +824,132 @@ if (session) {
     </View>
   </View>
 </Modal>
+{/* =================================================
+    LOCK / UNLOCK CONVERSATION MODAL
+================================================= */}
+
+<Modal
+  visible={!!lockConversationTarget}
+  transparent
+  animationType="fade"
+  onRequestClose={() => {
+    setLockConversationTarget(null);
+    setLockPinText("");
+  }}
+>
+  <View style={styles.renameModalOverlay}>
+    <View style={styles.renameModal}>
+      <Text style={styles.renameModalTitle}>
+        {lockConversationTarget?.locked
+          ? "🔓 Unlock Chat"
+          : "🔒 Lock Chat"}
+      </Text>
+
+      <Text style={styles.renameModalDescription}>
+        {lockConversationTarget?.locked
+          ? "Enter the 4-digit PIN to unlock this conversation."
+          : "Create a 4-digit PIN to lock this conversation."}
+      </Text>
+
+      <TextInput
+        style={styles.renameInput}
+        value={lockPinText}
+        onChangeText={setLockPinText}
+        placeholder="4-digit PIN"
+        placeholderTextColor="#64748b"
+        keyboardType="number-pad"
+        secureTextEntry
+        maxLength={4}
+        autoFocus
+      />
+
+      <View style={styles.renameModalActions}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            setLockConversationTarget(null);
+            setLockPinText("");
+          }}
+        >
+          <Text style={styles.renameCancelText}>
+            Cancel
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+  const pin = lockPinText.trim();
+
+  if (!/^\d{4}$/.test(pin)) {
+    Alert.alert(
+      "Invalid PIN",
+      "PIN must be exactly 4 digits."
+    );
+    return;
+  }
+
+  const conversationId =
+    lockConversationTarget.id ||
+    lockConversationTarget.session_id;
+
+  if (lockConversationTarget.locked) {
+    if (
+      pin !== lockConversationTarget.lockPin
+    ) {
+      Alert.alert(
+        "Incorrect PIN",
+        "The PIN you entered is incorrect."
+      );
+      return;
+    }
+
+    setConversations((prev) =>
+      prev.map((item) =>
+        (item.id || item.session_id) ===
+        conversationId
+          ? {
+              ...item,
+              locked: false,
+              lockPin: "",
+            }
+          : item
+      )
+    );
+  } else {
+    setConversations((prev) =>
+      prev.map((item) =>
+        (item.id || item.session_id) ===
+        conversationId
+          ? {
+              ...item,
+              locked: true,
+              lockPin: pin,
+            }
+          : item
+      )
+    );
+  }
+
+  setLockConversationTarget(null);
+  setLockPinText("");
+}}
+        >
+          <Text style={styles.renameSaveText}>
+            {lockConversationTarget?.locked
+              ? "Unlock"
+              : "Lock"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
 </View>
 </SafeAreaView>
   );
 }
+
 
 // =========================================================
 // LOGIN / REGISTER SCREEN
