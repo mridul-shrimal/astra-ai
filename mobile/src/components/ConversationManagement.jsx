@@ -14,6 +14,8 @@ function ConversationManagement({
   loadingConversations,
   actionLoading,
   onOpenConversation,
+  onDeleteConversation,
+  onPinConversation,
   onRefresh,
   onNewChat,
   onRenameConversation,
@@ -81,6 +83,22 @@ const renderConversation = ({ item }) => {
       ================================================= */}
 
       <View style={styles.conversationActions}>
+        
+        <TouchableOpacity
+  activeOpacity={0.7}
+  style={styles.actionButton}
+  onPress={() =>
+    onPinConversation(item)
+  }
+  disabled={actionLoading}
+  accessibilityRole="button"
+  accessibilityLabel={`${item.pinned ? "Unpin" : "Pin"} ${title}`}
+>
+  <Text style={styles.actionText}>
+    {item.pinned ? "📌" : "📍"}
+  </Text>
+</TouchableOpacity>
+
         <TouchableOpacity
           activeOpacity={0.7}
           style={styles.actionButton}
@@ -96,25 +114,20 @@ const renderConversation = ({ item }) => {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.actionButton}
-          onPress={() =>
-            onDeleteConversation(item)
-          }
-          disabled={actionLoading}
-          accessibilityRole="button"
-          accessibilityLabel={`Delete ${title}`}
-        >
-          <Text
-            style={[
-              styles.actionText,
-              styles.deleteActionText,
-            ]}
-          >
-            ⋮
-          </Text>
-        </TouchableOpacity>
+       <TouchableOpacity
+  activeOpacity={0.7}
+  style={styles.actionButton}
+  onPress={() =>
+    onDeleteConversation(item)
+  }
+  disabled={actionLoading}
+  accessibilityRole="button"
+  accessibilityLabel={`Delete ${title}`}
+>
+  <Text style={styles.actionText}>
+    🗑
+  </Text>
+</TouchableOpacity>
       </View>
     </View>
   );
@@ -164,7 +177,11 @@ const renderConversation = ({ item }) => {
         </View>
       ) : (
         <FlatList
-          data={conversations}
+         data={[...conversations].sort(
+  (a, b) =>
+    Number(b.pinned) -
+    Number(a.pinned)
+)}
           keyExtractor={(item, index) =>
             String(
               item.id ||

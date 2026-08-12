@@ -43,7 +43,27 @@ const loadConversations = useCallback(
       const list =
         response.data?.conversations || [];
 
-      setConversations(list);
+      setConversations((currentConversations) =>
+  list.map((conversation) => {
+    const conversationId =
+      conversation.id ||
+      conversation.session_id;
+
+    const existingConversation =
+      currentConversations.find(
+        (item) =>
+          (item.id || item.session_id) ===
+          conversationId
+      );
+
+    return {
+      ...conversation,
+      pinned:
+        existingConversation?.pinned ??
+        false,
+    };
+  })
+);
 
       setSelectedConversation(
         (currentSelected) => {
@@ -113,10 +133,21 @@ const loadConversations = useCallback(
           );
         }
 
-        setConversations((current) => [
-          newConversation,
-          ...current,
-        ]);
+        setConversations((current) => {
+  const updated = [
+    ...current,
+    {
+      ...newConversation,
+      pinned: false,
+    },
+  ];
+
+  return updated.sort(
+    (a, b) =>
+      Number(b.pinned) -
+      Number(a.pinned)
+  );
+});
 
         setSelectedConversation(
           newConversation

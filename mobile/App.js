@@ -515,6 +515,34 @@ if (session && selectedConversation) {
 }
 
 // =========================================================
+// PIN CONVERSATION
+// =========================================================
+
+const handlePinConversation = (conversation) => {
+  if (!conversation) {
+    return;
+  }
+
+  const conversationId =
+    conversation.id || conversation.session_id;
+
+  if (!conversationId) {
+    return;
+  }
+
+  setConversations((prev) =>
+    prev.map((item) =>
+      (item.id || item.session_id) === conversationId
+        ? {
+            ...item,
+            pinned: !item.pinned,
+          }
+        : item
+    )
+  );
+};
+
+// =========================================================
 // RENAME CONVERSATION HANDLER
 // =========================================================
 
@@ -606,8 +634,14 @@ if (session) {
   onOpenConversation={openConversation}
   onRefresh={loadConversations}
   onNewChat={createConversation}
-  onRenameConversation={handleRenameConversation}
-/>
+  onRenameConversation={
+    handleRenameConversation
+  }
+  onPinConversation={handlePinConversation}
+  onDeleteConversation={
+    confirmDeleteConversation
+  }
+/>  
 {/* =================================================
     RENAME CONVERSATION MODAL
 ================================================= */}
