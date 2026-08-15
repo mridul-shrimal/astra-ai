@@ -9,7 +9,9 @@ const {
   getConversation,
   renameConversation,
   deleteConversation,
+  duplicateConversation,
 } = require("../services/conversationService");
+
 const {
   getMessages,
 } = require("../services/messageService");
@@ -86,6 +88,54 @@ router.post("/", async (req, res) => {
     });
   }
 });
+/**
+ * Duplicate conversation
+ */
+router.post(
+  "/:sessionId/duplicate",
+  async (req, res) => {
+    try {
+      const { sessionId } =
+        req.params;
+
+      const userId =
+        req.user.id;
+
+      const conversation =
+        await duplicateConversation(
+          sessionId,
+          userId
+        );
+
+      res.status(201).json({
+        success: true,
+        conversation,
+      });
+    } catch (error) {
+      console.error(
+        "❌ Duplicate Conversation Error:",
+        error.message
+      );
+
+      if (
+        error.message ===
+        "Conversation not found or access denied."
+      ) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Conversation not found.",
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Failed to duplicate conversation.",
+      });
+    }
+  }
+);
 /**
  * Get all messages for a conversation
  */
@@ -215,5 +265,53 @@ router.delete("/:sessionId", async (req, res) => {
     });
   }
 });
+/**
+ * Duplicate conversation
+ */
+router.post(
+  "/:sessionId/duplicate",
+  async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = req.user.id;
 
+      const {
+        duplicateConversation,
+      } = require("../services/conversationService");
+
+      const duplicatedConversation =
+        await duplicateConversation(
+          sessionId,
+          userId
+        );
+
+      res.status(201).json({
+        success: true,
+        conversation:
+          duplicatedConversation,
+      });
+    } catch (error) {
+      console.error(
+        "❌ Duplicate Conversation Error:",
+        error.message
+      );
+
+      if (
+        error.message ===
+        "Conversation not found or access denied."
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "Conversation not found.",
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Failed to duplicate conversation.",
+      });
+    }
+  }
+);
 module.exports = router;

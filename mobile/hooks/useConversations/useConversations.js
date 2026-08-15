@@ -398,25 +398,25 @@ const renameConversation = useCallback(
     loadConversations,
   ]);
 
-  return {
-    conversations,
-    setConversations,
+return {
+  conversations,
+  setConversations,
 
-    selectedConversation,
-    setSelectedConversation,
+  selectedConversation,
+  setSelectedConversation,
 
-    loadingConversations,
-    actionLoading,
+  loadingConversations,
+  actionLoading,
+  setActionLoading,
 
-    loadConversations,
+  loadConversations,
+  createConversation,
+  openConversation,
 
-    createConversation,
-    openConversation,
-
-    renameConversation,
-    deleteConversation,
-    confirmDeleteConversation,
-  };
+  renameConversation,
+  deleteConversation,
+  confirmDeleteConversation,
+};
 };
 
 export default useConversations;

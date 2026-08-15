@@ -81,9 +81,9 @@ const {
 
   loadingConversations,
   actionLoading,
+  setActionLoading,
 
   loadConversations,
-
   createConversation,
   openConversation,
 
@@ -91,6 +91,7 @@ const {
   deleteConversation,
   confirmDeleteConversation,
 } = useConversations(session);
+
 
   // =========================================================
   // MESSAGES
@@ -224,7 +225,81 @@ const handleLogout = async () => {
     );
   }
 };
+// =========================================================
+// DUPLICATE CONVERSATION
+// =========================================================
 
+const handleDuplicateConversation =
+  async (conversation) => {
+    if (!conversation) {
+      return;
+    }
+
+    const sessionId = conversation.session_id;
+
+if (!sessionId) {
+  Alert.alert(
+    "Duplicate Failed",
+    "This conversation has no session ID."
+  );
+  return;
+}
+
+
+    if (!sessionId) {
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+
+      const response =
+        await api.post(
+          `/conversations/${sessionId}/duplicate`
+        );
+
+      const duplicatedConversation =
+        response.data?.conversation;
+
+      if (!duplicatedConversation) {
+        throw new Error(
+          "Duplicated conversation was not returned."
+        );
+      }
+
+      // Add duplicate to the top
+      setConversations((prev) => [
+        duplicatedConversation,
+        ...prev,
+      ]);
+
+      // Select duplicate
+      setSelectedConversation(
+        duplicatedConversation
+      );
+
+      console.log(
+        "📑 Conversation duplicated:",
+        duplicatedConversation
+      );
+
+    } catch (error) {
+      console.log(
+        "❌ DUPLICATE CONVERSATION ERROR:",
+        error.response?.status,
+        error.response?.data ||
+          error.message
+      );
+
+      Alert.alert(
+        "Couldn't Duplicate Chat",
+        error.response?.data?.message ||
+          "Could not duplicate this conversation."
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
 // =========================================================
 // RENDER CONVERSATION
 // =========================================================
@@ -244,39 +319,60 @@ const renderConversation = ({ item }) => {
     item?.session_id;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
+    <View
       style={[
         styles.conversation,
         isSelected &&
           styles.conversationSelected,
       ]}
-      onPress={() => openConversation(item)}
     >
-      <View style={styles.conversationContent}>
-        <Text
-          style={[
-            styles.conversationTitle,
-            isSelected &&
-              styles.conversationTitleSelected,
-          ]}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {title}
-        </Text>
-
-        {!!date && (
+      {/* OPEN CONVERSATION */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        style={styles.conversationMain}
+        onPress={() => openConversation(item)}
+      >
+        <View style={styles.conversationContent}>
           <Text
-            style={styles.conversationDate}
+            style={[
+              styles.conversationTitle,
+              isSelected &&
+                styles.conversationTitleSelected,
+            ]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {date}
+            {title}
           </Text>
-        )}
-      </View>
-    </TouchableOpacity>
+
+          {!!date && (
+            <Text
+              style={styles.conversationDate}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {date}
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
+
+      {/* DUPLICATE */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        style={styles.actionButton}
+        onPress={() =>
+          onDuplicateConversation(item)
+        }
+        disabled={actionLoading}
+        accessibilityRole="button"
+        accessibilityLabel={`Duplicate ${title}`}
+      >
+        <Text style={styles.actionText}>
+          📑
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -743,6 +839,9 @@ onRequestUnlock={
   onDeleteConversation={
     confirmDeleteConversation
   }
+  onDuplicateConversation={
+  handleDuplicateConversation
+}
 />  
 {/* =================================================
     RENAME CONVERSATION MODAL

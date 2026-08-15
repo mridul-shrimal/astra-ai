@@ -1,3 +1,7 @@
+const {
+  getMessages,
+  saveMessage,
+} = require("./messageService");
 const db = require("../database/database");
 
 /**
@@ -176,7 +180,122 @@ function deleteConversation(sessionId, userId) {
     );
   });
 }
+/**
+ * Duplicate conversation with all messages
+ */
+async function duplicateConversation(
+  sessionId,
+  userId
+) {
+  console.log("📑 DUPLICATE REQUEST:");
+  console.log("   sessionId:", sessionId);
+  console.log("   userId:", userId);
 
+  const original = await getConversation(
+    sessionId,
+    userId
+  );
+
+  console.log(
+    "📑 ORIGINAL CONVERSATION:",
+    original
+  );
+
+  if (!original) {
+    throw new Error(
+      "Conversation not found or access denied."
+    );
+  }
+
+  // KEEP EVERYTHING BELOW YOUR EXISTING CODE
+
+  const { randomUUID } = require("crypto");
+
+  const newSessionId = randomUUID();
+
+  await createConversation(
+    newSessionId,
+    `${original.title || "New Chat"} Copy`,
+    userId
+  );
+
+  const messages = await getMessages(sessionId);
+
+  for (const message of messages) {
+    await saveMessage(
+      newSessionId,
+      message.sender,
+      message.content
+    );
+  }
+
+  return await getConversation(
+    newSessionId,
+    userId
+  );
+}
+
+/**
+ * Duplicate conversation
+ */
+async function duplicateConversation(
+  sessionId,
+  userId
+) {
+  // Verify original conversation belongs to user
+  const original =
+    await getConversation(
+      sessionId,
+      userId
+    );
+
+  if (!original) {
+    throw new Error(
+      "Conversation not found or access denied."
+    );
+  }
+
+  // Get original messages
+  const messages =
+    await getMessages(sessionId);
+
+  // Create new session ID
+  const { randomUUID } =
+    require("crypto");
+
+  const newSessionId =
+    randomUUID();
+
+  // Create duplicate title
+  const originalTitle =
+    original.title?.trim() ||
+    "New Chat";
+
+  const newTitle =
+    `${originalTitle} (Copy)`;
+
+  // Create new conversation
+  await createConversation(
+    newSessionId,
+    newTitle,
+    userId
+  );
+
+  // Copy messages
+  for (const message of messages) {
+    await saveMessage(
+      newSessionId,
+      message.sender,
+      message.content
+    );
+  }
+
+  // Return the new conversation
+  return {
+    session_id: newSessionId,
+    title: newTitle,
+  };
+}
 module.exports = {
   createConversation,
   getAllConversations,
@@ -184,4 +303,5 @@ module.exports = {
   renameConversation,
   touchConversation,
   deleteConversation,
+  duplicateConversation,
 };

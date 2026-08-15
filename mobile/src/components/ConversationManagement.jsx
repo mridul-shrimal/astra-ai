@@ -17,12 +17,16 @@ function ConversationManagement({
   onDeleteConversation,
   onArchiveConversation,
   onToggleLockConversation,
-  onRequestUnlock,
   onPinConversation,
+  onDuplicateConversation,
   onRefresh,
   onNewChat,
   onRenameConversation,
 }) {
+
+// =========================================================
+// RENDER CONVERSATION
+// =========================================================
 
 const renderConversation = ({ item }) => {
   const title =
@@ -52,16 +56,18 @@ const renderConversation = ({ item }) => {
           styles.conversationSelected,
       ]}
     >
+
+      {/* CHAT CONTENT */}
       <TouchableOpacity
         activeOpacity={0.75}
         onPress={() => {
-  if (item.locked) {
-     onRequestUnlock(item);
-    return;
-  }
+          if (item.locked) {
+            onRequestUnlock(item);
+            return;
+          }
 
-  onOpenConversation(item);
-}}
+          onOpenConversation(item);
+        }}
         style={styles.conversationMain}
       >
         <View style={styles.conversationContent}>
@@ -87,88 +93,65 @@ const renderConversation = ({ item }) => {
         </View>
       </TouchableOpacity>
 
-      {/* =================================================
-          CONVERSATION ACTIONS
-      ================================================= */}
-
+      {/* ACTION BUTTONS */}
       <View style={styles.conversationActions}>
-        
-        <TouchableOpacity
-  activeOpacity={0.7}
-  style={styles.actionButton}
-  onPress={() =>
-    onPinConversation(item)
-  }
-  disabled={actionLoading}
-  accessibilityRole="button"
-  accessibilityLabel={`${item.pinned ? "Unpin" : "Pin"} ${title}`}
->
-  <Text style={styles.actionText}>
-    {item.pinned ? "📌" : "📍"}
-  </Text>
-</TouchableOpacity>
 
-<TouchableOpacity
-  activeOpacity={0.7}
-  style={styles.actionButton}
-  onPress={() =>
-    onArchiveConversation(item)
-  }
-  disabled={actionLoading}
-  accessibilityRole="button"
-  accessibilityLabel={`${item.archived ? "Restore" : "Archive"} ${title}`}
->
-  <Text style={styles.actionText}>
-    {item.archived ? "🔄" : "📦"}
-  </Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-  activeOpacity={0.7}
-  style={styles.actionButton}
-  onPress={() =>
-    onToggleLockConversation(item)
-  }
-  disabled={actionLoading}
-  accessibilityRole="button"
-  accessibilityLabel={`${
-    item.locked ? "Unlock" : "Lock"
-  } ${title}`}
->
-  <Text style={styles.actionText}>
-    {item.locked ? "🔓" : "🔒"}
-  </Text>
-</TouchableOpacity>
-
+        {/* PIN */}
         <TouchableOpacity
           activeOpacity={0.7}
           style={styles.actionButton}
           onPress={() =>
-            onRenameConversation(item)
+            onPinConversation(item)
           }
           disabled={actionLoading}
-          accessibilityRole="button"
-          accessibilityLabel={`Rename ${title}`}
         >
           <Text style={styles.actionText}>
-            ✎
+            {item.pinned ? "📌" : "📍"}
           </Text>
         </TouchableOpacity>
 
-       <TouchableOpacity
-  activeOpacity={0.7}
-  style={styles.actionButton}
-  onPress={() =>
-    onDeleteConversation(item)
-  }
-  disabled={actionLoading}
-  accessibilityRole="button"
-  accessibilityLabel={`Delete ${title}`}
->
-  <Text style={styles.actionText}>
-    🗑
-  </Text>
-</TouchableOpacity>
+        {/* DUPLICATE */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.actionButton}
+          onPress={() =>
+            onDuplicateConversation(item)
+          }
+          disabled={actionLoading}
+        >
+          <Text style={styles.actionText}>
+            📑
+          </Text>
+        </TouchableOpacity>
+
+        {/* ARCHIVE */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.actionButton}
+          onPress={() =>
+            onArchiveConversation(item)
+          }
+          disabled={actionLoading}
+        >
+          <Text style={styles.actionText}>
+            {item.archived ? "🔄" : "📦"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* LOCK */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.actionButton}
+          onPress={() =>
+            onToggleLockConversation(item)
+          }
+          disabled={actionLoading}
+        >
+          <Text style={styles.actionText}>
+            {item.locked ? "🔓" : "🔒"}
+          </Text>
+        </TouchableOpacity>
+
       </View>
     </View>
   );
