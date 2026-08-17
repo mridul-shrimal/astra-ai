@@ -1,43 +1,19 @@
-import axios from "axios";
+import { createApiClient } from "@astra/shared";
 import { supabase } from "./supabase";
 
-const API_URL = "http://10.118.48.152:5000/api";
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-export const api = axios.create({
+const api = createApiClient({
   baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 
-// =========================================================
-// ATTACH SUPABASE ACCESS TOKEN
-// =========================================================
-
-api.interceptors.request.use(async (config) => {
-  try {
+  getAccessToken: async () => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
-    if (session?.access_token) {
-      config.headers = config.headers || {};
-
-      config.headers.Authorization =
-        `Bearer ${session.access_token}`;
-    } else {
-      console.log(
-        "⚠️ API REQUEST: No Supabase session token"
-      );
-    }
-  } catch (error) {
-    console.log(
-      "❌ API AUTH INTERCEPTOR ERROR:",
-      error.message
-    );
-  }
-
-  return config;
+    return session?.access_token ?? null;
+  },
 });
 
+export { api };
 export default api;
