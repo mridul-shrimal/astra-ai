@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "web": "npm --workspace frontend run dev",
-    "mobile": "npm --workspace mobile run start",
     "backend": "npm --prefix backend run dev"
+  },
+  "dependencies": {
+    "react": "19.1.0"
   }
 }

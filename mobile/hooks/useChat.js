@@ -67,7 +67,7 @@ const useChat = ({
       console.log("🚀 Sending message to Astra...");
 
       const response = await fetch(
-        "http://10.118.48.152:5000/api/chat/stream",
+       "http://10.138.130.152:5000/api/chat/stream",
         {
           method: "POST",
           headers: {

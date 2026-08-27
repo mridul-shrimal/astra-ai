@@ -1,7 +1,7 @@
 import { createApiClient } from "@astra/shared";
 import { supabase } from "./supabase";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_URL = "http://10.138.130.152:5000/api";
 
 const api = createApiClient({
   baseURL: API_URL,
