@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Alert } from "react-native";
 
+import { createConversationApi } from "@astra/shared";
 import api from "../../api";
+
+const conversationApi = createConversationApi(api);
 
 const useConversations = (session) => {
   const [conversations, setConversations] =
@@ -33,7 +36,7 @@ const loadConversations = useCallback(
       setLoadingConversations(true);
 
       const response =
-        await api.get("/conversations");
+        await conversationApi.getConversations();
 
       console.log(
         "CONVERSATIONS RESPONSE:",
@@ -122,7 +125,7 @@ const loadConversations = useCallback(
         setActionLoading(true);
 
         const response =
-          await api.post("/conversations");
+          await conversationApi.createConversation();
 
         const newConversation =
           response.data?.conversation;
@@ -206,8 +209,8 @@ const renameConversation = useCallback(
     try {
       setActionLoading(true);
 
-      const response = await api.put(
-        `/conversations/${conversationId}`,
+      const response = await conversationApi.updateConversation(
+        conversationId,
         {
           title: trimmedTitle,
         }
@@ -292,8 +295,8 @@ const renameConversation = useCallback(
       try {
         setActionLoading(true);
 
-        await api.delete(
-          `/conversations/${conversationId}`
+        await conversationApi.deleteConversation(
+          conversationId
         );
 
         setConversations((current) =>

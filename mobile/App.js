@@ -17,6 +17,7 @@ import {
 } from "react-native";
 
 import { supabase } from "./supabase";
+import { createConversationApi } from "@astra/shared";
 import api from "./api";
 
 import useAuth from "./hooks/useAuth";
@@ -25,6 +26,8 @@ import useConversations from "./hooks/useConversations/useConversations";
 import useMessages from "./hooks/useMessages";
 import useChat from "./hooks/useChat";
 import ConversationManagement from "./src/components/ConversationManagement";
+
+const conversationApi = createConversationApi(api);
 
 export default function App() {
   // =========================================================
@@ -254,9 +257,7 @@ if (!sessionId) {
       setActionLoading(true);
 
       const response =
-        await api.post(
-          `/conversations/${sessionId}/duplicate`
-        );
+        await conversationApi.duplicateConversation(sessionId);
 
       const duplicatedConversation =
         response.data?.conversation;

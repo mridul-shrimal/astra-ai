@@ -11,5 +11,8 @@ export function createConversationApi(api) {
 
     deleteConversation: (conversationId) =>
       api.delete(`/conversations/${conversationId}`),
+
+    duplicateConversation: (conversationId) =>
+      api.post(`/conversations/${conversationId}/duplicate`),
   };
 }
