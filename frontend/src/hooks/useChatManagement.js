@@ -1,5 +1,7 @@
 import toast from "react-hot-toast";
 import api from "../services/api";
+import { createConversationApi } from "@astra/shared";
+const conversationApi = createConversationApi(api);
 function useChatManagement({
   chats,
   backendConversations,
@@ -73,12 +75,12 @@ const handleRenameChat = async (chatId) => {
   const title = newTitle.trim();
 
   try {
-    const response = await api.put(
-      `/conversations/${sessionId}`,
-      {
-        title,
-      }
-    );
+    const response = await conversationApi.updateConversation(
+  sessionId,
+  {
+    title,
+  }
+);
 
     const data = response.data;
 
@@ -381,8 +383,8 @@ const handleDeleteChat = async (chatId) => {
 if (backendChat) {
   
 
-  const response = await api.delete(
-  `/conversations/${backendChat.session_id}`
+ const response = await conversationApi.deleteConversation(
+  backendChat.session_id
 );
 
 const data = response.data;

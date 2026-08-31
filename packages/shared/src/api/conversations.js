@@ -6,6 +6,9 @@ export function createConversationApi(api) {
     createConversation: () =>
       api.post("/conversations"),
 
+    getConversationMessages: (conversationId) =>
+      api.get(`/conversations/${conversationId}/messages`),
+
     updateConversation: (conversationId, data) =>
       api.put(`/conversations/${conversationId}`, data),
 

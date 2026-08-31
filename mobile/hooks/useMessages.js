@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
-
+import { createConversationApi } from "@astra/shared";
+const conversationApi = createConversationApi(api);
 const useMessages = (session, selectedConversation) => {
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -25,9 +26,9 @@ const useMessages = (session, selectedConversation) => {
         selectedConversation.session_id
       );
 
-      const response = await api.get(
-        `/conversations/${selectedConversation.session_id}/messages`
-      );
+     const response = await conversationApi.getConversationMessages(
+  selectedConversation.session_id
+);
 
       console.log(
         "📨 MESSAGE RESPONSE:",

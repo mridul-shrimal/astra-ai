@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
 import api from "../services/api";
+import { createConversationApi } from "@astra/shared";
 import notificationSound from "../assets/sounds/notification.mp3";
 import useExportChat from "../hooks/useChatExport";
 import useChatStream from "../hooks/useChatStream";
@@ -15,6 +16,7 @@ import { useAuth } from "../hooks/useAuth";
 import { speak } from "../utils/speech";
 import { useEffect } from "react";
 
+const conversationApi = createConversationApi(api);
 // =========================
 // Helper Functions
 // =========================
@@ -55,7 +57,7 @@ function Chat() {
   useEffect(() => {
     const loadConversations = async () => {
       try {
-       const response = await api.get("/conversations");
+       const response = await conversationApi.getConversations();
 
       const data = response.data;
 
@@ -185,9 +187,9 @@ useEffect(() => {
 
   const loadMessages = async () => {
     try {
-        const response = await api.get(
-        `/conversations/${currentChatId}/messages`
-      );
+        const response = await conversationApi.getConversationMessages(
+  currentChatId
+);
 
       const data = response.data;
 
@@ -766,7 +768,7 @@ const handleNewChat = () => {
 
 const handleCreateChatWithModel = async () => {
   try {
-    const response = await api.post("/conversations");
+    const response = await conversationApi.createConversation();
 
     const data = response.data;
 
@@ -1178,10 +1180,7 @@ searchRef={searchRef}
         // =========================
         // Export
         // =========================
-        exportOpen={exportOpen}
-setExportOpen={setExportOpen}
-
-handleExportChat={handleExportChat}
+        handleExportChat={handleExportChat}
       />
 
 
