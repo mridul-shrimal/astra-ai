@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Alert } from "react-native";
+import { parseSseEvents } from "@astra/shared";
 import { supabase } from "../supabase";
 
 const useChat = ({
@@ -98,27 +99,8 @@ const useChat = ({
 
       const events = responseText.split("\n\n");
 
-      for (const event of events) {
-        const line = event
-          .split("\n")
-          .find((line) =>
-            line.startsWith("data:")
-          );
-
-        if (!line) {
-          continue;
-        }
-
-        const data = line
-          .replace(/^data:\s*/, "")
-          .trim();
-
-        if (!data || data === "[DONE]") {
-          continue;
-        }
-
-        try {
-          const parsed = JSON.parse(data);
+      parseSseEvents(events, {
+        onEvent: (parsed) => {
 
           if (
             parsed.type === "chunk" &&
@@ -151,13 +133,14 @@ const useChat = ({
                 "AI streaming failed."
             );
           }
-        } catch (parseError) {
+        },
+        onParseError: (parseError) => {
           console.log(
             "⚠️ SSE parse warning:",
             parseError.message
           );
-        }
-      }
+        },
+      });
 
       console.log(
         "✅ Final AI response:",

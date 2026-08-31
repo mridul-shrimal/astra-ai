@@ -1,3 +1,4 @@
+import { parseSseEvents } from "@astra/shared";
 import supabase from "../config/supabase";
 function useChatStream({
   updateCurrentMessages,
@@ -79,31 +80,8 @@ const response = await fetch(
 
       buffer = events.pop() || "";
 
-      for (const event of events) {
-        const line = event
-          .split("\n")
-          .find((line) =>
-            line.startsWith("data:")
-          );
-
-        if (!line) {
-          continue;
-        }
-
-        const data = line
-          .replace(/^data:\s*/, "")
-          .trim();
-
-        if (!data) {
-          continue;
-        }
-
-        if (data === "[DONE]") {
-          continue;
-        }
-
-        try {
-          const parsed = JSON.parse(data);
+      parseSseEvents(events, {
+        onEvent: (parsed) => {
 
           if (
             parsed.type === "chunk" &&
@@ -136,13 +114,14 @@ const response = await fetch(
                 "Streaming failed."
             );
           }
-        } catch (parseError) {
+        },
+        onParseError: (parseError) => {
           console.warn(
             "⚠️ Stream parse error:",
             parseError
           );
-        }
-      }
+        },
+      });
     }
 
     setIsTyping(false);
