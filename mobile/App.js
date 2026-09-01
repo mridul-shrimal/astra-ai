@@ -3,17 +3,9 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
-  KeyboardAvoidingView,
-  Modal,
-  StyleSheet,
-  Platform,
   SafeAreaView,
-  ScrollView,
+  StyleSheet,
   Text,
-  TextInput,
-  TouchableOpacity,
-  View,
 } from "react-native";
 
 import { supabase } from "./supabase";
@@ -25,7 +17,9 @@ import useAuthActions from "./hooks/useAuthActions";
 import useConversations from "./hooks/useConversations/useConversations";
 import useMessages from "./hooks/useMessages";
 import useChat from "./hooks/useChat";
-import ConversationManagement from "./src/components/ConversationManagement";
+import AuthScreen from "./src/components/AuthScreen";
+import ChatScreen from "./src/components/ChatScreen";
+import HomeScreen from "./src/components/HomeScreen";
 
 const conversationApi = createConversationApi(api);
 
@@ -301,112 +295,6 @@ if (!sessionId) {
       setActionLoading(false);
     }
   };
-// =========================================================
-// RENDER CONVERSATION
-// =========================================================
-
-const renderConversation = ({ item }) => {
-  const title =
-    item?.title?.trim() ||
-    "New Conversation";
-
-  const date =
-    item?.updated_at ||
-    item?.created_at ||
-    "";
-
-  const isSelected =
-    selectedConversation?.session_id ===
-    item?.session_id;
-
-  return (
-    <View
-      style={[
-        styles.conversation,
-        isSelected &&
-          styles.conversationSelected,
-      ]}
-    >
-      {/* OPEN CONVERSATION */}
-      <TouchableOpacity
-        activeOpacity={0.7}
-        style={styles.conversationMain}
-        onPress={() => openConversation(item)}
-      >
-        <View style={styles.conversationContent}>
-          <Text
-            style={[
-              styles.conversationTitle,
-              isSelected &&
-                styles.conversationTitleSelected,
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {title}
-          </Text>
-
-          {!!date && (
-            <Text
-              style={styles.conversationDate}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {date}
-            </Text>
-          )}
-        </View>
-      </TouchableOpacity>
-
-      {/* DUPLICATE */}
-      <TouchableOpacity
-        activeOpacity={0.7}
-        style={styles.actionButton}
-        onPress={() =>
-          onDuplicateConversation(item)
-        }
-        disabled={actionLoading}
-        accessibilityRole="button"
-        accessibilityLabel={`Duplicate ${title}`}
-      >
-        <Text style={styles.actionText}>
-          📑
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-
-// =========================================================
-// RENDER MESSAGE
-// =========================================================
-
-const renderMessage = ({ item }) => {
-  const text =
-    item?.content ||
-    item?.message ||
-    item?.text ||
-    "";
-
-  const cleanText =
-    typeof text === "string"
-      ? text.trim()
-      : String(text || "").trim();
-
-  if (!cleanText) {
-    return null;
-  }
-
-  return (
-    <View style={styles.message}>
-      <Text style={styles.messageText}>
-        {cleanText}
-      </Text>
-    </View>
-  );
-};
-
   // =========================================================
 // AUTH SESSION LOADING
 // =========================================================
@@ -432,188 +320,22 @@ if (authSessionLoading) {
 // =========================================================
 
 if (session && selectedConversation) {
-  const conversationTitle =
-    selectedConversation?.title?.trim() ||
-    "New Chat";
-
   return (
-    <KeyboardAvoidingView
-      style={styles.chatContainer}
-      behavior={
-        Platform.OS === "ios"
-          ? "padding"
-          : "height"
-      }
-    >
-      <SafeAreaView style={styles.chatContainer}>
-
-        {/* =================================================
-            CHAT HEADER
-        ================================================= */}
-
-        <View style={styles.chatHeader}>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.backButton}
-            onPress={() => {
-              setSelectedConversation(null);
-              setMessages([]);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Go back to conversations"
-          >
-            <Text style={styles.backButtonText}>
-              ‹
-            </Text>
-
-            <Text style={styles.backButtonLabel}>
-              Back
-            </Text>
-          </TouchableOpacity>
-
-
-          <View style={styles.chatHeaderCenter}>
-            <Text
-              style={styles.chatTitle}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {conversationTitle}
-            </Text>
-
-            <Text style={styles.chatSubtitle}>
-              Astra AI
-            </Text>
-          </View>
-
-
-          {/* Keeps the title perfectly centered */}
-          <View style={styles.headerSpacer} />
-
-        </View>
-
-          {/* =================================================
-    MESSAGES
-================================================= */}
-
-{loadingMessages ? (
-  <View style={styles.loading}>
-    <ActivityIndicator
-      size="large"
-      color="#22d3ee"
+    <ChatScreen
+      styles={styles}
+      selectedConversation={selectedConversation}
+      messages={messages}
+      loadingMessages={loadingMessages}
+      messageText={messageText}
+      isSending={isSending}
+      onMessageTextChange={setMessageText}
+      onSendMessage={sendMessage}
+      onBack={() => {
+        setSelectedConversation(null);
+        setMessages([]);
+      }}
     />
-
-    <Text style={styles.loadingText}>
-      Loading messages...
-    </Text>
-  </View>
-) : (
-  <FlatList
-    style={styles.messagesList}
-    data={messages}
-    keyExtractor={(item, index) =>
-      String(item.id || `${item.created_at || "message"}-${index}`)
-    }
-    renderItem={renderMessage}
-    contentContainerStyle={[
-      styles.messagesContent,
-      messages.length === 0 &&
-        styles.messagesEmptyContent,
-    ]}
-    keyboardShouldPersistTaps="handled"
-    keyboardDismissMode={
-      Platform.OS === "ios"
-        ? "interactive"
-        : "on-drag"
-    }
-    showsVerticalScrollIndicator={false}
-    removeClippedSubviews={Platform.OS === "android"}
-    initialNumToRender={20}
-    maxToRenderPerBatch={10}
-    windowSize={7}
-    ListEmptyComponent={
-      <View style={styles.emptyState}>
-        <Text style={styles.emptyStateIcon}>
-          ✦
-        </Text>
-
-        <Text style={styles.emptyTitle}>
-          Start a conversation
-        </Text>
-
-        <Text style={styles.empty}>
-          Ask Astra anything.
-        </Text>
-      </View>
-    }
-  />
-)}
-
-
-{/* =================================================
-    MESSAGE INPUT
-================================================= */}
-
-<View style={styles.inputContainer}>
-  <View style={styles.inputRow}>
-
-    <TextInput
-      style={styles.messageInput}
-      placeholder="Message Astra..."
-      placeholderTextColor="#64748b"
-      value={messageText}
-      onChangeText={setMessageText}
-      multiline
-      maxLength={4000}
-      editable={!isSending}
-      textAlignVertical="top"
-      returnKeyType="send"
-      blurOnSubmit={false}
-      keyboardAppearance="dark"
-      autoCorrect
-      spellCheck
-      accessibilityLabel="Message Astra"
-    />
-
-    <TouchableOpacity
-      activeOpacity={0.8}
-      style={[
-        styles.sendButton,
-        isSending &&
-          styles.sendButtonDisabled,
-      ]}
-      onPress={sendMessage}
-      disabled={isSending}
-      accessibilityRole="button"
-      accessibilityLabel={
-        isSending
-          ? "Sending message"
-          : "Send message"
-      }
-    >
-      {isSending ? (
-        <ActivityIndicator
-          size="small"
-          color="#ffffff"
-        />
-      ) : (
-        <Text style={styles.sendButtonText}>
-          ↑
-        </Text>
-      )}
-    </TouchableOpacity>
-
-  </View>
-
-  <Text style={styles.inputHint}>
-    Astra AI can make mistakes. Check important information.
-  </Text>
-</View>
-
-</SafeAreaView>
-</KeyboardAvoidingView>
-);
+  );
 }
 
 // =========================================================
@@ -759,140 +481,12 @@ const handleRenameConversation = (
   );
 };
 
-  // =========================================================
-// LOGGED-IN HOME SCREEN
-// =========================================================
+const handleCloseRename = () => {
+  setRenameConversationTarget(null);
+  setRenameText("");
+};
 
-if (session) {
-  const userEmail =
-    session?.user?.email || "Astra User";
-
-  return (
-    <SafeAreaView style={styles.container}>
-
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
-      <View style={styles.header}>
-        <View style={styles.headerBrand}>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoBadgeText}>
-              ✦
-            </Text>
-          </View>
-
-          <View style={styles.headerBrandText}>
-            <Text style={styles.appTitle}>
-              Astra AI
-            </Text>
-
-            <Text
-              style={styles.userEmail}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {userEmail}
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.75}
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          disabled={authLoading}
-          accessibilityRole="button"
-          accessibilityLabel="Log out of Astra AI"
-        >
-          <Text style={styles.logoutButtonText}>
-            Logout
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-
-      {/* =================================================
-    CONVERSATION MANAGEMENT
-================================================= */}
-
-<View style={styles.content}>
-<ConversationManagement
-  conversations={conversations}
-  selectedConversation={selectedConversation}
-  loadingConversations={loadingConversations}
-  actionLoading={actionLoading}
-  onOpenConversation={openConversation}
-  onRefresh={loadConversations}
-  onNewChat={createConversation}
-  onRenameConversation={
-    handleRenameConversation
-  }
-  onPinConversation={handlePinConversation}
-  onArchiveConversation={handleArchiveConversation}
-  
-  onToggleLockConversation={
-  handleToggleLockConversation
-}
-onRequestUnlock={
-  handleRequestUnlock
-}
-  onDeleteConversation={
-    confirmDeleteConversation
-  }
-  onDuplicateConversation={
-  handleDuplicateConversation
-}
-/>  
-{/* =================================================
-    RENAME CONVERSATION MODAL
-================================================= */}
-
-<Modal
-  visible={!!renameConversationTarget}
-  transparent
-  animationType="fade"
-  onRequestClose={() => {
-    setRenameConversationTarget(null);
-    setRenameText("");
-  }}
->
-  <View style={styles.renameModalOverlay}>
-    <View style={styles.renameModal}>
-      <Text style={styles.renameModalTitle}>
-        Rename Chat
-      </Text>
-
-      <Text style={styles.renameModalDescription}>
-        Enter a new name for this conversation.
-      </Text>
-
-      <TextInput
-        style={styles.renameInput}
-        value={renameText}
-        onChangeText={setRenameText}
-        placeholder="Conversation name"
-        placeholderTextColor="#64748b"
-        autoFocus
-        maxLength={100}
-      />
-
-      <View style={styles.renameModalActions}>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            setRenameConversationTarget(null);
-            setRenameText("");
-          }}
-        >
-          <Text style={styles.renameCancelText}>
-            Cancel
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.8}
-      onPress={async () => {
+const handleSaveRename = async () => {
   const trimmedTitle =
     renameText.trim();
 
@@ -914,71 +508,14 @@ onRequestUnlock={
     setRenameConversationTarget(null);
     setRenameText("");
   }
-}}
-        >
-          <Text style={styles.renameSaveText}>
-            Save
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
-{/* =================================================
-    LOCK / UNLOCK CONVERSATION MODAL
-================================================= */}
+};
 
-<Modal
-  visible={!!lockConversationTarget}
-  transparent
-  animationType="fade"
-  onRequestClose={() => {
-    setLockConversationTarget(null);
-    setLockPinText("");
-  }}
->
-  <View style={styles.renameModalOverlay}>
-    <View style={styles.renameModal}>
-      <Text style={styles.renameModalTitle}>
-        {lockConversationTarget?.locked
-          ? "🔓 Unlock Chat"
-          : "🔒 Lock Chat"}
-      </Text>
+const handleCloseLock = () => {
+  setLockConversationTarget(null);
+  setLockPinText("");
+};
 
-      <Text style={styles.renameModalDescription}>
-        {lockConversationTarget?.locked
-          ? "Enter the 4-digit PIN to unlock this conversation."
-          : "Create a 4-digit PIN to lock this conversation."}
-      </Text>
-
-      <TextInput
-        style={styles.renameInput}
-        value={lockPinText}
-        onChangeText={setLockPinText}
-        placeholder="4-digit PIN"
-        placeholderTextColor="#64748b"
-        keyboardType="number-pad"
-        secureTextEntry
-        maxLength={4}
-        autoFocus
-      />
-
-      <View style={styles.renameModalActions}>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            setLockConversationTarget(null);
-            setLockPinText("");
-          }}
-        >
-          <Text style={styles.renameCancelText}>
-            Cancel
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
+const handleSaveLock = () => {
   const pin = lockPinText.trim();
 
   if (!/^\d{4}$/.test(pin)) {
@@ -1033,242 +570,65 @@ onRequestUnlock={
 
   setLockConversationTarget(null);
   setLockPinText("");
-}}
-        >
-          <Text style={styles.renameSaveText}>
-            {lockConversationTarget?.locked
-              ? "Unlock"
-              : "Lock"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
-</View>
-</SafeAreaView>
+};
+
+  // =========================================================
+// LOGGED-IN HOME SCREEN
+// =========================================================
+
+if (session) {
+  const userEmail =
+    session?.user?.email || "Astra User";
+
+  return (
+    <HomeScreen
+      styles={styles}
+      userEmail={userEmail}
+      authLoading={authLoading}
+      onLogout={handleLogout}
+      conversations={conversations}
+      selectedConversation={selectedConversation}
+      loadingConversations={loadingConversations}
+      actionLoading={actionLoading}
+      onOpenConversation={openConversation}
+      onRefresh={loadConversations}
+      onNewChat={createConversation}
+      onRenameConversation={handleRenameConversation}
+      onPinConversation={handlePinConversation}
+      onArchiveConversation={handleArchiveConversation}
+      onToggleLockConversation={handleToggleLockConversation}
+      onRequestUnlock={handleRequestUnlock}
+      onDeleteConversation={confirmDeleteConversation}
+      onDuplicateConversation={handleDuplicateConversation}
+      renameConversationTarget={renameConversationTarget}
+      renameText={renameText}
+      onRenameTextChange={setRenameText}
+      onCloseRename={handleCloseRename}
+      onSaveRename={handleSaveRename}
+      lockConversationTarget={lockConversationTarget}
+      lockPinText={lockPinText}
+      onLockPinTextChange={setLockPinText}
+      onCloseLock={handleCloseLock}
+      onSaveLock={handleSaveLock}
+    />
   );
 }
-
 
 // =========================================================
 // LOGIN / REGISTER SCREEN
 // =========================================================
 
 return (
-  <SafeAreaView style={styles.container}>
-    <KeyboardAvoidingView
-      style={styles.authContainer}
-      behavior={
-        Platform.OS === "ios"
-          ? "padding"
-          : "height"
-      }
-    >
-      <ScrollView
-        contentContainerStyle={styles.authContent}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={
-          Platform.OS === "ios"
-            ? "interactive"
-            : "on-drag"
-        }
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-
-        {/* =================================================
-            BRAND
-        ================================================= */}
-
-        <View style={styles.authBrand}>
-          <View
-            style={styles.authLogo}
-            accessibilityElementsHidden
-          >
-            <Text style={styles.authLogoText}>
-              ✦
-            </Text>
-          </View>
-
-          <Text style={styles.appTitle}>
-            Astra AI
-          </Text>
-
-          <Text style={styles.authSubtitle}>
-            Your personal AI assistant
-          </Text>
-        </View>
-        {/* =================================================
-    AUTH CARD
-================================================= */}
-
-<View style={styles.authCard}>
-  <Text style={styles.authHeading}>
-    Welcome back
-  </Text>
-
-  <Text style={styles.authDescription}>
-    Sign in to continue to Astra AI.
-  </Text>
-
-
-  {/* Email */}
-
-  <View style={styles.authField}>
-    <Text style={styles.authFieldLabel}>
-      Email
-    </Text>
-
-    <TextInput
-      style={styles.input}
-      placeholder="you@example.com"
-      placeholderTextColor="#64748b"
-      value={email}
-      onChangeText={setEmail}
-      autoCapitalize="none"
-      autoCorrect={false}
-      spellCheck={false}
-      keyboardType="email-address"
-      textContentType="emailAddress"
-      autoComplete="email"
-      editable={!authLoading}
-      returnKeyType="next"
-      blurOnSubmit={false}
-      accessibilityLabel="Email address"
-    />
-  </View>
-
-
-  {/* Password */}
-
-  <View style={styles.authField}>
-    <Text style={styles.authFieldLabel}>
-      Password
-    </Text>
-
-    <TextInput
-      style={styles.input}
-      placeholder="Enter your password"
-      placeholderTextColor="#64748b"
-      value={password}
-      onChangeText={setPassword}
-      secureTextEntry
-      textContentType="password"
-      autoComplete="password"
-      editable={!authLoading}
-      returnKeyType="done"
-      onSubmitEditing={
-        authLoading
-          ? undefined
-          : handleLogin
-      }
-      accessibilityLabel="Password"
-    />
-  </View>
-
-
-  {/* Login */}
-
-  <TouchableOpacity
-    activeOpacity={0.85}
-    style={[
-      styles.authButton,
-      authLoading &&
-        styles.authButtonDisabled,
-    ]}
-    onPress={handleLogin}
-    disabled={authLoading}
-    accessibilityRole="button"
-    accessibilityLabel={
-      authLoading
-        ? "Signing in"
-        : "Log in"
-    }
-  >
-    {authLoading ? (
-      <View style={styles.authButtonContent}>
-        <ActivityIndicator
-          size="small"
-          color="#ffffff"
-        />
-
-        <Text style={styles.authButtonText}>
-          Signing in...
-        </Text>
-      </View>
-    ) : (
-      <Text style={styles.authButtonText}>
-        Login
-      </Text>
-    )}
-  </TouchableOpacity>
-
-          {/* Divider */}
-
-<View style={styles.authDivider}>
-  <View style={styles.authDividerLine} />
-
-  <Text style={styles.authDividerText}>
-    OR
-  </Text>
-
-  <View style={styles.authDividerLine} />
-</View>
-
-
-{/* Create Account */}
-
-<TouchableOpacity
-  activeOpacity={0.85}
-  style={[
-    styles.secondaryAuthButton,
-    authLoading &&
-      styles.authButtonDisabled,
-  ]}
-  onPress={handleSignup}
-  disabled={authLoading}
-  accessibilityRole="button"
-  accessibilityLabel={
-    authLoading
-      ? "Creating account"
-      : "Create account"
-  }
->
-  {authLoading ? (
-    <View style={styles.authButtonContent}>
-      <ActivityIndicator
-        size="small"
-        color="#22d3ee"
-      />
-
-      <Text style={styles.secondaryAuthButtonText}>
-        Creating account...
-      </Text>
-    </View>
-  ) : (
-    <Text style={styles.secondaryAuthButtonText}>
-      Create Account
-    </Text>
-  )}
-</TouchableOpacity>
-
-</View>
-
-
-{/* Footer */}
-
-<Text style={styles.authFooter}>
-  Secure access to your personal AI assistant
-</Text>
-
-<Text style={styles.authVersion}>
-  Astra AI
-</Text>
-
-</ScrollView>
-</KeyboardAvoidingView>
-</SafeAreaView>
+  <AuthScreen
+    styles={styles}
+    email={email}
+    password={password}
+    authLoading={authLoading}
+    onEmailChange={setEmail}
+    onPasswordChange={setPassword}
+    onLogin={handleLogin}
+    onSignup={handleSignup}
+  />
 );
 }
 
