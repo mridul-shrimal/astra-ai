@@ -1,7 +1,10 @@
 import { createContext, useEffect, useState } from "react";
+import { createAuthService } from "@astra/shared";
 import supabase from "../config/supabase";
 
 export const AuthContext = createContext();
+
+const auth = createAuthService(supabase);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -15,7 +18,7 @@ export function AuthProvider({ children }) {
         const {
           data: { session },
           error,
-        } = await supabase.auth.getSession();
+        } = await auth.getSession();
 
         if (error) {
           console.error("❌ Session Error:", error);
@@ -39,33 +42,22 @@ export function AuthProvider({ children }) {
 
     loadSession();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (mounted) {
-          setUser(session?.user ?? null);
-        }
+    const unsubscribe = auth.subscribeToSessionChanges((session) => {
+      if (mounted) {
+        setUser(session?.user ?? null);
       }
-    );
+    });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
 
   const login = async (userData, session) => {
     try {
       if (session?.access_token && session?.refresh_token) {
-        const { error } = await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        });
-
-        if (error) {
-          throw error;
-        }
+        await auth.setSession(session);
       }
 
       setUser(userData);
@@ -77,7 +69,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await auth.signOut();
 
       if (error) {
         console.error("❌ Logout Error:", error);

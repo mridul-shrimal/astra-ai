@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { createAuthService } from "@astra/shared";
 import { supabase } from "../supabase";
+
+const auth = createAuthService(supabase);
 
 const useAuth = () => {
   const [session, setSession] = useState(null);
@@ -11,7 +14,7 @@ const useAuth = () => {
     const loadSession = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await auth.getSession();
 
       if (mounted) {
         setSession(session);
@@ -21,19 +24,15 @@ const useAuth = () => {
 
     loadSession();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (mounted) {
-          setSession(session);
-        }
+    const unsubscribe = auth.subscribeToSessionChanges((session) => {
+      if (mounted) {
+        setSession(session);
       }
-    );
+    });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
 

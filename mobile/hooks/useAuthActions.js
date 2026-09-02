@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { createAuthService } from "@astra/shared";
 import { supabase } from "../supabase";
+
+const auth = createAuthService(supabase);
 
 const useAuthActions = () => {
   const [authLoading, setAuthLoading] = useState(false);
@@ -16,7 +19,7 @@ const useAuthActions = () => {
       setAuthLoading(true);
 
       const { error } =
-        await supabase.auth.signInWithPassword({
+        await auth.signInWithPassword({
           email,
           password,
         });
@@ -67,7 +70,7 @@ const useAuthActions = () => {
       setAuthLoading(true);
 
       const { error } =
-        await supabase.auth.signUp({
+        await auth.signUp({
           email,
           password,
         });
