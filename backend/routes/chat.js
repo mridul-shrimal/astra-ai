@@ -22,9 +22,7 @@ const {
   getRecentMemories,
 } = require("../services/memoryService");
 const {
-  createConversation,
-  getConversation,
-  touchConversation,
+  getOrCreateConversation,
 } = require("../services/conversationService");
 const {
   saveMessage,
@@ -52,42 +50,24 @@ router.post(
 
       const currentUser = req.user.id;
 
-      let currentSession = sessionId;
+      let currentSession;
 
-      // Create conversation if needed
-      if (!currentSession) {
-        currentSession = require("crypto").randomUUID();
+try {
+  ({ sessionId: currentSession } =
+    await getOrCreateConversation(
+      sessionId,
+      currentUser
+    ));
+} catch (error) {
+  if (error.status === 404) {
+    return res.status(404).json({
+      success: false,
+      message: "Conversation not found.",
+    });
+  }
 
-        await createConversation(
-          currentSession,
-          "New Chat",
-          currentUser
-        );
-
-        console.log(
-          `💬 Created streaming conversation: ${currentSession} for user: ${currentUser}`
-        );
-      } else {
-        // Verify this conversation belongs to the authenticated user
-        const existingConversation =
-          await getConversation(
-            currentSession,
-            currentUser
-          );
-
-        if (!existingConversation) {
-          return res.status(404).json({
-            success: false,
-            message: "Conversation not found.",
-          });
-        }
-
-        await touchConversation(
-          currentSession,
-          currentUser
-        );
-      }
-
+  throw error;
+}
       // Extract uploaded files
       let documentText = "";
 
@@ -327,38 +307,23 @@ ${message || "Summarize all uploaded documents."}
 
 const currentUser = req.user.id;
 
-let currentSession = sessionId;
+let currentSession;
 
-if (!currentSession) {
-  currentSession = require("crypto").randomUUID();
-
-  await createConversation(
-    currentSession,
-    "New Chat",
-    currentUser
-  );
-
-  console.log(
-    `💬 Created conversation: ${currentSession} for user: ${currentUser}`
-  );
-} else {
-  const existingConversation =
-    await getConversation(
-      currentSession,
+try {
+  ({ sessionId: currentSession } =
+    await getOrCreateConversation(
+      sessionId,
       currentUser
-    );
-
-  if (!existingConversation) {
+    ));
+} catch (error) {
+  if (error.status === 404) {
     return res.status(404).json({
       success: false,
       message: "Conversation not found.",
     });
   }
 
-  await touchConversation(
-    currentSession,
-    currentUser
-  );
+  throw error;
 }
 
 let useWebSearch = false;

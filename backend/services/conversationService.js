@@ -140,6 +140,55 @@ function touchConversation(sessionId, userId) {
 }
 
 /**
+ * Get existing conversation or create a new one
+ */
+async function getOrCreateConversation(
+  sessionId,
+  userId,
+  title = "New Chat"
+) {
+  const currentSession =
+    sessionId || require("crypto").randomUUID();
+
+  if (!sessionId) {
+    await createConversation(
+      currentSession,
+      title,
+      userId
+    );
+
+    return {
+      sessionId: currentSession,
+      created: true,
+    };
+  }
+
+  const existingConversation =
+    await getConversation(
+      currentSession,
+      userId
+    );
+
+  if (!existingConversation) {
+    const error = new Error(
+      "Conversation not found."
+    );
+    error.status = 404;
+    throw error;
+  }
+
+  await touchConversation(
+    currentSession,
+    userId
+  );
+
+  return {
+    sessionId: currentSession,
+    created: false,
+  };
+}
+
+/**
  * Delete conversation
  */
 function deleteConversation(sessionId, userId) {
@@ -179,60 +228,6 @@ function deleteConversation(sessionId, userId) {
       }
     );
   });
-}
-/**
- * Duplicate conversation with all messages
- */
-async function duplicateConversation(
-  sessionId,
-  userId
-) {
-  console.log("📑 DUPLICATE REQUEST:");
-  console.log("   sessionId:", sessionId);
-  console.log("   userId:", userId);
-
-  const original = await getConversation(
-    sessionId,
-    userId
-  );
-
-  console.log(
-    "📑 ORIGINAL CONVERSATION:",
-    original
-  );
-
-  if (!original) {
-    throw new Error(
-      "Conversation not found or access denied."
-    );
-  }
-
-  // KEEP EVERYTHING BELOW YOUR EXISTING CODE
-
-  const { randomUUID } = require("crypto");
-
-  const newSessionId = randomUUID();
-
-  await createConversation(
-    newSessionId,
-    `${original.title || "New Chat"} Copy`,
-    userId
-  );
-
-  const messages = await getMessages(sessionId);
-
-  for (const message of messages) {
-    await saveMessage(
-      newSessionId,
-      message.sender,
-      message.content
-    );
-  }
-
-  return await getConversation(
-    newSessionId,
-    userId
-  );
 }
 
 /**
@@ -302,6 +297,7 @@ module.exports = {
   getConversation,
   renameConversation,
   touchConversation,
+  getOrCreateConversation,
   deleteConversation,
   duplicateConversation,
 };
