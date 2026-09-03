@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../api";
-import { createConversationApi } from "@astra/shared";
-const conversationApi = createConversationApi(api);
+import {
+  createConversationService,
+  getConversationSessionId,
+} from "@astra/shared";
+
+const conversationService = createConversationService(api);
 const useMessages = (session, selectedConversation) => {
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -12,7 +16,11 @@ const useMessages = (session, selectedConversation) => {
       return;
     }
 
-    if (!selectedConversation?.session_id) {
+    const conversationId = getConversationSessionId(
+      selectedConversation
+    );
+
+    if (!conversationId) {
 
       setMessages([]);
       return;
@@ -23,20 +31,13 @@ const useMessages = (session, selectedConversation) => {
 
       console.log(
         "📨 Loading messages:",
-        selectedConversation.session_id
-      );
-
-     const response = await conversationApi.getConversationMessages(
-  selectedConversation.session_id
-);
-
-      console.log(
-        "📨 MESSAGE RESPONSE:",
-        response.data
+        conversationId
       );
 
       const loadedMessages =
-        response.data?.messages || [];
+        await conversationService.getConversationMessages(
+          selectedConversation
+        );
 
       setMessages(loadedMessages);
     } catch (error) {
@@ -65,7 +66,7 @@ const useMessages = (session, selectedConversation) => {
     loadMessages();
   }, [
     session,
-    selectedConversation?.session_id,
+    getConversationSessionId(selectedConversation),
   ]);
 
   return {

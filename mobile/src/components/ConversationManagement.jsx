@@ -1,5 +1,7 @@
 import React from "react";
 
+import { getConversationSessionId } from "@astra/shared";
+
 import {
   ActivityIndicator,
   FlatList,
@@ -22,6 +24,7 @@ function ConversationManagement({
   onRefresh,
   onNewChat,
   onRenameConversation,
+  onRequestUnlock,
 }) {
 
 // =========================================================
@@ -38,12 +41,11 @@ const renderConversation = ({ item }) => {
     item.created_at ||
     "";
 
-  const itemId =
-    item.id || item.session_id;
+  const itemId = getConversationSessionId(item);
 
-  const selectedId =
-    selectedConversation?.id ||
-    selectedConversation?.session_id;
+  const selectedId = getConversationSessionId(
+    selectedConversation
+  );
 
   const isSelected =
     selectedId === itemId;
@@ -107,6 +109,30 @@ const renderConversation = ({ item }) => {
         >
           <Text style={styles.actionText}>
             {item.pinned ? "📌" : "📍"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* RENAME */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.actionButton}
+          onPress={() => onRenameConversation(item)}
+          disabled={actionLoading}
+        >
+          <Text style={styles.actionText}>
+            ✏️
+          </Text>
+        </TouchableOpacity>
+
+        {/* DELETE */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.actionButton}
+          onPress={() => onDeleteConversation(item)}
+          disabled={actionLoading}
+        >
+          <Text style={styles.actionText}>
+            🗑️
           </Text>
         </TouchableOpacity>
 
@@ -211,8 +237,7 @@ const renderConversation = ({ item }) => {
   
           keyExtractor={(item, index) =>
             String(
-              item.id ||
-                item.session_id ||
+            getConversationSessionId(item) ||
                 index
             )
           }
@@ -269,8 +294,7 @@ const renderConversation = ({ item }) => {
       .map((item) => (
         <View
           key={
-            item.id ||
-            item.session_id
+            getConversationSessionId(item)
           }
           style={styles.conversation}
         >
@@ -303,6 +327,16 @@ onPress={() => {
             >
               <Text style={styles.actionText}>
                 🔄 Restore
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => onDeleteConversation(item)}
+              disabled={actionLoading}
+            >
+              <Text style={styles.actionText}>
+                🗑️
               </Text>
             </TouchableOpacity>
           </View>

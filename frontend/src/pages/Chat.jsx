@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
 import api from "../services/api";
-import { createConversationApi } from "@astra/shared";
+import { createConversationService } from "@astra/shared";
 import notificationSound from "../assets/sounds/notification.mp3";
 import useExportChat from "../hooks/useChatExport";
 import useChatStream from "../hooks/useChatStream";
@@ -16,7 +16,7 @@ import { useAuth } from "../hooks/useAuth";
 import { speak } from "../utils/speech";
 import { useEffect } from "react";
 
-const conversationApi = createConversationApi(api);
+const conversationService = createConversationService(api);
 // =========================
 // Helper Functions
 // =========================
@@ -57,12 +57,8 @@ function Chat() {
   useEffect(() => {
     const loadConversations = async () => {
       try {
-       const response = await conversationApi.getConversations();
-
-      const data = response.data;
-
         setBackendConversations(
-          data.success ? data.conversations : []
+          await conversationService.getConversations()
         );
       } catch (error) {
         console.error(
@@ -172,7 +168,7 @@ const currentChat =
       model: null,
       messages:
         backendMessages[conversation.session_id] || [],
-      backendId: conversation.id,
+      backendId: conversation.backendId ?? conversation.id,
     }))
     .find(
       (chat) =>
@@ -187,15 +183,11 @@ useEffect(() => {
 
   const loadMessages = async () => {
     try {
-        const response = await conversationApi.getConversationMessages(
-  currentChatId
-);
-
-      const data = response.data;
-
-      if (!data.success) return;
-
-      const messages = data.messages.map((msg) => ({
+      const messages = (
+        await conversationService.getConversationMessages(
+          currentChatId
+        )
+      ).map((msg) => ({
         id: msg.id,
         sender: msg.sender,
         message: msg.content,
@@ -252,7 +244,9 @@ useEffect(() => {
           lockPin: "",
           model: null,
           messages,
-          backendId: backendConversation.id,
+          backendId:
+            backendConversation.backendId ??
+            backendConversation.id,
         };
 
         return [...prev, backendChat];
@@ -768,15 +762,8 @@ const handleNewChat = () => {
 
 const handleCreateChatWithModel = async () => {
   try {
-    const response = await conversationApi.createConversation();
-
-    const data = response.data;
-
-    if (!data.success) {
-      throw new Error(
-        data.message || "Failed to create conversation"
-      );
-    }
+    const backendConversation =
+      await conversationService.createConversation();
 
     const newChat = createNewChat(
       selectedModel,
@@ -785,15 +772,19 @@ const handleCreateChatWithModel = async () => {
 
     // Use the backend session ID
     newChat.sessionId =
-      data.conversation.session_id;
+      backendConversation.session_id;
 
     newChat.title =
-      data.conversation.title || "New Chat";
+      backendConversation.title || "New Chat";
 
+    setBackendConversations((prev) => [
+      backendConversation,
+      ...prev,
+    ]);
     setChats((prev) => [newChat, ...prev]);
 
     setCurrentChatId(
-      data.conversation.session_id
+      backendConversation.session_id
     );
 
     setModelModalOpen(false);

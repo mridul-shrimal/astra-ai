@@ -161,6 +161,7 @@ const backendChats = backendConversations.map(
         existingChat?.messages || [],
 
       backendId:
+        conversation.backendId ??
         conversation.id,
     };
   }
@@ -274,7 +275,9 @@ const groupedChats = useMemo(() => {
     groups["Uncategorized"] = [];
   }
 
-  visibleChats.forEach((chat) => {
+  visibleChats
+    .filter((chat) => !chat.pinned)
+    .forEach((chat) => {
     const folder =
       chat.folder || "Uncategorized";
 
@@ -283,7 +286,7 @@ const groupedChats = useMemo(() => {
     }
 
     groups[folder].push(chat);
-  });
+    });
 
   return groups;
 }, [folders, visibleChats]);

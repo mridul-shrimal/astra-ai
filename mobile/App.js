@@ -9,7 +9,10 @@ import {
 } from "react-native";
 
 import { supabase } from "./supabase";
-import { createConversationApi } from "@astra/shared";
+import {
+  createConversationService,
+  getConversationSessionId,
+} from "@astra/shared";
 import api from "./api";
 
 import useAuth from "./hooks/useAuth";
@@ -21,7 +24,7 @@ import AuthScreen from "./src/components/AuthScreen";
 import ChatScreen from "./src/components/ChatScreen";
 import HomeScreen from "./src/components/HomeScreen";
 
-const conversationApi = createConversationApi(api);
+const conversationService = createConversationService(api);
 
 export default function App() {
   // =========================================================
@@ -61,6 +64,9 @@ const [lockConversationTarget, setLockConversationTarget] =
   useState(null);
 
 const [lockPinText, setLockPinText] = useState("");
+
+const [openAfterUnlock, setOpenAfterUnlock] =
+  useState(false);
 
 const [renameText, setRenameText] =
   useState("");
@@ -232,7 +238,7 @@ const handleDuplicateConversation =
       return;
     }
 
-    const sessionId = conversation.session_id;
+    const sessionId = getConversationSessionId(conversation);
 
 if (!sessionId) {
   Alert.alert(
@@ -250,28 +256,29 @@ if (!sessionId) {
     try {
       setActionLoading(true);
 
-      const response =
-        await conversationApi.duplicateConversation(sessionId);
-
       const duplicatedConversation =
-        response.data?.conversation;
-
-      if (!duplicatedConversation) {
-        throw new Error(
-          "Duplicated conversation was not returned."
-        );
-      }
+        await conversationService.duplicateConversation(sessionId);
 
       // Add duplicate to the top
       setConversations((prev) => [
-        duplicatedConversation,
+        {
+          ...duplicatedConversation,
+          pinned: false,
+          archived: false,
+          locked: false,
+          lockPin: "",
+        },
         ...prev,
       ]);
 
       // Select duplicate
-      setSelectedConversation(
-        duplicatedConversation
-      );
+      setSelectedConversation({
+        ...duplicatedConversation,
+        pinned: false,
+        archived: false,
+        locked: false,
+        lockPin: "",
+      });
 
       console.log(
         "📑 Conversation duplicated:",
@@ -347,8 +354,7 @@ const handlePinConversation = (conversation) => {
     return;
   }
 
-  const conversationId =
-    conversation.id || conversation.session_id;
+  const conversationId = getConversationSessionId(conversation);
 
   if (!conversationId) {
     return;
@@ -356,7 +362,7 @@ const handlePinConversation = (conversation) => {
 
   setConversations((prev) =>
     prev.map((item) =>
-      (item.id || item.session_id) === conversationId
+      getConversationSessionId(item) === conversationId
         ? {
             ...item,
             pinned: !item.pinned,
@@ -375,21 +381,19 @@ const handleArchiveConversation = (conversation) => {
     return;
   }
 
-  const conversationId =
-    conversation.id || conversation.session_id;
+  const conversationId = getConversationSessionId(conversation);
 
   if (!conversationId) {
     return;
   }
 
   const isCurrentlySelected =
-    (selectedConversation?.id ||
-      selectedConversation?.session_id) ===
+    getConversationSessionId(selectedConversation) ===
     conversationId;
 
   setConversations((prev) =>
     prev.map((item) =>
-      (item.id || item.session_id) === conversationId
+      getConversationSessionId(item) === conversationId
         ? {
             ...item,
             archived: !item.archived,
@@ -407,7 +411,7 @@ const handleArchiveConversation = (conversation) => {
     const nextConversation =
       conversations.find(
         (item) =>
-          (item.id || item.session_id) !==
+          getConversationSessionId(item) !==
             conversationId &&
           !item.archived
       );
@@ -431,8 +435,7 @@ const handleToggleLockConversation = (conversation) => {
     return;
   }
 
-  const conversationId =
-    conversation.id || conversation.session_id;
+  const conversationId = getConversationSessionId(conversation);
 
   if (!conversationId) {
     return;
@@ -440,6 +443,7 @@ const handleToggleLockConversation = (conversation) => {
 
   setLockConversationTarget(conversation);
   setLockPinText("");
+  setOpenAfterUnlock(false);
 };
 
 // =========================================================
@@ -453,6 +457,7 @@ const handleRequestUnlock = (conversation) => {
 
   setLockConversationTarget(conversation);
   setLockPinText("");
+  setOpenAfterUnlock(true);
 };
 
 // =========================================================
@@ -462,7 +467,7 @@ const handleRequestUnlock = (conversation) => {
 const handleRenameConversation = (
   conversation
 ) => {
-  if (!conversation?.session_id) {
+  if (!getConversationSessionId(conversation)) {
     return;
   }
 
@@ -500,7 +505,7 @@ const handleSaveRename = async () => {
 
   const success =
     await renameConversation(
-      renameConversationTarget.session_id,
+    getConversationSessionId(renameConversationTarget),
       trimmedTitle
     );
 
@@ -513,6 +518,7 @@ const handleSaveRename = async () => {
 const handleCloseLock = () => {
   setLockConversationTarget(null);
   setLockPinText("");
+  setOpenAfterUnlock(false);
 };
 
 const handleSaveLock = () => {
@@ -526,9 +532,9 @@ const handleSaveLock = () => {
     return;
   }
 
-  const conversationId =
-    lockConversationTarget.id ||
-    lockConversationTarget.session_id;
+  const conversationId = getConversationSessionId(
+    lockConversationTarget
+  );
 
   if (lockConversationTarget.locked) {
     if (
@@ -543,7 +549,7 @@ const handleSaveLock = () => {
 
     setConversations((prev) =>
       prev.map((item) =>
-        (item.id || item.session_id) ===
+        getConversationSessionId(item) ===
         conversationId
           ? {
               ...item,
@@ -553,10 +559,18 @@ const handleSaveLock = () => {
           : item
       )
     );
+
+    if (openAfterUnlock) {
+      setSelectedConversation({
+        ...lockConversationTarget,
+        locked: false,
+        lockPin: "",
+      });
+    }
   } else {
     setConversations((prev) =>
       prev.map((item) =>
-        (item.id || item.session_id) ===
+        getConversationSessionId(item) ===
         conversationId
           ? {
               ...item,
@@ -570,6 +584,7 @@ const handleSaveLock = () => {
 
   setLockConversationTarget(null);
   setLockPinText("");
+  setOpenAfterUnlock(false);
 };
 
   // =========================================================

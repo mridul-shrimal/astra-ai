@@ -1,7 +1,11 @@
 import toast from "react-hot-toast";
 import api from "../services/api";
-import { createConversationApi } from "@astra/shared";
-const conversationApi = createConversationApi(api);
+import {
+  createConversationService,
+  getConversationSessionId,
+} from "@astra/shared";
+
+const conversationService = createConversationService(api);
 function useChatManagement({
   chats,
   backendConversations,
@@ -53,8 +57,7 @@ const handleRenameChat = async (chatId) => {
     return;
   }
 
-  const sessionId =
-    chat.sessionId || chat.id;
+  const sessionId = getConversationSessionId(chat);
 
   if (!sessionId) {
     toast.error(
@@ -75,21 +78,10 @@ const handleRenameChat = async (chatId) => {
   const title = newTitle.trim();
 
   try {
-    const response = await conversationApi.updateConversation(
-  sessionId,
-  {
-    title,
-  }
-);
-
-    const data = response.data;
-
-    if (!data.success) {
-      throw new Error(
-        data.message ||
-          "Failed to rename conversation"
-      );
-    }
+    await conversationService.renameConversation(
+      sessionId,
+      title
+    );
 
     // Update frontend chats
     setChats((prev) =>
@@ -154,7 +146,42 @@ const handleRenameChat = async (chatId) => {
   // =========================
 
   // Duplicate Chat
-  const handleDuplicateChat = (chatId) => {
+  const handleDuplicateChat = async (chatId) => {
+    const backendChat = backendConversations?.find(
+      (conversation) =>
+        getConversationSessionId(conversation) === chatId
+    );
+
+    if (backendChat) {
+      try {
+        const duplicatedConversation =
+          await conversationService.duplicateConversation(
+            backendChat
+          );
+
+        setBackendConversations((prev) => [
+          duplicatedConversation,
+          ...prev,
+        ]);
+        setCurrentChatId(
+          getConversationSessionId(duplicatedConversation)
+        );
+        toast.success("📑 Chat duplicated successfully!");
+      } catch (error) {
+        console.error(
+          "❌ Duplicate Conversation Error:",
+          error
+        );
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to duplicate chat."
+        );
+      }
+
+      return;
+    }
+
     const chat = chats.find((c) => c.id === chatId);
 
     if (!chat) return;
@@ -383,20 +410,7 @@ const handleDeleteChat = async (chatId) => {
 if (backendChat) {
   
 
- const response = await conversationApi.deleteConversation(
-  backendChat.session_id
-);
-
-const data = response.data;
-
-  
-
-  if (!data.success) {
-    throw new Error(
-      data.message ||
-        "Failed to delete conversation"
-    );
-  }
+ await conversationService.deleteConversation(backendChat);
 
   // Remove deleted conversation from backend state
   const remainingBackendChats =
