@@ -7,6 +7,9 @@ import { toast } from "react-hot-toast";
 import EditMemoryModal from "../components/memory/EditMemoryModal";
 import api from "../services/api";
 import { Edit } from "lucide-react";
+import { createMemoryService } from "@astra/shared";
+
+const memoryService = createMemoryService(api);
 
 function Memory() {
   const [memories, setMemories] = useState([]);
@@ -29,12 +32,7 @@ const loadMemories = async () => {
   try {
     setLoading(true);
 
-    const response = await api.get("/memory");
-    const data = response.data;
-
-    if (data.success) {
-      setMemories(data.memories || []);
-    }
+    setMemories(await memoryService.getMemories());
   } catch (error) {
     console.error(
       "Failed to load memories:",
@@ -56,15 +54,11 @@ const loadMemories = async () => {
     if (!confirmDelete) return;
 
     try {
-     const response = await api.delete("/memory");
+     await memoryService.clearMemories();
 
-const data = response.data;
-
-      if (data.success) {
-  setMemories([]);
-  await loadMemories();
-  alert("🧠 All memories cleared successfully.");
-}
+     setMemories([]);
+     await loadMemories();
+     alert("🧠 All memories cleared successfully.");
     } catch (error) {
       console.error("Failed to clear memory:", error);
     }
@@ -155,24 +149,14 @@ const copyMemory = async (memory) => {
 
 const handleSaveMemory = async (updatedMemory) => {
   try {
-    const response = await api.put(
-      `/memory/item/${updatedMemory.id}`,
-      {
-        user_message: updatedMemory.user_message,
-        ai_response: updatedMemory.ai_response,
-      }
-    );
+    await memoryService.updateMemory(updatedMemory);
 
-    const data = response.data;
+    toast.success("Memory updated!");
 
-    if (data.success) {
-      toast.success("Memory updated!");
+    setEditOpen(false);
+    setSelectedMemory(null);
 
-      setEditOpen(false);
-      setSelectedMemory(null);
-
-      await loadMemories();
-    }
+    await loadMemories();
   } catch (error) {
     console.error(error);
     toast.error("Failed to update memory.");
@@ -556,15 +540,8 @@ const categories = [
         if (!confirmDelete) return;
 
         try {
-          const response = await api.delete(
-  `/memory/item/${memory.id}`
-);
-
-const data = response.data;
-
-if (data.success) {
-  await loadMemories();
-}
+          await memoryService.deleteMemory(memory);
+          await loadMemories();
         } catch (error) {
           console.error(error);
         }

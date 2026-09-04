@@ -4,6 +4,9 @@ import { useSettings } from "../../context/SettingsContext";
 import { Brain, Trash2, Database } from "lucide-react";
 import SettingsSection from "./SettingsSection";
 import api from "../../services/api";
+import { createMemoryService } from "@astra/shared";
+
+const memoryService = createMemoryService(api);
 function MemorySection() {
 const {
   memoryEnabled,
@@ -17,13 +20,7 @@ const [memoryCount, setMemoryCount] = useState(0);
 
 const loadMemoryCount = async () => {
   try {
-    const response = await api.get("/memory/count/all");
-
-    const data = response.data;
-
-    if (data.success) {
-      setMemoryCount(data.count);
-    }
+    setMemoryCount(await memoryService.getMemoryCount());
   } catch (error) {
     console.error(
       "Failed to load memory count:",
@@ -44,17 +41,12 @@ const clearMemory = async () => {
   if (!confirmDelete) return;
 
   try {
-    const response = await api.delete("/memory");
+    await memoryService.clearMemories();
+    await loadMemoryCount();
 
-    const data = response.data;
-
-    if (data.success) {
-      await loadMemoryCount();
-
-      alert(
-        "🧠 All memories cleared successfully."
-      );
-    }
+    alert(
+      "🧠 All memories cleared successfully."
+    );
   } catch (error) {
     console.error(
       "Failed to clear memory:",
