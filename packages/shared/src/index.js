@@ -1,6 +1,7 @@
 export { createApiClient } from "./api/client.js";
 export { createConversationApi } from "./api/conversations.js";
 export { createMemoryApi } from "./api/memory.js";
+export { createUploadApi } from "./api/upload.js";
 export {
   createConversationService,
   getConversationSessionId,
@@ -20,3 +21,4 @@ export {
 export { generateChatTitle } from "./chat/title.js";
 export { createAuthService } from "./auth/supabase.js";
 export { createMemoryService } from "./memory/service.js";
+export { createUploadService } from "./upload/service.js";
