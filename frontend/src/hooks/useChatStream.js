@@ -1,149 +1,108 @@
-import { parseSseEvents } from "@astra/shared";
+import { createChatService } from "@astra/shared";
+import api from "../services/api";
 import supabase from "../config/supabase";
+
+const chatService = createChatService();
+
 function useChatStream({
   updateCurrentMessages,
   stopGenerationRef,
   setIsTyping,
   setIsGenerating,
 }) {
-  
+  const streamMessage = async (
+    sessionId,
+    messageId,
+    existingMessages,
+    requestData
+  ) => {
+    try {
+      setIsTyping(true);
+      setIsGenerating(true);
+      stopGenerationRef.current = false;
 
-  // =========================
-  // Stream Message
-  // =========================
-
-const streamMessage = async (
-  sessionId,
-  messageId,
-  existingMessages,
-  requestData
-) => {
-  try {
-    setIsTyping(true);
-    setIsGenerating(true);
-
-    stopGenerationRef.current = false;
-
-    const {
-  data: { session },
-} = await supabase.auth.getSession();
-
-const response = await fetch(
-  "http://localhost:5000/api/chat/stream",
-  {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${session?.access_token}`,
-    },
-    body: requestData,
-  }
-);
-
-    if (!response.ok) {
-      throw new Error(
-        `Streaming request failed: ${response.status}`
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${api.defaults.baseURL}/chat/stream`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: requestData,
+        }
       );
-    }
 
-    if (!response.body) {
-      throw new Error(
-        "Streaming is not supported by this browser."
-      );
-    }
-
-    const reader =
-      response.body.getReader();
-
-    const decoder = new TextDecoder();
-
-    let buffer = "";
-    let current = "";
-
-    while (true) {
-      if (stopGenerationRef.current) {
-        await reader.cancel();
-        break;
+      if (!response.ok) {
+        throw new Error(
+          `Streaming request failed: ${response.status}`
+        );
       }
 
-      const { value, done } =
-        await reader.read();
-
-      if (done) {
-        break;
+      if (!response.body) {
+        throw new Error(
+          "Streaming is not supported by this browser."
+        );
       }
 
-      buffer += decoder.decode(value, {
-        stream: true,
-      });
-
-      const events = buffer.split("\n\n");
-
-      buffer = events.pop() || "";
-
-      parseSseEvents(events, {
-        onEvent: (parsed) => {
-
-          if (
-            parsed.type === "chunk" &&
-            parsed.content
-          ) {
-            current += parsed.content;
-
+      const accumulator =
+        chatService.createAssistantResponseAccumulator({
+          onChunk: (content) => {
             updateCurrentMessages(
-              existingMessages.map((msg) =>
-                msg.id === messageId
-                  ? {
-                      ...msg,
-                      message: current,
-                    }
-                  : msg
+              chatService.updateMessageContent(
+                existingMessages,
+                messageId,
+                content,
+                "message"
               )
             );
-          }
+          },
+          onDone: (event) => {
+            console.log("Streaming complete:", event.modelUsed);
+          },
+        });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-          if (parsed.type === "done") {
-            console.log(
-              "✅ Streaming complete:",
-              parsed.modelUsed
-            );
-          }
+      while (true) {
+        if (stopGenerationRef.current) {
+          await reader.cancel();
+          break;
+        }
 
-          if (parsed.type === "error") {
-            throw new Error(
-              parsed.message ||
-                "Streaming failed."
-            );
-          }
-        },
-        onParseError: (parseError) => {
-          console.warn(
-            "⚠️ Stream parse error:",
-            parseError
-          );
-        },
-      });
+        const { value, done } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+
+        buffer = events.pop() || "";
+
+        chatService.processChatSseEvents(events, {
+          accumulator,
+          onParseError: (parseError) => {
+            console.warn("Stream parse error:", parseError);
+          },
+        });
+      }
+
+      return accumulator.getResponse();
+    } catch (error) {
+      console.error("Streaming Error:", error);
+      throw error;
+    } finally {
+      setIsTyping(false);
+      setIsGenerating(false);
     }
+  };
 
-    setIsTyping(false);
-    setIsGenerating(false);
-
-    return current;
-  } catch (error) {
-    console.error(
-      "❌ Streaming Error:",
-      error
-    );
-
-    setIsTyping(false);
-    setIsGenerating(false);
-
-    throw error;
-  }
-};
-
-  return {
-  streamMessage,
-};
+  return { streamMessage };
 }
 
 export default useChatStream;

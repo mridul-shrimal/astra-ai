@@ -1,20 +1,30 @@
 import { useState } from "react";
 import { Alert } from "react-native";
-import { parseSseEvents } from "@astra/shared";
+import {
+  createChatRequest,
+  createChatService,
+  generateChatTitle,
+  getConversationSessionId,
+} from "@astra/shared";
+import api from "../api";
 import { supabase } from "../supabase";
+
+const chatService = createChatService();
 
 const useChat = ({
   session,
   selectedConversation,
   setMessages,
+  renameConversation,
 }) => {
   const [messageText, setMessageText] = useState("");
   const [isSending, setIsSending] = useState(false);
 
   const sendMessage = async () => {
     const text = messageText.trim();
+    const sessionId = getConversationSessionId(selectedConversation);
 
-    if (!text || !selectedConversation) {
+    if (!text || !sessionId) {
       return;
     }
 
@@ -24,12 +34,18 @@ const useChat = ({
       setIsSending(true);
       setMessageText("");
 
+      if (selectedConversation.title === "New Chat") {
+        await renameConversation?.(
+          sessionId,
+          generateChatTitle(text)
+        );
+      }
+
       const userMessage = {
         id: `user-${Date.now()}`,
         content: text,
         role: "user",
       };
-
       const assistantMessage = {
         id: assistantId,
         content: "",
@@ -50,25 +66,20 @@ const useChat = ({
         throw new Error("No active Supabase session.");
       }
 
+      const request = createChatRequest({
+        message: text,
+        sessionId,
+        useMemory: false,
+        autoSaveMemory: false,
+      });
       const formData = new FormData();
 
-      formData.append("message", text);
-      formData.append(
-        "sessionId",
-        selectedConversation.session_id
-      );
-      formData.append(
-        "model",
-        "mistralai/mistral-small-3.2-24b-instruct"
-      );
-      formData.append("temperature", "0.7");
-      formData.append("useMemory", "false");
-      formData.append("autoSaveMemory", "false");
-
-      console.log("🚀 Sending message to Astra...");
+      Object.entries(request).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
 
       const response = await fetch(
-       "http://10.138.130.152:5000/api/chat/stream",
+        `${api.defaults.baseURL}/chat/stream`,
         {
           method: "POST",
           headers: {
@@ -80,103 +91,57 @@ const useChat = ({
       );
 
       if (!response.ok) {
-        const errorText = await response.text();
-
-        console.log(
-          "❌ STREAM ERROR:",
-          response.status,
-          errorText
-        );
-
         throw new Error(
           `Streaming request failed: ${response.status}`
         );
       }
 
-      const responseText = await response.text();
-
-      let currentResponse = "";
-
-      const events = responseText.split("\n\n");
-
-      parseSseEvents(events, {
-        onEvent: (parsed) => {
-
-          if (
-            parsed.type === "chunk" &&
-            parsed.content
-          ) {
-            currentResponse += parsed.content;
-
+      const accumulator =
+        chatService.createAssistantResponseAccumulator({
+          onChunk: (content) => {
             setMessages((current) =>
-              current.map((msg) =>
-                msg.id === assistantId
-                  ? {
-                      ...msg,
-                      content: currentResponse,
-                    }
-                  : msg
+              chatService.updateMessageContent(
+                current,
+                assistantId,
+                content,
+                "content"
               )
             );
-          }
+          },
+        });
 
-          if (parsed.type === "done") {
-            console.log(
-              "✅ AI STREAM COMPLETE:",
-              parsed.modelUsed
-            );
-          }
-
-          if (parsed.type === "error") {
-            throw new Error(
-              parsed.message ||
-                "AI streaming failed."
-            );
-          }
-        },
-        onParseError: (parseError) => {
-          console.log(
-            "⚠️ SSE parse warning:",
-            parseError.message
-          );
-        },
-      });
-
-      console.log(
-        "✅ Final AI response:",
-        currentResponse
+      chatService.processChatSseEvents(
+        (await response.text()).split("\n\n"),
+        {
+          accumulator,
+          onParseError: (parseError) => {
+            console.log("SSE parse warning:", parseError.message);
+          },
+        }
       );
 
+      const currentResponse = accumulator.getResponse();
+
       setMessages((current) =>
-        current.map((msg) =>
-          msg.id === assistantId
-            ? {
-                ...msg,
-                content:
-                  currentResponse ||
-                  "Astra returned an empty response.",
-              }
-            : msg
+        chatService.updateMessageContent(
+          current,
+          assistantId,
+          currentResponse || "Astra returned an empty response.",
+          "content"
         )
       );
 
       return currentResponse;
     } catch (error) {
-      console.log(
-        "❌ SEND MESSAGE ERROR:",
-        error.message
-      );
+      console.log("SEND MESSAGE ERROR:", error.message);
 
       Alert.alert(
         "Message failed",
-        error.message ||
-          "Could not send message."
+        error.message || "Could not send message."
       );
 
       setMessages((current) =>
-        current.filter(
-          (msg) => msg.id !== assistantId
-        )
+        current.filter((message) => message.id !== assistantId)
       );
 
       throw error;

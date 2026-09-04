@@ -122,6 +122,7 @@ const {
     session,
     selectedConversation,
     setMessages,
+    renameConversation,
   });
 
  // =========================================================

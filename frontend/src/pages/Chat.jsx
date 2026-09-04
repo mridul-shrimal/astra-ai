@@ -2,14 +2,17 @@ import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import ChatDesktop from "../components/chat/ChatDesktop";
 import api from "../services/api";
-import { createConversationService } from "@astra/shared";
+import {
+  createChatRequest,
+  createConversationService,
+  generateChatTitle,
+} from "@astra/shared";
 import notificationSound from "../assets/sounds/notification.mp3";
 import useExportChat from "../hooks/useChatExport";
 import useChatStream from "../hooks/useChatStream";
 import useChatManagement from "../hooks/useChatManagement";
 import useChatEffects from "../hooks/useChatEffects";
 import useChatPersistence from "../hooks/useChatPersistence";
-import { generateChatTitle } from "../utils/generateChatTitle";
 import ModelSelectorModal from "../components/chat/ModelSelectorModal";
 import useMessageActions from "../hooks/useMessageActions";
 import { useAuth } from "../hooks/useAuth";
@@ -438,11 +441,6 @@ if (currentChat.title === "New Chat") {
 - Important information
 - Any actionable insights`;
 
-      formData.append("message", prompt);
-      formData.append(
-        "sessionId",
-        currentChat.sessionId
-      );
 const settings =
   JSON.parse(localStorage.getItem("astra-settings")) || {};
 
@@ -466,24 +464,21 @@ const activeModel =
 
 
 
-formData.append(
-  "model",
-  MODEL_MAP[activeModel] ||
-    "mistralai/mistral-small-3.2-24b-instruct"
-);
+const request = createChatRequest({
+  message: prompt,
+  sessionId: currentChat.sessionId,
+  model:
+    MODEL_MAP[activeModel] ||
+    "mistralai/mistral-small-3.2-24b-instruct",
+  temperature: settings.temperature ?? 0.7,
+  useMemory: settings.memoryEnabled ?? true,
+  autoSaveMemory: settings.memoryAutoSave ?? true,
+  allowEmptyMessage: files.length > 0,
+});
 
-formData.append(
-  "temperature",
-  settings.temperature ?? 0.7
-);
-formData.append(
-  "useMemory",
-  settings.memoryEnabled ?? true
-);
-formData.append(
-  "autoSaveMemory",
-  settings.memoryAutoSave ?? true
-);
+Object.entries(request).forEach(([key, value]) => {
+  formData.append(key, String(value));
+});
 
       files.forEach((file) => {
         formData.append("files", file);
