@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  useColorScheme,
 } from "react-native";
 
 import { supabase } from "./supabase";
@@ -20,13 +21,21 @@ import useAuthActions from "./hooks/useAuthActions";
 import useConversations from "./hooks/useConversations/useConversations";
 import useMessages from "./hooks/useMessages";
 import useChat from "./hooks/useChat";
+import usePreferences from "./hooks/usePreferences";
 import AuthScreen from "./src/components/AuthScreen";
 import ChatScreen from "./src/components/ChatScreen";
 import HomeScreen from "./src/components/HomeScreen";
+import SettingsScreen from "./src/components/SettingsScreen";
+import MemoryScreen from "./src/components/MemoryScreen";
+import { authenticateWithBiometrics } from "./security/biometrics";
 
 const conversationService = createConversationService(api);
 
 export default function App() {
+  const [screen, setScreen] = useState("home");
+  const { preferences, setPreference } = usePreferences();
+  const systemTheme = useColorScheme();
+  const isLight = preferences.theme === "light" || (preferences.theme === "system" && systemTheme === "light");
   // =========================================================
   // AUTH INPUT
   // =========================================================
@@ -116,13 +125,19 @@ const {
   const {
     messageText,
     setMessageText,
-    sendMessage,
-    isSending,
+  sendMessage,
+  isSending,
+  attachments,
+  pickAttachments,
+  removeAttachment,
+  stopGeneration,
+  regenerate,
   } = useChat({
     session,
     selectedConversation,
     setMessages,
     renameConversation,
+    preferences,
   });
 
  // =========================================================
@@ -303,6 +318,21 @@ if (!sessionId) {
       setActionLoading(false);
     }
   };
+
+const handleDeleteConversation = (conversation) => {
+  const conversationId = getConversationSessionId(conversation);
+
+  if (!conversationId) {
+    return;
+  }
+
+  if (preferences.deleteConfirmation) {
+    confirmDeleteConversation(conversation);
+    return;
+  }
+
+  deleteConversation(conversationId);
+};
   // =========================================================
 // AUTH SESSION LOADING
 // =========================================================
@@ -322,12 +352,11 @@ if (authSessionLoading) {
   );
 }
 
-
 // =========================================================
 // CHAT SCREEN
 // =========================================================
 
-if (session && selectedConversation) {
+if (session && selectedConversation && screen === "home") {
   return (
     <ChatScreen
       styles={styles}
@@ -338,10 +367,103 @@ if (session && selectedConversation) {
       isSending={isSending}
       onMessageTextChange={setMessageText}
       onSendMessage={sendMessage}
+      attachments={attachments}
+      onPickAttachments={pickAttachments}
+      onRemoveAttachment={removeAttachment}
+      onStopGeneration={stopGeneration}
+      onRegenerate={regenerate}
+      preferences={preferences}
+      isLight={isLight}
+      onMessageAction={(message) => {
+        Alert.alert("Message actions", "Choose an action", [
+          {
+            text: "Favorite",
+            onPress: () =>
+              setMessages((current) =>
+                current.map((item) =>
+                  item.id === message.id
+                    ? { ...item, favorite: !item.favorite }
+                    : item
+                )
+              ),
+          },
+          {
+            text: "Like",
+            onPress: () =>
+              setMessages((current) =>
+                current.map((item) =>
+                  item.id === message.id
+                    ? {
+                        ...item,
+                        liked: !item.liked,
+                        disliked: false,
+                      }
+                    : item
+                )
+              ),
+          },
+          {
+            text: "Dislike",
+            onPress: () =>
+              setMessages((current) =>
+                current.map((item) =>
+                  item.id === message.id
+                    ? {
+                        ...item,
+                        disliked: !item.disliked,
+                        liked: false,
+                      }
+                    : item
+                )
+              ),
+          },
+          ...(message.role === "assistant" || message.sender === "ai"
+            ? [
+                {
+                  text: "Regenerate",
+                  onPress: () => regenerate(messages, message.id),
+                },
+              ]
+            : []),
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+        ]);
+      }}
       onBack={() => {
         setSelectedConversation(null);
         setMessages([]);
       }}
+    />
+  );
+}
+
+if (session && screen === "settings") {
+  return (
+    <SettingsScreen
+      preferences={preferences}
+      setPreference={setPreference}
+      isLight={isLight}
+      userEmail={session.user?.email || "Astra User"}
+      onBack={() => setScreen("home")}
+      onAccount={() =>
+        Alert.alert(
+          "Account",
+          `Signed in as ${session.user?.email || "Astra User"}`
+        )
+      }
+      onLogout={handleLogout}
+      onMemory={() => setScreen("memory")}
+    />
+  );
+}
+
+if (session && screen === "memory") {
+  return (
+    <MemoryScreen
+      isLight={isLight}
+      onBack={() => setScreen("settings")}
     />
   );
 }
@@ -451,9 +573,24 @@ const handleToggleLockConversation = (conversation) => {
 // REQUEST UNLOCK FOR LOCKED CONVERSATION
 // =========================================================
 
-const handleRequestUnlock = (conversation) => {
+const handleRequestUnlock = async (conversation) => {
   if (!conversation) {
     return;
+  }
+
+  if (preferences.biometricEnabled) {
+    const result = await authenticateWithBiometrics();
+
+    if (result.success) {
+      const conversationId = getConversationSessionId(conversation);
+      setConversations((current) => current.map((item) =>
+        getConversationSessionId(item) === conversationId
+          ? { ...item, locked: false, lockPin: "" }
+          : item
+      ));
+      setSelectedConversation({ ...conversation, locked: false, lockPin: "" });
+      return;
+    }
   }
 
   setLockConversationTarget(conversation);
@@ -602,6 +739,9 @@ if (session) {
       userEmail={userEmail}
       authLoading={authLoading}
       onLogout={handleLogout}
+      onOpenSettings={() => setScreen("settings")}
+      onOpenMemory={() => setScreen("memory")}
+      isLight={isLight}
       conversations={conversations}
       selectedConversation={selectedConversation}
       loadingConversations={loadingConversations}
@@ -614,7 +754,7 @@ if (session) {
       onArchiveConversation={handleArchiveConversation}
       onToggleLockConversation={handleToggleLockConversation}
       onRequestUnlock={handleRequestUnlock}
-      onDeleteConversation={confirmDeleteConversation}
+      onDeleteConversation={handleDeleteConversation}
       onDuplicateConversation={handleDuplicateConversation}
       renameConversationTarget={renameConversationTarget}
       renameText={renameText}
@@ -1075,7 +1215,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  messageText: {
+messageText: {
     color: "#e2e8f0",
     fontSize: 16,
     lineHeight: 24,
@@ -1093,6 +1233,13 @@ inputContainer: {
   borderTopWidth: 1,
   borderTopColor: "#1e293b",
 },
+
+attachmentRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 },
+attachment: { maxWidth: 180, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 10, backgroundColor: "#164e63" },
+attachmentText: { color: "#cffafe", fontSize: 12 },
+attachButton: { width: 42, height: 50, borderRadius: 14, justifyContent: "center", alignItems: "center", marginRight: 7, backgroundColor: "#1e293b" },
+attachText: { color: "#22d3ee", fontSize: 25, fontWeight: "700" },
+messageTime: { color: "#64748b", fontSize: 10, marginTop: 7 },
 
 inputRow: {
   flexDirection: "row",

@@ -53,7 +53,7 @@ function AISection() {
             DeepSeek Chat V3
           </option>
 
-          <option value="openai/gpt-oss-20b:free">
+          <option value="openai/gpt-oss-20b">
             GPT OSS 20B
           </option>
         </select>

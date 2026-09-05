@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Astra AI Mobile UI",
+    "slug": "astra-ai-mobile-ui-v1",
+    "version": "1.0.0",
+    "entryPoint": "./index.js",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-secure-store",
+      "expo-document-picker",
+      "expo-notifications",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Astra AI to use Face ID to unlock protected conversations."
+        }
+      ]
+    ]
+  }
+}

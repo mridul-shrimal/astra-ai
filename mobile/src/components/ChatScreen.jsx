@@ -19,6 +19,14 @@ function ChatScreen({
   isSending,
   onMessageTextChange,
   onSendMessage,
+  attachments,
+  onPickAttachments,
+  onRemoveAttachment,
+  onStopGeneration,
+  onRegenerate,
+  onMessageAction,
+  preferences,
+  isLight,
   onBack,
 }) {
   const conversationTitle =
@@ -42,25 +50,26 @@ function ChatScreen({
     }
 
     return (
-      <View style={styles.message}>
+      <TouchableOpacity style={styles.message} onLongPress={() => onMessageAction?.(item)}>
         <Text style={styles.messageText}>
           {cleanText}
         </Text>
-      </View>
+        {preferences?.showTimestamp && item.created_at && <Text style={styles.messageTime}>{new Date(item.created_at).toLocaleString()}</Text>}
+      </TouchableOpacity>
     );
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.chatContainer}
+      style={[styles.chatContainer, isLight && { backgroundColor: "#f8fafc" }]}
       behavior={
         Platform.OS === "ios"
           ? "padding"
           : "height"
       }
     >
-      <SafeAreaView style={styles.chatContainer}>
-        <View style={styles.chatHeader}>
+      <SafeAreaView style={[styles.chatContainer, isLight && { backgroundColor: "#f8fafc" }]}>
+        <View style={[styles.chatHeader, isLight && { backgroundColor: "#ffffff", borderBottomColor: "#cbd5e1" }]}>
           <TouchableOpacity
             activeOpacity={0.7}
             style={styles.backButton}
@@ -148,7 +157,9 @@ function ChatScreen({
         )}
 
         <View style={styles.inputContainer}>
+          {!!attachments?.length && <View style={styles.attachmentRow}>{attachments.map((file) => <TouchableOpacity key={file.uri} style={styles.attachment} onPress={() => onRemoveAttachment(file.uri)}><Text style={styles.attachmentText} numberOfLines={1}>{file.name} ×</Text></TouchableOpacity>)}</View>}
           <View style={styles.inputRow}>
+            <TouchableOpacity style={styles.attachButton} onPress={onPickAttachments} disabled={isSending}><Text style={styles.attachText}>+</Text></TouchableOpacity>
             <TextInput
               style={styles.messageInput}
               placeholder="Message Astra..."
@@ -159,8 +170,9 @@ function ChatScreen({
               maxLength={4000}
               editable={!isSending}
               textAlignVertical="top"
-              returnKeyType="send"
+              returnKeyType={preferences?.enterToSend === false ? "default" : "send"}
               blurOnSubmit={false}
+              onSubmitEditing={preferences?.enterToSend === false ? undefined : onSendMessage}
               keyboardAppearance="dark"
               autoCorrect
               spellCheck
@@ -174,20 +186,16 @@ function ChatScreen({
                 isSending &&
                   styles.sendButtonDisabled,
               ]}
-              onPress={onSendMessage}
-              disabled={isSending}
+              onPress={isSending ? onStopGeneration : onSendMessage}
               accessibilityRole="button"
               accessibilityLabel={
                 isSending
-                  ? "Sending message"
+                  ? "Stop generation"
                   : "Send message"
               }
             >
               {isSending ? (
-                <ActivityIndicator
-                  size="small"
-                  color="#ffffff"
-                />
+                <Text style={styles.sendButtonText}>■</Text>
               ) : (
                 <Text style={styles.sendButtonText}>
                   ↑

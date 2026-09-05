@@ -14,6 +14,9 @@ function HomeScreen({
   userEmail,
   authLoading,
   onLogout,
+  onOpenSettings,
+  onOpenMemory,
+  isLight,
   conversations,
   selectedConversation,
   loadingConversations,
@@ -40,8 +43,8 @@ function HomeScreen({
   onSaveLock,
 }) {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, isLight && { backgroundColor: "#f8fafc" }]}>
+      <View style={[styles.header, isLight && { backgroundColor: "#ffffff", borderBottomColor: "#cbd5e1" }]}>
         <View style={styles.headerBrand}>
           <View style={styles.logoBadge}>
             <Text style={styles.logoBadgeText}>
@@ -64,6 +67,25 @@ function HomeScreen({
           </View>
         </View>
 
+        <View style={{ flexDirection: "row", gap: 8 }}>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          style={styles.logoutButton}
+          onPress={onOpenMemory}
+          accessibilityRole="button"
+          accessibilityLabel="Open memory"
+        >
+          <Text style={styles.logoutButtonText}>Memory</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          style={styles.logoutButton}
+          onPress={onOpenSettings}
+          accessibilityRole="button"
+          accessibilityLabel="Open settings"
+        >
+          <Text style={styles.logoutButtonText}>Settings</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           activeOpacity={0.75}
           style={styles.logoutButton}
@@ -76,9 +98,10 @@ function HomeScreen({
             Logout
           </Text>
         </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={styles.content}>
+      <View style={[styles.content, isLight && { backgroundColor: "#f8fafc" }]}>
         <ConversationManagement
           conversations={conversations}
           selectedConversation={selectedConversation}

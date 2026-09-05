@@ -178,10 +178,9 @@ ${message || "Summarize all uploaded documents."}
       res.write("data: [DONE]\n\n");
       res.end();
     } catch (error) {
-      console.error(
-        "Streaming Chat Error:",
-        error
-      );
+  console.error("Streaming Chat Error:", error);
+  console.error("Streaming Chat Error Message:", error?.message);
+  console.error("Streaming Chat Error Stack:", error?.stack);
 
       if (!res.headersSent) {
         return res.status(500).json({

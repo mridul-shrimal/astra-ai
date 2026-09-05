@@ -1,16 +1,15 @@
-import React from "react";
-
-import { getConversationSessionId } from "@astra/shared";
-
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Modal,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { getConversationSessionId } from "@astra/shared";
 
-function ConversationManagement({
+export default function ConversationManagement({
   conversations,
   selectedConversation,
   loadingConversations,
@@ -26,358 +25,295 @@ function ConversationManagement({
   onRenameConversation,
   onRequestUnlock,
 }) {
+  const [menuConversation, setMenuConversation] = useState(null);
 
-// =========================================================
-// RENDER CONVERSATION
-// =========================================================
-
-const renderConversation = ({ item }) => {
-  const title =
-    item.title?.trim() ||
-    "New Conversation";
-
-  const date =
-    item.updated_at ||
-    item.created_at ||
-    "";
-
-  const itemId = getConversationSessionId(item);
-
-  const selectedId = getConversationSessionId(
-    selectedConversation
+  const active = useMemo(
+    () =>
+      conversations
+        .filter((item) => !item.archived)
+        .sort(
+          (a, b) => Number(b.pinned) - Number(a.pinned)
+        ),
+    [conversations]
   );
 
-  const isSelected =
-    selectedId === itemId;
+  const archived = useMemo(
+    () => conversations.filter((item) => item.archived),
+    [conversations]
+  );
 
-  return (
-    <View
-      style={[
-        styles.conversation,
-        isSelected &&
-          styles.conversationSelected,
-      ]}
-    >
+  const run = (action) => {
+    const item = menuConversation;
 
-      {/* CHAT CONTENT */}
-      <TouchableOpacity
-        activeOpacity={0.75}
-        onPress={() => {
-          if (item.locked) {
-            onRequestUnlock(item);
-            return;
-          }
+    setMenuConversation(null);
 
-          onOpenConversation(item);
-        }}
-        style={styles.conversationMain}
+    if (item) {
+      action(item);
+    }
+  };
+
+  const renderItem = ({ item }) => {
+    const selected =
+      getConversationSessionId(item) ===
+      getConversationSessionId(selectedConversation);
+
+    return (
+      <View
+        style={[
+          styles.conversation,
+          selected && styles.selected,
+        ]}
       >
-        <View style={styles.conversationContent}>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={() =>
+            item.locked
+              ? onRequestUnlock(item)
+              : onOpenConversation(item)
+          }
+        >
           <Text
-            style={[
-              styles.conversationTitle,
-              isSelected &&
-                styles.conversationTitleSelected,
-            ]}
+            style={styles.title}
             numberOfLines={1}
           >
-            {title}
+            {item.pinned ? "📌 " : ""}
+            {item.locked ? "🔒 " : ""}
+            {item.title?.trim() || "New Conversation"}
           </Text>
 
-          {!!date && (
-            <Text
-              style={styles.conversationDate}
-              numberOfLines={1}
-            >
-              {date}
-            </Text>
-          )}
-        </View>
-      </TouchableOpacity>
-
-      {/* ACTION BUTTONS */}
-      <View style={styles.conversationActions}>
-
-        {/* PIN */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.actionButton}
-          onPress={() =>
-            onPinConversation(item)
-          }
-          disabled={actionLoading}
-        >
-          <Text style={styles.actionText}>
-            {item.pinned ? "📌" : "📍"}
+          <Text style={styles.date}>
+            {item.updated_at ||
+              item.created_at ||
+              ""}
           </Text>
         </TouchableOpacity>
 
-        {/* RENAME */}
         <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.actionButton}
-          onPress={() => onRenameConversation(item)}
+          style={styles.more}
+          onPress={() => setMenuConversation(item)}
           disabled={actionLoading}
         >
-          <Text style={styles.actionText}>
-            ✏️
-          </Text>
+          <Text style={styles.moreText}>•••</Text>
         </TouchableOpacity>
-
-        {/* DELETE */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.actionButton}
-          onPress={() => onDeleteConversation(item)}
-          disabled={actionLoading}
-        >
-          <Text style={styles.actionText}>
-            🗑️
-          </Text>
-        </TouchableOpacity>
-
-        {/* DUPLICATE */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.actionButton}
-          onPress={() =>
-            onDuplicateConversation(item)
-          }
-          disabled={actionLoading}
-        >
-          <Text style={styles.actionText}>
-            📑
-          </Text>
-        </TouchableOpacity>
-
-        {/* ARCHIVE */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.actionButton}
-          onPress={() =>
-            onArchiveConversation(item)
-          }
-          disabled={actionLoading}
-        >
-          <Text style={styles.actionText}>
-            {item.archived ? "🔄" : "📦"}
-          </Text>
-        </TouchableOpacity>
-
-        {/* LOCK */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.actionButton}
-          onPress={() =>
-            onToggleLockConversation(item)
-          }
-          disabled={actionLoading}
-        >
-          <Text style={styles.actionText}>
-            {item.locked ? "🔓" : "🔒"}
-          </Text>
-        </TouchableOpacity>
-
       </View>
-    </View>
-  );
-};
+    );
+  };
 
   return (
     <View style={styles.container}>
-      {/* =================================================
-          SECTION HEADER
-      ================================================= */}
-
-      <View style={styles.sectionHeader}>
+      <View style={styles.header}>
         <View>
-          <Text style={styles.sectionTitle}>
+          <Text style={styles.heading}>
             Your Conversations
           </Text>
 
-          <Text style={styles.sectionSubtitle}>
+          <Text style={styles.subtitle}>
             Continue where you left off
           </Text>
         </View>
 
-        {!loadingConversations &&
-          conversations.length > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>
-                {conversations.length}
-              </Text>
-            </View>
-          )}
+        <TouchableOpacity onPress={onRefresh}>
+          <Text style={styles.refresh}>Refresh</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* =================================================
-          CONVERSATION LIST
-      ================================================= */}
-
       {loadingConversations ? (
-        <View style={styles.loading}>
-          <ActivityIndicator
-            size="large"
-            color="#22d3ee"
-          />
+        <View style={styles.center}>
+          <ActivityIndicator color="#22d3ee" />
 
-          <Text style={styles.loadingText}>
+          <Text style={styles.subtitle}>
             Loading conversations...
           </Text>
         </View>
       ) : (
         <FlatList
-       data={[...conversations]
-  .filter((conversation) => !conversation.archived)
-  .sort(
-    (a, b) =>
-      Number(b.pinned) -
-      Number(a.pinned)
-  )}
-  
+          data={active}
           keyExtractor={(item, index) =>
             String(
-            getConversationSessionId(item) ||
-                index
+              getConversationSessionId(item) || index
             )
           }
-          renderItem={renderConversation}
+          renderItem={renderItem}
           refreshing={loadingConversations}
           onRefresh={onRefresh}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.list,
-            conversations.length === 0 &&
-              styles.emptyList,
-          ]}
           ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>
-                💬
-              </Text>
-
-              <Text style={styles.emptyTitle}>
+            <View style={styles.center}>
+              <Text style={styles.heading}>
                 No conversations yet
               </Text>
 
-              <Text style={styles.emptyText}>
+              <Text style={styles.subtitle}>
                 Start a new chat with Astra AI.
               </Text>
             </View>
           }
+          ListFooterComponent={
+            archived.length ? (
+              <View style={styles.archived}>
+                <Text style={styles.archivedTitle}>
+                  Archived ({archived.length})
+                </Text>
+
+                {archived.map((item) => (
+                  <View
+                    key={getConversationSessionId(item)}
+                    style={styles.archivedItem}
+                  >
+                    <TouchableOpacity
+                      style={{ flex: 1 }}
+                      onPress={() =>
+                        item.locked
+                          ? onRequestUnlock(item)
+                          : onOpenConversation(item)
+                      }
+                    >
+                      <Text
+                        style={styles.title}
+                        numberOfLines={1}
+                      >
+                        {item.title ||
+                          "New Conversation"}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() =>
+                        onArchiveConversation(item)
+                      }
+                    >
+                      <Text style={styles.restore}>
+                        Restore
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() =>
+                        setMenuConversation(item)
+                      }
+                    >
+                      <Text style={styles.moreText}>
+                        •••
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            ) : null
+          }
+          contentContainerStyle={styles.list}
         />
       )}
-{/* =================================================
-    ARCHIVED CONVERSATIONS
-================================================= */}
 
-{conversations.some(
-  (conversation) => conversation.archived
-) && (
-  <View style={styles.archivedSection}>
-    <Text style={styles.archivedTitle}>
-      📦 Archived (
-      {
-        conversations.filter(
-          (conversation) =>
-            conversation.archived
-        ).length
-      }
-      )
-    </Text>
+      <TouchableOpacity
+        style={[
+          styles.newButton,
+          actionLoading && { opacity: 0.5 },
+        ]}
+        onPress={onNewChat}
+        disabled={actionLoading}
+      >
+        <Text style={styles.newText}>
+          + New Chat
+        </Text>
+      </TouchableOpacity>
 
-    {conversations
-      .filter(
-        (conversation) =>
-          conversation.archived
-      )
-      .map((item) => (
-        <View
-          key={
-            getConversationSessionId(item)
-          }
-          style={styles.conversation}
-        >
-          <View style={styles.conversationContent}>
-          <TouchableOpacity
-  activeOpacity={0.7}
-onPress={() => {
-  if (item.locked) {
-    onRequestUnlock(item);
-    return;
-  }
-
-  onOpenConversation(item);
-}}
->
-  <Text
-    style={styles.conversationTitle}
-    numberOfLines={1}
-  >
-    {item.title?.trim() ||
-      "New Conversation"}
-  </Text>
-</TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() =>
-                onArchiveConversation(item)
-              }
-            >
-              <Text style={styles.actionText}>
-                🔄 Restore
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => onDeleteConversation(item)}
-              disabled={actionLoading}
-            >
-              <Text style={styles.actionText}>
-                🗑️
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ))}
-  </View>
-)}
-      {/* =================================================
-          NEW CHAT
-      ================================================= */}
-
-      <View style={styles.newChat}>
+      <Modal
+        visible={!!menuConversation}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          setMenuConversation(null)
+        }
+      >
         <TouchableOpacity
-  activeOpacity={0.8}
-  style={[
-    styles.newChatButton,
-    actionLoading &&
-      styles.newChatButtonDisabled,
-  ]}
-  onPress={onNewChat}
-  disabled={actionLoading}
->
-          {actionLoading ? (
-  <ActivityIndicator
-    size="small"
-    color="#ffffff"
-  />
-) : (
-  <>
-    <Text style={styles.newChatIcon}>
-      +
-    </Text>
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={() => setMenuConversation(null)}
+        >
+          <View style={styles.menu}>
+            <Text
+              style={styles.menuTitle}
+              numberOfLines={1}
+            >
+              {menuConversation?.title ||
+                "Conversation"}
+            </Text>
 
-    <Text style={styles.newChatText}>
-      New Chat
-    </Text>
-  </>
-)}
+            <Menu
+              text="Rename"
+              onPress={() =>
+                run(onRenameConversation)
+              }
+            />
+
+            <Menu
+              text="Duplicate"
+              onPress={() =>
+                run(onDuplicateConversation)
+              }
+            />
+
+            <Menu
+              text={
+                menuConversation?.pinned
+                  ? "Unpin"
+                  : "Pin"
+              }
+              onPress={() => run(onPinConversation)}
+            />
+
+            <Menu
+              text={
+                menuConversation?.archived
+                  ? "Restore"
+                  : "Archive"
+              }
+              onPress={() =>
+                run(onArchiveConversation)
+              }
+            />
+
+            <Menu
+              text={
+                menuConversation?.locked
+                  ? "Unlock"
+                  : "Lock"
+              }
+              onPress={() =>
+                run(onToggleLockConversation)
+              }
+            />
+
+            <Menu
+              text="Delete"
+              destructive
+              onPress={() =>
+                run(onDeleteConversation)
+              }
+            />
+          </View>
         </TouchableOpacity>
-      </View>
+      </Modal>
     </View>
+  );
+}
+
+function Menu({ text, destructive, onPress }) {
+  return (
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={onPress}
+    >
+      <Text
+        style={
+          destructive
+            ? styles.delete
+            : styles.menuText
+        }
+      >
+        {text}
+      </Text>
+    </TouchableOpacity>
   );
 }
 
@@ -386,183 +322,156 @@ const styles = {
     flex: 1,
   },
 
-  sectionHeader: {
+  header: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 14,
+    marginBottom: 13,
   },
 
-  sectionTitle: {
+  heading: {
+    color: "#f8fafc",
     fontSize: 20,
     fontWeight: "700",
-    color: "#f8fafc",
   },
 
-  sectionSubtitle: {
+  subtitle: {
+    color: "#94a3b8",
     marginTop: 4,
     fontSize: 13,
-    color: "#64748b",
   },
 
-  countBadge: {
-    minWidth: 30,
-    height: 30,
-    paddingHorizontal: 8,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#164e63",
-  },
-conversationMain: {
-  flex: 1,
-},
-
-conversationActions: {
-  flexDirection: "row",
-  alignItems: "center",
-  marginLeft: 8,
-},
-
-actionButton: {
-  width: 38,
-  height: 38,
-  borderRadius: 10,
-  justifyContent: "center",
-  alignItems: "center",
-},
-
-actionText: {
-  fontSize: 20,
-  color: "#94a3b8",
-},
-
-deleteActionText: {
-  fontSize: 22,
-  color: "#94a3b8",
-},
-
-  countText: {
-    color: "#67e8f9",
-    fontSize: 13,
+  refresh: {
+    color: "#22d3ee",
     fontWeight: "700",
+    padding: 8,
+  },
+
+  center: {
+    alignItems: "center",
+    padding: 40,
   },
 
   list: {
-    paddingBottom: 20,
-  },
-
-  emptyList: {
-    flexGrow: 1,
+    paddingBottom: 12,
   },
 
   conversation: {
-  padding: 12,
-  marginBottom: 10,
-  borderWidth: 1,
-  borderColor: "#1e293b",
-  borderRadius: 14,
-  backgroundColor: "#0f172a",
-  flexDirection: "row",
-  alignItems: "center",
-},
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 13,
+    marginBottom: 9,
+    backgroundColor: "#0f172a",
+    borderColor: "#1e293b",
+    borderWidth: 1,
+    borderRadius: 14,
+  },
 
-  conversationSelected: {
+  selected: {
     borderColor: "#06b6d4",
     backgroundColor: "#083344",
   },
 
-  conversationContent: {
-    flex: 1,
-  },
-
-  conversationTitle: {
+  title: {
+    color: "#e2e8f0",
     fontSize: 16,
     fontWeight: "600",
-    color: "#e2e8f0",
   },
 
-  conversationTitleSelected: {
-    color: "#67e8f9",
-  },
-
-  conversationDate: {
-    marginTop: 6,
-    fontSize: 12,
+  date: {
     color: "#64748b",
+    fontSize: 11,
+    marginTop: 5,
   },
 
-  loading: {
-    flex: 1,
-    justifyContent: "center",
+  more: {
+    width: 45,
     alignItems: "center",
-    paddingHorizontal: 24,
+    paddingVertical: 8,
   },
 
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
+  moreText: {
     color: "#94a3b8",
+    fontSize: 18,
   },
 
-  emptyState: {
+  archived: {
+    marginTop: 10,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#1e293b",
+  },
+
+  archivedTitle: {
+    color: "#fbbf24",
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+
+  archivedItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 11,
+    backgroundColor: "#0f172a",
+    marginBottom: 7,
+    borderRadius: 10,
+  },
+
+  restore: {
+    color: "#22d3ee",
+    fontWeight: "700",
+    marginRight: 15,
+  },
+
+  newButton: {
+    backgroundColor: "#06b6d4",
+    borderRadius: 14,
+    minHeight: 52,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 50,
+    marginTop: 8,
   },
 
-  emptyIcon: {
-    fontSize: 38,
-    marginBottom: 14,
-  },
-
-  emptyTitle: {
-    fontSize: 17,
+  newText: {
+    color: "white",
     fontWeight: "700",
+    fontSize: 16,
+  },
+
+  overlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,.55)",
+  },
+
+  menu: {
+    padding: 17,
+    backgroundColor: "#0f172a",
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderColor: "#1e293b",
+    borderWidth: 1,
+  },
+
+  menuTitle: {
+    color: "#f8fafc",
+    fontWeight: "700",
+    fontSize: 16,
+    paddingBottom: 8,
+  },
+
+  menuItem: {
+    paddingVertical: 14,
+  },
+
+  menuText: {
     color: "#e2e8f0",
-    textAlign: "center",
+    fontSize: 16,
   },
 
-  emptyText: {
-    marginTop: 6,
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#64748b",
-    textAlign: "center",
-  },
-
-  newChat: {
-    paddingTop: 10,
-    paddingBottom: 4,
-  },
-
-newChatButton: {
-  minHeight: 52,
-  borderRadius: 14,
-  backgroundColor: "#06b6d4",
-  flexDirection: "row",
-  justifyContent: "center",
-  alignItems: "center",
-},
-
-newChatButtonDisabled: {
-  opacity: 0.6,
-},
-
-
-  newChatIcon: {
-    marginRight: 8,
-    color: "#ffffff",
-    fontSize: 24,
-    lineHeight: 24,
-  },
-
-  newChatText: {
-    color: "#ffffff",
-    fontSize: 15,
+  delete: {
+    color: "#f87171",
+    fontSize: 16,
     fontWeight: "700",
   },
 };
 
-export default ConversationManagement;
