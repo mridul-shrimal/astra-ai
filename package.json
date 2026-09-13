@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "workspaces": [
     "frontend",
-    "mobile",
     "mobile_backup",
     "packages/*"
   ],
