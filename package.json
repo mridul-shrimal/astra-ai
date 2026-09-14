@@ -5,6 +5,7 @@
   "workspaces": [
     "frontend",
     "mobile_backup",
+    "mobile_ui",
     "packages/*"
   ],
   "scripts": {
