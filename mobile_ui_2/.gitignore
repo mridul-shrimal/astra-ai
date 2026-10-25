@@ -1,0 +1,4 @@
+.env
+.expo/
+.expo-export/
+node_modules/

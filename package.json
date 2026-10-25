@@ -6,6 +6,7 @@
     "frontend",
     "mobile_backup",
     "mobile_ui",
+    "mobile_ui_2",
     "packages/*"
   ],
   "scripts": {
