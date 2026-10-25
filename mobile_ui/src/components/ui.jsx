@@ -1,4 +1,6 @@
 import {
+  Modal,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -110,6 +112,69 @@ export function MenuButton({ onPress }) {
   );
 }
 
+export function ActionSheet({ visible, actions, onClose }) {
+  const { colors, radius, spacing, typography } = useTheme();
+
+  if (!visible) return null;
+
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable
+        style={[
+          styles.modalOverlay,
+          { backgroundColor: colors.overlay },
+        ]}
+        onPress={onClose}
+      >
+        <Pressable
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colors.surface,
+              borderTopLeftRadius: radius.lg,
+              borderTopRightRadius: radius.lg,
+              padding: spacing.lg,
+            },
+          ]}
+          onPress={() => {}}
+        >
+          {actions.map((action) => (
+            <TouchableOpacity
+              key={action.label}
+              disabled={action.disabled}
+              style={[
+                styles.sheetAction,
+                {
+                  borderTopColor: colors.border,
+                },
+              ]}
+              onPress={action.onPress}
+            >
+              <Text
+                style={[
+                  typography.body,
+                  {
+                    color: action.destructive
+                      ? colors.danger
+                      : colors.text,
+                  },
+                ]}
+              >
+                {action.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   button: {
     minHeight: 44,
@@ -124,5 +189,18 @@ const styles = StyleSheet.create({
   menuButton: {
     marginRight: 12,
     padding: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    padding: 20,
+  },
+  sheet: {
+    width: "100%",
+  },
+  sheetAction: {
+    minHeight: 52,
+    justifyContent: "center",
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
 });

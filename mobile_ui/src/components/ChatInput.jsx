@@ -23,6 +23,9 @@ export default function ChatInput({
   onPickAttachment,
   onVoiceInput,
   isSending,
+  isStreaming,
+  onStop,
+  enterToSend = true,
   placeholder = "Ask Astra anything...",
   attachment,
   onRemoveAttachment,
@@ -31,11 +34,15 @@ export default function ChatInput({
   const insets = useSafeAreaInsets();
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
 
   const hasText = value && value.trim().length > 0;
 
   const handleEmojiSelect = (emoji) => {
-    onChangeText((prev) => prev + emoji);
+    const start = selection.start ?? value.length;
+    const end = selection.end ?? start;
+    onChangeText(`${value.slice(0, start)}${emoji}${value.slice(end)}`);
+    setSelection({ start: start + emoji.length, end: start + emoji.length });
     setEmojiPickerVisible(false);
   };
 
@@ -88,6 +95,8 @@ export default function ChatInput({
           <TextInput
             value={value}
             onChangeText={onChangeText}
+            onSelectionChange={({ nativeEvent }) => setSelection(nativeEvent.selection)}
+            onSubmitEditing={enterToSend ? onSend : undefined}
             placeholder={placeholder}
             placeholderTextColor={colors.textMuted}
             style={[
@@ -100,7 +109,56 @@ export default function ChatInput({
             accessibilityLabel="Chat input"
           />
 
-          {!hasText ? (
+          {isStreaming ? (
+            <TouchableOpacity
+              onPress={onStop}
+              disabled={false}
+              activeOpacity={0.7}
+              style={[
+                styles.iconBtn,
+                {
+                  backgroundColor: colors.danger,
+                  borderRadius: radius.full,
+                  width: 40,
+                  height: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                },
+              ]}
+              hitSlop={8}
+              accessibilityLabel="Stop generating"
+            >
+              <View
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 2,
+                  backgroundColor: colors.background,
+                }}
+              />
+            </TouchableOpacity>
+          ) : hasText ? (
+            <TouchableOpacity
+              onPress={onSend}
+              disabled={isSending}
+              activeOpacity={0.7}
+              style={[
+                styles.iconBtn,
+                {
+                  backgroundColor: isSending ? colors.textDim : colors.primary,
+                  borderRadius: radius.full,
+                  width: 40,
+                  height: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                },
+              ]}
+              hitSlop={8}
+              accessibilityLabel="Send message"
+            >
+              <Ionicons name="send" size={18} color={colors.background} />
+            </TouchableOpacity>
+          ) : (
             <View style={styles.iconGroup}>
               <TouchableOpacity
                 onPress={() => setEmojiPickerVisible(true)}
@@ -122,27 +180,6 @@ export default function ChatInput({
                 <Ionicons name="mic" size={22} color={colors.icon} />
               </TouchableOpacity>
             </View>
-          ) : (
-            <TouchableOpacity
-              onPress={onSend}
-              disabled={isSending}
-              activeOpacity={0.7}
-              style={[
-                styles.iconBtn,
-                {
-                  backgroundColor: isSending ? colors.textDim : colors.primary,
-                  borderRadius: radius.full,
-                  width: 40,
-                  height: 40,
-                  alignItems: "center",
-                  justifyContent: "center",
-                },
-              ]}
-              hitSlop={8}
-              accessibilityLabel="Send message"
-            >
-              <Ionicons name="send" size={18} color={colors.background} />
-            </TouchableOpacity>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -169,11 +206,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 4,
+    minWidth: 0,
     borderWidth: 1,
   },
   input: {
     flex: 1,
+    minWidth: 0,
     fontSize: 16,
     lineHeight: 22,
     paddingHorizontal: 4,

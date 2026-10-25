@@ -11,59 +11,55 @@ const ACTIONS = [
   { key: "dislike", label: "Dislike", icon: "thumbs-down-outline", iconSize: 16 },
 ];
 
-export default function MessageActions({ onAction, style }) {
-  const { colors, typography, spacing } = useTheme();
+function ActionButton({ action, onAction, selected, colors, typography }) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const renderAction = (action) => {
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-
-    const handlePressIn = () => {
-      Animated.spring(scaleAnim, {
+  return (
+    <TouchableOpacity
+      onPress={() => onAction?.(action.key)}
+      onPressIn={() => Animated.spring(scaleAnim, {
         toValue: 0.92,
         friction: 3,
         tension: 40,
         useNativeDriver: true,
-      }).start();
-    };
-
-    const handlePressOut = () => {
-      Animated.spring(scaleAnim, {
+      }).start()}
+      onPressOut={() => Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 3,
         tension: 40,
         useNativeDriver: true,
-      }).start();
-    };
-
-    return (
-      <TouchableOpacity
-        key={action.key}
-        onPress={() => onAction?.(action.key)}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={1}
-        style={[styles.actionBtn, { minHeight: 40 }]}
-        hitSlop={12}
-        accessibilityLabel={action.label}
+      }).start()}
+      activeOpacity={1}
+        style={[styles.actionBtn, { flexGrow: 1, flexShrink: 0, flexBasis: 0 }]}
+      hitSlop={8}
+      accessibilityLabel={action.label}
+    >
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Ionicons
+          name={action.icon}
+          size={action.iconSize}
+          color={selected ? colors.primary : colors.textMuted}
+        />
+      </Animated.View>
+      <Text
+        style={[
+          typography.caption,
+          {
+            color: selected ? colors.primary : colors.textMuted,
+            marginLeft: 4,
+            fontSize: 12,
+            flexShrink: 0,
+          },
+        ]}
       >
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          <Ionicons
-            name={action.icon}
-            size={action.iconSize}
-            color={colors.textMuted}
-          />
-        </Animated.View>
-        <Text
-          style={[
-            typography.caption,
-            { color: colors.textMuted, marginLeft: 4, fontSize: 12 },
-          ]}
-        >
-          {action.label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
+        {action.label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+export default function MessageActions({ onAction, liked, disliked, style }) {
+  const { colors, typography, spacing } = useTheme();
 
   return (
     <Animated.View
@@ -72,32 +68,60 @@ export default function MessageActions({ onAction, style }) {
         {
           backgroundColor: colors.surfaceDim,
           borderColor: colors.borderDim,
-          marginHorizontal: spacing.lg,
           marginLeft: 48,
+          marginRight: spacing.lg,
         },
         style,
       ]}
     >
-      {ACTIONS.map(renderAction)}
+      <View style={styles.actionRow}>
+        {ACTIONS.slice(0, 2).map((action) => (
+          <ActionButton
+            key={action.key}
+            action={action}
+            onAction={onAction}
+            selected={false}
+            colors={colors}
+            typography={typography}
+          />
+        ))}
+      </View>
+      <View style={styles.actionRow}>
+        {ACTIONS.slice(2).map((action) => (
+          <ActionButton
+            key={action.key}
+            action={action}
+            onAction={onAction}
+            selected={action.key === "like" ? liked : disliked}
+            colors={colors}
+            typography={typography}
+          />
+        ))}
+      </View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    justifyContent: "space-around",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1,
-    alignSelf: "flex-start",
+    alignSelf: "stretch",
   },
-  actionBtn: {
+    actionBtn: {
+      minHeight: 44,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+      paddingHorizontal: 4,
+      paddingVertical: 8,
+  },
+  actionRow: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
   },
 });

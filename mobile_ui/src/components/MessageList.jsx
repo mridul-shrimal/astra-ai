@@ -10,6 +10,8 @@ export default function MessageList({
   messages,
   isThinking,
   onAction,
+  feedbackByMessageId,
+  showTimestamp,
   ListEmptyComponent,
 }) {
   const { colors } = useTheme();
@@ -26,7 +28,13 @@ export default function MessageList({
   }, [messages, isThinking, scrollToBottom]);
 
   const renderMessage = ({ item }) => (
-    <AnimatedMessageBubble message={item} isThinking={isThinking} onAction={onAction} />
+    <AnimatedMessageBubble
+      message={item}
+      isThinking={isThinking}
+      onAction={onAction}
+      feedback={feedbackByMessageId?.[item.id]}
+      showTimestamp={showTimestamp}
+    />
   );
 
   const keyExtractor = (item) => item.id || `${item.role}-${Date.now()}`;
@@ -53,7 +61,7 @@ export default function MessageList({
   );
 }
 
-const AnimatedMessageBubble = ({ message, isThinking, onAction }) => {
+const AnimatedMessageBubble = ({ message, isThinking, onAction, feedback, showTimestamp }) => {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
 
@@ -74,11 +82,15 @@ const AnimatedMessageBubble = ({ message, isThinking, onAction }) => {
   }, [opacity, translateY]);
 
   return (
-    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+    <Animated.View style={[styles.messageItem, { opacity, transform: [{ translateY }] }]}>
       <View style={styles.msgWrapper}>
-        <MessageBubble message={message} />
+        <MessageBubble message={message} showTimestamp={showTimestamp} />
         {!isThinking && message.role !== "user" && (
-          <MessageActions onAction={onAction} />
+          <MessageActions
+            onAction={(actionKey) => onAction?.(message, actionKey)}
+            liked={feedback?.liked}
+            disliked={feedback?.disliked}
+          />
         )}
       </View>
     </Animated.View>
@@ -92,7 +104,11 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 12,
   },
+  messageItem: {
+    width: "100%",
+  },
   msgWrapper: {
+    width: "100%",
     marginBottom: 4,
   },
 });

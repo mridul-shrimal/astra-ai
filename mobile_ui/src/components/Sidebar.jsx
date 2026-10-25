@@ -1,5 +1,6 @@
 import {
   Animated,
+  Alert,
   Easing,
   ScrollView,
   StyleSheet,
@@ -60,6 +61,91 @@ const truncateTitle = (title, maxLength = 32) => {
   return trimmed.slice(0, maxLength).trim() + "…";
 };
 
+function ConversationItem({
+  conv,
+  selectedConversation,
+  onSelectConversation,
+}) {
+  const { colors, spacing, radius, typography } = useTheme();
+  const isActive =
+    selectedConversation &&
+    getConversationSessionId(selectedConversation) ===
+      getConversationSessionId(conv);
+
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View key={getConversationSessionId(conv)} style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        style={[
+          styles.conversationItem,
+          {
+            backgroundColor: isActive ? colors.primaryDim : "transparent",
+            borderRadius: radius.md,
+            marginHorizontal: spacing.md,
+            padding: spacing.md,
+          },
+        ]}
+        onPress={() => onSelectConversation(conv)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+        hitSlop={4}
+      >
+        <View style={styles.conversationContent}>
+          <Text
+            style={[
+              typography.body,
+              {
+                color: isActive ? colors.primary : colors.text,
+                fontWeight: isActive ? "600" : "400",
+                fontSize: 15,
+              },
+            ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {truncateTitle(conv.title) || "New Chat"}
+          </Text>
+          {conv.updated_at ? (
+            <Text
+              style={[
+                typography.caption,
+                {
+                  color: isActive ? colors.primaryDim : colors.textMuted,
+                },
+              ]}
+            >
+              {formatDate(conv.updated_at)}
+            </Text>
+          ) : null}
+        </View>
+        {isActive && (
+          <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
 export default function Sidebar({ currentRoute }) {
   const { isOpen, closeSidebar } = useSidebar();
   const { colors, spacing, radius, typography } = useTheme();
@@ -70,27 +156,45 @@ export default function Sidebar({ currentRoute }) {
     selectedConversation,
     loadingConversations,
     openConversation,
-    createConversation,
+    startNewChat,
   } = convState;
 
   const handleNavigate = (name) => {
+    if (name === "Chat" && !selectedConversation) {
+      navigate("Home");
+      closeSidebar();
+      return;
+    }
     navigate(name);
     closeSidebar();
   };
 
-  const handleNewChat = () => {
-    createConversation();
+  const handleNewChat = async () => {
+    startNewChat();
+    navigate("Home");
     closeSidebar();
   };
 
   const handleSelectConversation = (conversation) => {
+    if (conversation.locked) {
+      Alert.alert(
+        "Conversation Locked",
+        "Unlock this conversation from the conversation actions before opening it."
+      );
+      return;
+    }
     openConversation(conversation);
     navigate("Chat");
     closeSidebar();
   };
 
-  const handleSignOut = () => {
-    auth.signOut();
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      Alert.alert("Sign Out Failed", error.message || "Could not sign out.");
+      return;
+    }
     closeSidebar();
   };
 
@@ -104,86 +208,6 @@ export default function Sidebar({ currentRoute }) {
       useNativeDriver: true,
     }).start();
   }, [isOpen, translateX]);
-
-  const renderConversationItem = (conv) => {
-    const isActive =
-      selectedConversation &&
-      getConversationSessionId(selectedConversation) ===
-        getConversationSessionId(conv);
-
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-
-    const handlePressIn = () => {
-      Animated.spring(scaleAnim, {
-        toValue: 0.97,
-        friction: 3,
-        tension: 40,
-        useNativeDriver: true,
-      }).start();
-    };
-
-    const handlePressOut = () => {
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 3,
-        tension: 40,
-        useNativeDriver: true,
-      }).start();
-    };
-
-    return (
-      <Animated.View key={getConversationSessionId(conv)} style={{ transform: [{ scale: scaleAnim }] }}>
-        <TouchableOpacity
-          style={[
-            styles.conversationItem,
-            {
-              backgroundColor: isActive ? colors.primaryDim : "transparent",
-              borderRadius: radius.md,
-              marginHorizontal: spacing.md,
-              padding: spacing.md,
-            },
-          ]}
-          onPress={() => handleSelectConversation(conv)}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          activeOpacity={1}
-          hitSlop={4}
-        >
-          <View style={styles.conversationContent}>
-            <Text
-              style={[
-                typography.body,
-                {
-                  color: isActive ? colors.primary : colors.text,
-                  fontWeight: isActive ? "600" : "400",
-                  fontSize: 15,
-                },
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {truncateTitle(conv.title) || "New Chat"}
-            </Text>
-            {conv.updated_at ? (
-              <Text
-                style={[
-                  typography.caption,
-                  {
-                    color: isActive ? colors.primaryDim : colors.textMuted,
-                  },
-                ]}
-              >
-                {formatDate(conv.updated_at)}
-              </Text>
-            ) : null}
-          </View>
-          {isActive && (
-            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
-          )}
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
 
   const conversationsToRender = [...conversations].sort((a, b) => {
     const aDate = new Date(a.updated_at || a.created_at || 0);
@@ -377,7 +401,14 @@ export default function Sidebar({ currentRoute }) {
                 </Text>
               </View>
             ) : (
-              conversationsToRender.map(renderConversationItem)
+              conversationsToRender.map((conv) => (
+                <ConversationItem
+                  key={getConversationSessionId(conv)}
+                  conv={conv}
+                  selectedConversation={selectedConversation}
+                  onSelectConversation={handleSelectConversation}
+                />
+              ))
             )}
           </ScrollView>
 

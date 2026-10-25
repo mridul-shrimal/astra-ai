@@ -1,29 +1,17 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeProvider";
 import MessageContent from "./MessageContent";
 
-export default function MessageBubble({ message }) {
-  const { colors } = useTheme();
+export default function MessageBubble({ message, showTimestamp }) {
+  const { colors, spacing, radius, typography } = useTheme();
 
   const isUser = message.role === "user" || message.sender === "user";
 
-  const containerStyle = isUser
-    ? [
-        styles.userContainer,
-        {
-          backgroundColor: colors.primary,
-          borderBottomRightRadius: 4,
-        },
-      ]
-    : [
-        styles.assistantContainer,
-        {
-          backgroundColor: colors.surface,
-          borderBottomLeftRadius: 4,
-        },
-      ];
+  const content = message.content || message.message || message.text || "";
+
+  const timestamp = message.createdAt || message.created_at;
 
   return (
     <View style={[styles.messageRow, isUser && styles.userRow]}>
@@ -39,8 +27,8 @@ export default function MessageBubble({ message }) {
         </View>
       )}
 
-      <View style={containerStyle}>
-        <MessageContent content={message.content || message.message || message.text || ""} />
+      <View style={containerStyle(isUser, colors, radius, spacing)}>
+        <MessageContent content={content} />
       </View>
 
       {isUser && (
@@ -54,9 +42,37 @@ export default function MessageBubble({ message }) {
           <Ionicons name="person" size={14} color={colors.background} />
         </View>
       )}
+
+      {showTimestamp && timestamp ? (
+        <Text
+          style={[
+            typography.caption,
+            {
+              color: isUser ? colors.userText : colors.textMuted,
+              opacity: 0.75,
+              marginTop: 6,
+            },
+          ]}
+        >
+          {new Date(timestamp).toLocaleString()}
+        </Text>
+      ) : null}
     </View>
   );
 }
+
+const containerStyle = (isUser, colors, radius, spacing) => [
+  styles.userContainer,
+  {
+    backgroundColor: isUser ? colors.primary : colors.surface,
+    borderBottomRightRadius: isUser ? 4 : radius.md,
+    borderBottomLeftRadius: isUser ? radius.md : 4,
+    borderWidth: isUser ? 0 : StyleSheet.hairlineWidth,
+    borderColor: isUser ? colors.user : colors.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+];
 
 const styles = StyleSheet.create({
   messageRow: {
@@ -92,7 +108,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 18,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: "transparent",
   },
 });

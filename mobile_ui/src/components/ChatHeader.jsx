@@ -5,7 +5,7 @@ import { useSidebar } from "../context/SidebarContext";
 import ChatHeaderMenu from "./ChatHeaderMenu";
 import { useTheme } from "../theme/ThemeProvider";
 
-export default function ChatHeader({ title, onMenuAction }) {
+export default function ChatHeader({ title, onMenuAction, conversation }) {
   const { openSidebar } = useSidebar();
   const { colors, typography, radius } = useTheme();
 
@@ -23,7 +23,7 @@ export default function ChatHeader({ title, onMenuAction }) {
       ]}
     >
       <View style={styles.row}>
-        {/* LEFT: Hamburger */}
+        <View style={styles.sideSlot}>
         <TouchableOpacity
           onPress={openSidebar}
           activeOpacity={0.7}
@@ -33,6 +33,7 @@ export default function ChatHeader({ title, onMenuAction }) {
         >
           <Ionicons name="menu" size={24} color={colors.text} />
         </TouchableOpacity>
+        </View>
 
         {/* CENTER: Conversation title */}
         <View style={styles.titleContainer}>
@@ -60,8 +61,9 @@ export default function ChatHeader({ title, onMenuAction }) {
           </Text>
         </View>
 
-        {/* RIGHT: Header controls */}
-        <ChatHeaderMenu onMenuAction={onMenuAction} />
+        <View style={styles.sideSlot}>
+          <ChatHeaderMenu onMenuAction={onMenuAction} conversation={conversation} />
+        </View>
       </View>
     </View>
   );
@@ -82,7 +84,11 @@ const styles = StyleSheet.create({
   },
   menuBtn: {
     padding: 10,
-    marginRight: 8,
+  },
+  sideSlot: {
+    width: 48,
+    alignItems: "center",
+    justifyContent: "center",
   },
   titleContainer: {
     flex: 1,

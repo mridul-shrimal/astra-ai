@@ -1,10 +1,12 @@
 const darkColors = {
   primary: "#007AFF",
   primaryDim: "#007AFF20",
+  primarySoft: "#007AFF20",
   background: "#000000",
   surface: "#121212",
   surfaceDim: "#1C1C1E",
   surfaceElevated: "#1A1A1C",
+  surfaceMuted: "#1C1C1E",
   text: "#FFFFFF",
   textMuted: "#8E8E93",
   textDim: "#48484A",
@@ -16,15 +18,19 @@ const darkColors = {
   danger: "#FF3B30",
   green: "#30B05F",
   greenDim: "#30B05F20",
+  user: "#007AFF",
+  userText: "#FFFFFF",
 };
 
 const lightColors = {
   primary: "#007AFF",
   primaryDim: "#007AFF20",
+  primarySoft: "#007AFF20",
   background: "#F2F3F4",
   surface: "#FFFFFF",
   surfaceDim: "#E5E7EB",
   surfaceElevated: "#F8FAFC",
+  surfaceMuted: "#F8FAFC",
   text: "#1A1A1A",
   textMuted: "#6B7280",
   textDim: "#9CA3AF",
@@ -36,6 +42,8 @@ const lightColors = {
   danger: "#FF3B30",
   green: "#30B05F",
   greenDim: "#30B05F20",
+  user: "#007AFF",
+  userText: "#FFFFFF",
 };
 
 export const colors = { dark: darkColors, light: lightColors };

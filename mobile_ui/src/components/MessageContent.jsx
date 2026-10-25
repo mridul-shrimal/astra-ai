@@ -222,7 +222,7 @@ export default function MessageContent({ content }) {
           return (
             <View key={key} style={{ marginVertical: 6 }}>
               {block.items.map((item, itemIdx) => {
-                const parts = renderInline(item);
+                const parts = renderInline(item, { colors, typography });
                 return (
                   <View
                     key={itemIdx}
@@ -242,7 +242,7 @@ export default function MessageContent({ content }) {
         }
 
         // paragraph
-        const parts = renderInline(block.content);
+        const parts = renderInline(block.content, { colors, typography });
         return (
           <Text
             key={key}

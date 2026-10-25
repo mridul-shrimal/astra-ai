@@ -42,6 +42,7 @@ export function AppNavigator() {
 
   return (
     <Stack.Navigator
+      key={isAuthenticated ? "authenticated" : "unauthenticated"}
       initialRouteName={isAuthenticated ? "Home" : "Auth"}
       screenOptions={{
         headerLeft: () => <HeaderMenuButton />,

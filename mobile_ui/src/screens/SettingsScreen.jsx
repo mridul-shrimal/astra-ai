@@ -1,10 +1,11 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 import { useAppContext } from "../context/AppContext";
 import { useTheme } from "../theme/ThemeProvider";
-import { defaultPreferences } from "../storage/preferences";
+import usePreferences from "../hooks/usePreferences";
+import useMemory from "../hooks/useMemory";
 
 const SettingSection = ({ title, children, colors, typography, spacing }) => (
   <View
@@ -36,6 +37,43 @@ const SettingSection = ({ title, children, colors, typography, spacing }) => (
   </View>
 );
 
+function ToggleRow({ label, detail, value, onChange }) {
+  const { colors, spacing, typography } = useTheme();
+  return (
+    <View style={[styles.row, { borderBottomColor: colors.border, paddingVertical: spacing.sm }]}>
+      <View style={styles.rowText}>
+        <Text style={[typography.label, { color: colors.text }]}>{label}</Text>
+        {detail ? <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]}>{detail}</Text> : null}
+      </View>
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.primary }} />
+    </View>
+  );
+}
+
+function Choices({ values, selected, onSelect }) {
+  const { colors, radius, spacing, typography } = useTheme();
+  return (
+    <View style={[styles.choices, { marginTop: spacing.sm }]}>
+      {values.map(([value, label]) => (
+        <TouchableOpacity
+          key={value}
+          onPress={() => onSelect(value)}
+          style={[
+            styles.choice,
+            {
+              borderColor: selected === value ? colors.primary : colors.border,
+              backgroundColor: selected === value ? colors.primarySoft : colors.surfaceMuted,
+              borderRadius: radius.sm,
+            },
+          ]}
+        >
+          <Text style={[typography.caption, { color: selected === value ? colors.primary : colors.text }]}>{label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
 const SettingRow = ({ icon, label, value, onPress, colors, typography, isLast }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -55,6 +93,7 @@ const SettingRow = ({ icon, label, value, onPress, colors, typography, isLast })
     ) : null}
     <Text
       style={[typography.body, { color: colors.text, flex: 1, fontSize: 16 }]}
+      numberOfLines={0}
     >
       {label}
     </Text>
@@ -62,7 +101,7 @@ const SettingRow = ({ icon, label, value, onPress, colors, typography, isLast })
       <Text
         style={[
           typography.caption,
-          { color: colors.textMuted, fontSize: 14 },
+          { color: colors.textMuted, fontSize: 14, flexShrink: 1, textAlign: "right" },
         ]}
       >
         {value}
@@ -102,8 +141,10 @@ const ThemeOption = ({ label, value, selected, onSelect, colors, typography }) =
 
 export default function SettingsScreen() {
   const { colors, typography, spacing, radius, preferences, updateTheme } = useTheme();
+  const { setPreference } = usePreferences();
   const { auth } = useAppContext();
   const { session } = auth;
+  const { clearAllMemories } = useMemory(session);
 
   const [signingOut, setSigningOut] = useState(false);
 
@@ -114,6 +155,10 @@ export default function SettingsScreen() {
   const handleThemeSelect = useCallback((theme) => {
     updateTheme(theme);
   }, [updateTheme]);
+
+  const handleSetPreference = useCallback((key, value) => {
+    setPreference(key, value);
+  }, [setPreference]);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -148,8 +193,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View
+    <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
     >
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[typography.title, { color: colors.text }]}>
@@ -193,6 +240,73 @@ export default function SettingsScreen() {
         </SettingSection>
 
         <SettingSection
+          title="AI Preferences"
+          colors={colors}
+          typography={typography}
+          spacing={spacing}
+        >
+          <Text style={[typography.label, { color: colors.text, marginBottom: spacing.sm }]}>
+            Model
+          </Text>
+          <Choices
+            values={[
+              ["mistralai/mistral-small-3.2-24b-instruct", "Mistral Small 3.2"],
+              ["google/gemma-3-27b-it", "Gemma 3 27B"],
+              ["deepseek/deepseek-chat-v3", "DeepSeek Chat V3"],
+              ["openai/gpt-oss-20b", "GPT OSS 20B"],
+            ]}
+            selected={preferences.model}
+            onSelect={(value) => handleSetPreference("model", value)}
+            colors={colors}
+            typography={typography}
+          />
+          <Text style={[typography.label, { color: colors.text, marginTop: spacing.md }]}>
+            Temperature: {Number(preferences.temperature).toFixed(1)}
+          </Text>
+          <Choices
+            values={[[0, "0"], [0.3, "0.3"], [0.5, "0.5"], [0.7, "0.7"], [1, "1"]]}
+            selected={preferences.temperature}
+            onSelect={(value) => handleSetPreference("temperature", value)}
+            colors={colors}
+            typography={typography}
+          />
+          <ToggleRow
+            label="Auto read aloud"
+            detail="Saved preference for supported voice output."
+            value={preferences.autoRead}
+            onChange={(value) => handleSetPreference("autoRead", value)}
+          />
+        </SettingSection>
+
+        <SettingSection
+          title="Chat"
+          colors={colors}
+          typography={typography}
+          spacing={spacing}
+        >
+          <ToggleRow
+            label="Enter to send"
+            value={preferences.enterToSend}
+            onChange={(value) => handleSetPreference("enterToSend", value)}
+          />
+          <ToggleRow
+            label="Show timestamps"
+            value={preferences.showTimestamp}
+            onChange={(value) => handleSetPreference("showTimestamp", value)}
+          />
+          <Text style={[typography.label, { color: colors.text, marginTop: spacing.sm }]}>
+            Font size
+          </Text>
+          <Choices
+            values={[["small", "Small"], ["medium", "Medium"], ["large", "Large"]]}
+            selected={preferences.fontSize}
+            onSelect={(value) => handleSetPreference("fontSize", value)}
+            colors={colors}
+            typography={typography}
+          />
+        </SettingSection>
+
+        <SettingSection
           title="Account"
           colors={colors}
           typography={typography}
@@ -228,24 +342,57 @@ export default function SettingsScreen() {
           typography={typography}
           spacing={spacing}
         >
-          <SettingRow
-            icon="notifications-outline"
-            label="Push Notifications"
-            value={defaultPreferences.notificationEnabled ? "On" : "Off"}
-            onPress={() => {}}
-            colors={colors}
-            typography={typography}
-            isLast={false}
+          <ToggleRow
+            label="Push notifications"
+            value={preferences.notificationEnabled}
+            onChange={(value) => handleSetPreference("notificationEnabled", value)}
           />
-          <SettingRow
-            icon="volume-high-outline"
-            label="Notification Sound"
-            value={defaultPreferences.notificationSound ? "On" : "Off"}
-            onPress={() => {}}
-            colors={colors}
-            typography={typography}
-            isLast={true}
+          <ToggleRow
+            label="Notification sound"
+            value={preferences.notificationSound}
+            onChange={(value) => handleSetPreference("notificationSound", value)}
           />
+        </SettingSection>
+
+        <SettingSection
+          title="Memory"
+          colors={colors}
+          typography={typography}
+          spacing={spacing}
+        >
+          <ToggleRow
+            label="Enable memory"
+            value={preferences.memoryEnabled}
+            onChange={(value) => handleSetPreference("memoryEnabled", value)}
+          />
+          <ToggleRow
+            label="Auto save memory"
+            value={preferences.memoryAutoSave}
+            onChange={(value) => handleSetPreference("memoryAutoSave", value)}
+          />
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert("Clear all memories?", "This cannot be undone.", [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Clear",
+                  style: "destructive",
+                  onPress: async () => {
+                    try {
+                      await clearAllMemories();
+                    } catch {
+                      Alert.alert("Couldn't clear memories", "Please try again.");
+                    }
+                  },
+                },
+              ]);
+            }}
+            style={[styles.settingRow, { borderBottomWidth: 0 }]}
+          >
+            <Text style={[typography.label, { color: colors.danger }]}>
+              Clear all memories
+            </Text>
+          </TouchableOpacity>
         </SettingSection>
 
         <SettingSection
@@ -257,8 +404,8 @@ export default function SettingsScreen() {
           <SettingRow
             icon="key-outline"
             label="Biometric Lock"
-            value={defaultPreferences.biometricEnabled ? "On" : "Off"}
-            onPress={() => {}}
+            value={preferences.biometricEnabled ? "On" : "Off"}
+            onPress={() => handleSetPreference("biometricEnabled", !preferences.biometricEnabled)}
             colors={colors}
             typography={typography}
             isLast={false}
@@ -266,8 +413,8 @@ export default function SettingsScreen() {
           <SettingRow
             icon="shield-checkmark-outline"
             label="Auto-Lock"
-            value={defaultPreferences.autoLock || "never"}
-            onPress={() => {}}
+            value={preferences.autoLock || "never"}
+            onPress={() => handleSetPreference("autoLock", preferences.autoLock === "never" ? "5m" : "never")}
             colors={colors}
             typography={typography}
             isLast={true}
@@ -307,13 +454,16 @@ export default function SettingsScreen() {
           />
         </SettingSection>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  content: {
+    paddingBottom: 24,
   },
   header: {
     paddingHorizontal: 20,
@@ -324,6 +474,31 @@ const styles = StyleSheet.create({
   settingRow: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  rowText: {
+    flex: 1,
+    paddingRight: 16,
+  },
+  choices: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  choice: {
+    minHeight: 38,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    borderWidth: 1,
   },
   settingIcon: {
     marginRight: 12,

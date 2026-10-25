@@ -6,7 +6,9 @@ const config = getDefaultConfig(__dirname);
 const reactPath = path.resolve(__dirname, "../node_modules/react");
 const sharedPath = path.resolve(__dirname, "../packages/shared");
 
-config.watchFolders = [sharedPath];
+config.watchFolders = [
+  ...new Set([...(config.watchFolders || []), sharedPath]),
+];
 
 config.resolver.extraNodeModules = {
   ...(config.resolver.extraNodeModules || {}),

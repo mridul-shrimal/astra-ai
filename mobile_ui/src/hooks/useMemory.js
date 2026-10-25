@@ -126,7 +126,8 @@ const useMemory = (session) => {
     error,
     count,
     loadMemories,
-    deleteMemory: confirmDelete,
+    deleteMemory,
+    confirmDelete,
     clearAllMemories,
   };
 };

@@ -4,7 +4,7 @@ import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, T
 import { Ionicons } from "@expo/vector-icons";
 
 import { useAppContext } from "../context/AppContext";
-import { useMemory } from "../hooks/useMemory";
+import useMemory from "../hooks/useMemory";
 import { useTheme } from "../theme/ThemeProvider";
 
 const truncateText = (text, maxLength = 100) => {

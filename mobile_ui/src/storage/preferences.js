@@ -8,6 +8,15 @@ export const defaultPreferences = {
   temperature: 0.7,
   memoryEnabled: true,
   memoryAutoSave: true,
+  enterToSend: true,
+  showTimestamp: false,
+  fontSize: "medium",
+  notificationEnabled: true,
+  notificationSound: false,
+  biometricEnabled: false,
+  autoLock: "never",
+  deleteConfirmation: true,
+  autoRead: false,
 };
 
 export async function loadPreferences() {

@@ -26,11 +26,13 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     let active = true;
 
-    loadPreferences().then((stored) => {
-      if (active) {
-        setPreferences(stored);
-      }
-    });
+    loadPreferences()
+      .then((stored) => {
+        if (active) {
+          setPreferences(stored);
+        }
+      })
+      .catch(() => {})
 
     return () => {
       active = false;

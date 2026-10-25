@@ -3,7 +3,6 @@
     "name": "Astra AI Mobile UI",
     "slug": "astra-ai-mobile-ui-v2",
     "version": "1.0.0",
-    "entryPoint": "./index.js",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "plugins": [

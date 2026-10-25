@@ -5,7 +5,6 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useAppContext } from "../context/AppContext";
 import { useTheme } from "../theme/ThemeProvider";
-import { supabase } from "../services/supabase";
 
 export default function AuthScreen() {
   const { colors, typography, spacing, radius } = useTheme();
@@ -23,10 +22,7 @@ export default function AuthScreen() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-        });
+        const { error } = await auth.signUp(email.trim(), password);
 
         if (error) {
           Alert.alert("Sign Up Failed", error.message);
@@ -37,10 +33,7 @@ export default function AuthScreen() {
           );
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
+        const { error } = await auth.signIn(email.trim(), password);
 
         if (error) {
           Alert.alert("Sign In Failed", error.message);

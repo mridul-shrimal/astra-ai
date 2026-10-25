@@ -11,14 +11,23 @@ import { useTheme } from "../theme/ThemeProvider";
 
 const MENU_ITEMS = [
   { key: "rename", label: "Rename Chat", icon: "create-outline" },
+  { key: "duplicate", label: "Duplicate", icon: "copy-outline" },
+  { key: "pin", label: "Pin", icon: "pushpin-outline" },
+  { key: "archive", label: "Archive", icon: "archive-outline" },
+  { key: "lock", label: "Lock", icon: "lock-outline" },
+  { key: "unlock", label: "Unlock", icon: "lock-open-outline" },
   { key: "clear", label: "Clear Conversation", icon: "trash-outline" },
   { key: "delete", label: "Delete Chat", icon: "trash-bin-outline" },
   { key: "info", label: "Conversation Info", icon: "information-outline" },
 ];
 
-export default function ChatHeaderMenu({ onMenuAction }) {
+export default function ChatHeaderMenu({ onMenuAction, conversation }) {
   const [isOpen, setIsOpen] = useState(false);
   const { colors, typography, radius } = useTheme();
+
+  const menuActions = conversation?.locked
+    ? MENU_ITEMS.filter((item) => item.key !== "lock")
+    : MENU_ITEMS.filter((item) => item.key !== "unlock");
 
   return (
     <View>
@@ -49,7 +58,7 @@ export default function ChatHeaderMenu({ onMenuAction }) {
               },
             ]}
           >
-            {MENU_ITEMS.map((item) => (
+            {menuActions.map((item) => (
               <TouchableOpacity
                 key={item.key}
                 onPress={() => {
